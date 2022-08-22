@@ -1,0 +1,13 @@
+{
+  "name": "lastchaos-2005-emulator",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "server": "node src/app.js"
+  },
+  "author": "agsvn",
+  "dependencies": {
+    "chalk": "^4.1.0",
+    "smart-buffer": "^4.2.0"
+  }
+}
