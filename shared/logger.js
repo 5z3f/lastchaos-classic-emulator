@@ -6,7 +6,7 @@ const log = {
         console.log(`${ chalk.gray(ts) } :: ${ chalk.blueBright(message) }`)
     },
     data: (data) => {
-        console.log(`${ chalk.gray(ts) } :: ${ chalk.italic.underline(data) }`);
+        console.log(`${ chalk.gray(ts) } :: ${ chalk.italic(data) }`);
     }
 }
 

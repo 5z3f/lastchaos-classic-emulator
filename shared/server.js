@@ -1,30 +1,23 @@
 const net = require('net');
-const handler = require('./handler');
-const log = require('./log');
+const log = require('@local/shared/logger');
 
 const connection = {
-    'enablished': false,
     'socket': null
 }
 
 const server =
 {
-    mount: (host, port) =>
+    mount: (host, port, handler) =>
     {
         const srv = net.createServer();
 
         srv.on('connection', (socket) => {
             log.info(`Incoming connection from ${ socket.remoteAddress }:${ socket.remotePort }`);
             
-            var toGameServer = false;
-
-            if(!connection.enablished) connection.enablished = true;
-            else                       toGameServer = true;
-
             connection.socket = socket;
 
             socket.on('data', (data) => {
-                handler.on('data', data, toGameServer);
+                handler.on('data', data);
             });
         });
 

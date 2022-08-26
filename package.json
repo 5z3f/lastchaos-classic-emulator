@@ -1,13 +1,15 @@
 {
   "name": "lastchaos-2005-emulator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "",
   "scripts": {
-    "server": "node src/app.js"
+    "loginserver": "node LoginServer/src/app.js",
+    "gameserver": "node GameServer/src/app.js"
   },
   "author": "agsvn",
   "dependencies": {
     "chalk": "^4.1.0",
+    "@local/shared": "file:./shared/",
     "smart-buffer": "^4.2.0"
   }
 }
