@@ -1,4 +1,4 @@
-# lastchaos-beta-emulator
+# lastchaos-classic-emulator
 
 ![image](https://user-images.githubusercontent.com/39301116/187099762-27f21503-4f23-492e-bd5e-8fc44bb0eeaa.png)
 
