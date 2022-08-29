@@ -1,4 +1,6 @@
+
 const SmartBuffer = require('smart-buffer').SmartBuffer;
+const LCCrypt = require('@local/shared/LCCrypt');
 
 const message = class
 {
@@ -8,17 +10,22 @@ const message = class
      * @param {number} type write message type
      * @param {number} subType write message subtype
      * @param {Boolean} [header=true] read lc packet header?
+     * @param {Boolean} [decrypt=true] decrypt packet using LCCrypt?
      */
-    constructor({ buffer, type, subType, header })
+    constructor({ buffer, type, subType, header, decrypt })
     {
-        this._sb = buffer ? SmartBuffer.fromBuffer(buffer) : new SmartBuffer();
-
-        this.header = (header !== false && this._sb.length >= 12) ? { // 12 - header length
-            'reliable': this.read('u16>'),                  // ntohs
-            'sequence': this.read('u32>'),                  // ntohl
-            'clientId': this.read('u16>'),
+        this._sb = buffer
+            ? SmartBuffer.fromBuffer(decrypt == undefined ? LCCrypt.Decrypt(buffer.slice(12)) : buffer) 
+            : new SmartBuffer();
+    
+        this.header = (header !== false && this._sb.length > 12) ? {    // 12 - header length
+            'reliable': this.read('u16>'),                              // ntohs
+            'sequence': this.read('u32>'),                              // ntohl
+            'packetId': this.read('u16>'),
             'packetSize': this.read('u32>'),
         } : null;
+
+        this.crypt = decrypt;
 
         if(type)     this.write('u8', type);
         if(subType)  this.write('u8', subType);
@@ -30,37 +37,40 @@ const message = class
      */
     buffer = () => this._sb.toBuffer();
 
+    // get clientId() { return this.header.clientId; }
+
     /**
      * Build message and export it to `Buffer` object
      * @param {number} clientId client id
      * @param {Boolean} [header=true] write lc packet header?
+     * @param {Boolean} [encrypt=true] encrypt packet using LCCrypt?
      * @return {Buffer} `Buffer` object
      */
-    build = ({ clientId, header }) => {
+    build = ({ header, encrypt }) => {
 
-        const makeHeader = (clientId, messageSize) =>
+        const makeHeader = (messageSize) =>
         {
             var writer = new SmartBuffer();
 
-            writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));   // reliable
-            writer.writeUInt32BE(0);                                // sequence
-            writer.writeUInt16BE(clientId);                         // client id
-            writer.writeUInt32BE(messageSize);                      // message size
+            writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));                       // reliable
+            writer.writeUInt32BE(0);                                                    // sequence
+            writer.writeUInt16BE(0);                                                    // packet id
+            writer.writeUInt32BE(encrypt !== false ? (messageSize + 5) : messageSize);  // message size + crypt sum  || FIXME: write it smarter
 
             return writer;
         };
 
         return header === false
             ? this._sb.toBuffer()
-            : Buffer.concat([ makeHeader(clientId, this._sb.length).toBuffer(), this._sb.toBuffer() ]);
+            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false ? LCCrypt.Crypt(this._sb.toBuffer()) : this._sb.toBuffer() /*this._sb.toBuffer()*/ ]);
     }
 
     /**
      * Available types: \
-     * i8, u8, stringnt, i16, u16, i32, u32, i64, u64, f (float) \
-     * you can set endian by using '>' (big) or '<' (little) at the end of type
-     * @param {string} type
-     * @return {value} value
+     * `i8` `u8` `i16` `u16` `i32` `u32` `i64` `u64` `f (float)` `stringnt` \
+     * you can set endian by using `> (big)` or `< (little)` at the end of type
+     * @param {string} type type
+     * @param {value} val value
      */
     read = (type) =>
     {
@@ -92,8 +102,8 @@ const message = class
 
     /**
      * Available types: \
-     * i8, u8, stringnt, i16, u16, i32, u32, i64, u64, f (float) \
-     * you can set endian by using '>' (big) or '<' (little) at the end of type
+     * `i8` `u8` `i16` `u16` `i32` `u32` `i64` `u64` `f (float)` `stringnt` \
+     * You can set endian by using `> (big)` or `< (little)` at the end of type
      * @param {string} type type
      * @param {value} val value
      */

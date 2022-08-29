@@ -121,6 +121,7 @@ dist
 
 # Stores VSCode versions used for testing VSCode extensions
 .vscode-test
+.vscode
 
 # yarn v2
 .yarn/cache
@@ -129,5 +130,5 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-LCCrypt/
 package-lock.json
+PATCHES.md

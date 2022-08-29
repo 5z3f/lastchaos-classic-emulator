@@ -1,13 +1,13 @@
+
 const log = require('@local/shared/logger');
 const message = require('@local/shared/message');
-
 
 const handler =
 {
     onData: (data) =>
     {
         // read packet
-        var msg = new message({ buffer: data });
+        var msg = new message({ buffer: data, header: false });
 
         // read id
         var messageId = msg.read('u8');

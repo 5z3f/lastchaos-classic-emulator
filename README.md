@@ -1,21 +1,41 @@
-# lastchaos-2005-emulator
+# lastchaos-beta-emulator
 
-![image](https://user-images.githubusercontent.com/39301116/186898713-014c7e2f-e070-44d2-97f5-5504cd4e026b.png)
+![image](https://user-images.githubusercontent.com/39301116/187099762-27f21503-4f23-492e-bd5e-8fc44bb0eeaa.png)
 
-# Setup
+# setup
 ```
-npm install
-npm run loginserver
-npm run gameserver
-```
+> npm install
 
-# Client
-This client is bad but we don't have anything better \
-If you have another version (2005-2006) without packet encryption (or offsets to disable it for 61027 USA version) I'd be glad if you can share it \
-```
-https://www.mediafire.com/download/6is8e8jus1jpnxp/LastchaosClient2005.7z
+> npm run loginserver
+> npm run gameserver
 ```
 
-# About
-under construction  
-by agsvn, Karmel0x
+# client
+
+**Server is currently based on client:**
+```
+> Nation:           USA
+> Version:          817
+> Release date:     12.2006
+> --------------------------
+> Download:
+> https://mega.nz/file/7ix03Crb#xy8T7XxQ5BFAsxtkeqPW2x4-e6-BETIfZaz360nZOpU
+> --------------------------
+```
+
+# patches
+```
+> Description:  USA Client 817 IP Filter Patch
+> Offset:       Engine.CCommunicationInterface::OpenSocket_t+8A2 OR 0x000FCC52
+> Replace:      00 -> 01
+> --------------------------
+> Patched Engine.dll:
+> https://mega.nz/file/vm4AQaYA#Sb_OT7plbNYC5Gti4PIRPpnoMRdN2OjXPiuN0LAOOR8
+> --------------------------
+```
+
+# about
+```
+> under construction
+> by agsvn, Karmel0x
+```

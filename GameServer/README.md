@@ -1,6 +1,5 @@
 # GameServer
 
 ### commands:
-- whoami
-- goto
-- gozone
+- .whoami
+- .speedup

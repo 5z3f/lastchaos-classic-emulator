@@ -8,7 +8,7 @@ module.exports = {
         const pulseMessage = () => {
             var msg = new message({});
             msg.write('i32>', 0);
-            return msg.build({ clientId: receivedMsg.clientId });
+            return msg.build({ });
         }
 
         log.data(`[OUT] << 'MSG_PULSE' (0x26)`);
