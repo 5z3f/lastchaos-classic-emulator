@@ -3,3 +3,4 @@
 ### commands:
 - .whoami
 - .speedup
+- .spawn

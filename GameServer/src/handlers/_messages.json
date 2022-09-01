@@ -1,0 +1,10 @@
+{
+    "MSG_LOGIN": 3,
+    "MSG_MENU": 4,
+    "MSG_START_GAME": 5,
+    "MSG_MOVE": 12,
+    "MSG_ATTACK": 13,
+    "MSG_CHAT": 15,
+    "MSG_GM": 23,
+    "MSG_PULSE": 38
+}

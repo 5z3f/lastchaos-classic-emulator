@@ -2,6 +2,10 @@
 
 ![image](https://user-images.githubusercontent.com/39301116/187099762-27f21503-4f23-492e-bd5e-8fc44bb0eeaa.png)
 
+https://user-images.githubusercontent.com/39301116/187806343-64885c75-1463-4ced-ba07-f3c042920a7b.mp4
+
+https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-9f19-84056b7196e0.mp4
+
 # setup
 ```
 > npm install

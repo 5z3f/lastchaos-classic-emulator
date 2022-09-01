@@ -1,7 +1,8 @@
 const server = require("@local/shared/server");
-const handler = require("./handler");
 
-HOST = '127.0.0.1';
-PORT = 4191;
-
-server.mount(HOST, PORT, handler);
+var srv = new server({
+    host:       '127.0.0.1',
+    port:       4191,
+    handlers:   require("./handlers"),
+    senders:    require("./senders")
+});

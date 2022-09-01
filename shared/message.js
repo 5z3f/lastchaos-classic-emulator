@@ -1,6 +1,6 @@
 
 const SmartBuffer = require('smart-buffer').SmartBuffer;
-const LCCrypt = require('@local/shared/LCCrypt');
+const lccrypt = require('@local/shared/lccrypt');
 
 const message = class
 {
@@ -10,13 +10,15 @@ const message = class
      * @param {number} type write message type
      * @param {number} subType write message subtype
      * @param {Boolean} [header=true] read lc packet header?
-     * @param {Boolean} [decrypt=true] decrypt packet using LCCrypt?
+     * @param {Boolean} [encrypted=true] is packet encrypted?
      */
-    constructor({ buffer, type, subType, header, decrypt })
+    constructor({ buffer, type, subType, header, encrypted })
     {
         this._sb = buffer
-            ? SmartBuffer.fromBuffer(decrypt == undefined ? LCCrypt.Decrypt(buffer.slice(12)) : buffer) 
+            ? SmartBuffer.fromBuffer(buffer) 
             : new SmartBuffer();
+
+        this.encrypted = encrypted ?? true;
     
         this.header = (header !== false && this._sb.length > 12) ? {    // 12 - header length
             'reliable': this.read('u16>'),                              // ntohs
@@ -25,26 +27,47 @@ const message = class
             'packetSize': this.read('u32>'),
         } : null;
 
-        this.crypt = decrypt;
+        if(buffer && this.encrypted) {
+            var decrypted = message.decrypt(buffer.slice(12));          // TODO: implement error handler
+            this._sb = SmartBuffer.fromBuffer(decrypted);
+        }
 
         if(type)     this.write('u8', type);
         if(subType)  this.write('u8', subType);
     }
 
     /**
+     * Decrypt buffer using LCCrypt library
+     * @param {Buffer} buffer message buffer
+     * @return {Buffer}
+     */
+     static decrypt = (buffer) => lccrypt.decrypt(buffer);
+
+    /**
+     * Encrypt buffer using LCCrypt library
+     * @param {Buffer} buffer message buffer
+     * @return {Buffer}
+     */
+     static encrypt = (buffer) => lccrypt.encrypt(buffer);
+
+    /**
      * Get Buffer object
-     * @return {Buffer} buffer
+     * @return {Buffer}
      */
     buffer = () => this._sb.toBuffer();
 
-    // get clientId() { return this.header.clientId; }
+    /**
+     * Get string buffer
+     * @return {string}
+     */
+    toString = () => this.buffer().toString('hex');
 
     /**
      * Build message and export it to `Buffer` object
      * @param {number} clientId client id
      * @param {Boolean} [header=true] write lc packet header?
-     * @param {Boolean} [encrypt=true] encrypt packet using LCCrypt?
-     * @return {Buffer} `Buffer` object
+     * @param {Boolean} [encrypt=true] encrypt packet?
+     * @return {Buffer}
      */
     build = ({ header, encrypt }) => {
 
@@ -55,14 +78,14 @@ const message = class
             writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));                       // reliable
             writer.writeUInt32BE(0);                                                    // sequence
             writer.writeUInt16BE(0);                                                    // packet id
-            writer.writeUInt32BE(encrypt !== false ? (messageSize + 5) : messageSize);  // message size + crypt sum  || FIXME: write it smarter
+            writer.writeUInt32BE(encrypt !== false ? (messageSize + 5) : messageSize);  // message size + lccrypt sum  || FIXME: write it smarter
 
             return writer;
         };
 
         return header === false
             ? this._sb.toBuffer()
-            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false ? LCCrypt.Crypt(this._sb.toBuffer()) : this._sb.toBuffer() /*this._sb.toBuffer()*/ ]);
+            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false ? message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer() ]);
     }
 
     /**
@@ -76,8 +99,7 @@ const message = class
     {
         var val;
 
-        switch(type)
-        {
+        switch(type) {
             case 'i8':          val = this._sb.readInt8(); break;
             case 'u8':          val = this._sb.readUInt8(); break;
             case 'stringnt':    val = this._sb.readStringNT(val); break;
@@ -109,8 +131,7 @@ const message = class
      */
     write = (type, val) =>
     {
-        switch(type)
-        {
+        switch(type) {
             case 'i8':          this._sb.writeInt8(val); break;
             case 'u8':          this._sb.writeUInt8(val); break;
             case 'stringnt':    this._sb.writeStringNT(val); break;

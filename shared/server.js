@@ -1,32 +1,44 @@
 const net = require('net');
 const log = require('@local/shared/logger');
+const session = require('@local/shared/session');
 
-const connection = {
-    'socket': null
-}
-
-const server =
+const server = class
 {
-    mount: (host, port, handler) =>
+    constructor({ host, port, handlers, senders })
     {
+        var that = this;
+
+        this.host = host ?? '127.0.0.1';
+        this.port = port ??  43594;
+
+        // hold current sessions
+        this.sessions = [];
+
+        // hold game data
+        // this.gamedata = new GameData();
+
         const srv = net.createServer();
-
-        srv.on('connection', (socket) => {
-            log.info(`Incoming connection from ${ socket.remoteAddress }:${ socket.remotePort }`);
-            
-            connection.socket = socket;
-
-            socket.on('data', (data) => {
-                handler.on('data', data);
+    
+        srv.on('connection', (socket) =>
+        {            
+            var sess = new session({
+                server: that,
+                socket: socket,
+                handlers: handlers,
+                senders: senders
             });
-        });
 
-        srv.listen(port, host, () => {
-            log.info(`Server started listening on ${ host }:${ port }`)
-        })
-    },
-    send: (buf) => {
-        connection.socket.write(buf);
+            that.sessions[sess.uid] = sess;
+        });
+    
+        srv.listen(this.port, this.host, () => {
+            log.info(`Server started listening on ${ this.host }:${ this.port }`)
+        });
+    }
+
+    // remove existing session
+    session = { 
+        remove: (uid) => { delete this.sessions[uid]; }
     }
 }
 
