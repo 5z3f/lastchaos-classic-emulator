@@ -1,6 +1,7 @@
-const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
-const object = require('../object');
+const Monster = require('../object/monster');
+const game = require('../game');
+const { Statistic } = require('../types');
 
 module.exports = {
     name: 'MSG_CHAT',
@@ -19,15 +20,11 @@ module.exports = {
             var params = data.text.split(' ');
             var speed = parseFloat(params[1]);
 
-            var character = object.get({ uid: data.senderId });
-            var runSpeedBefore = character.stats.runSpeed;
+            var character = game.find('character', data.senderId);
+            var runSpeedBefore = character.statistics.runSpeed.total;
 
-            character.update({
-                session: session, 
-                type: 'stats',
-                data: {
-                    'runSpeed': speed
-                }
+            character.update('stats', {
+                'runSpeed': new Statistic(speed)
             });
 
             session.send.chat({
@@ -43,31 +40,25 @@ module.exports = {
             var params = data.text.split(' ');
             var npcId = parseInt(params[1]);
 
-            var character = object.get({ uid: data.senderId });
+            var character = game.find('character', data.senderId);
 
-            var npc = new object({
-                type: 1,
+            let monster = new Monster({
                 id: npcId,
-                position: {
-                    'zoneId': character.position.zoneId,
-                    'areaId': character.position.areaId,
-                    'x': character.position.x,
-                    'z': character.position.z,
-                    'h': character.position.h,
-                    'r': character.position.r,
-                    'y': character.position.y
-                }
+                zoneId: character.zoneId,
+                areaId: character.areaId,
+                position: character.position,
             });
     
-            npc.appear(session);
+            game.add('monster', monster);
+            monster.appear(session);
 
             character.event.on('move', (pos) =>
             {
                 session.send.move({
                     objType: 1,
                     moveType: 1,
-                    uid: npc.uid,
-                    runSpeed: 5,
+                    uid: monster.uid,
+                    speed: 5,
                     position: {
                         'x': character.position.x-2,
                         'z': character.position.z-2,
@@ -83,7 +74,7 @@ module.exports = {
                 senderId: data.senderId,
                 senderName: data.senderName,
                 receiverName: data.receiverName,
-                text: `spawn [uid: ${ npc.uid }, npcId: ${ npcId }]`
+                text: `spawn [uid: ${ monster.uid }, npcId: ${ npcId }]`
             });
         }
         else

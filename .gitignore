@@ -132,3 +132,4 @@ dist
 
 package-lock.json
 PATCHES.md
+test.js

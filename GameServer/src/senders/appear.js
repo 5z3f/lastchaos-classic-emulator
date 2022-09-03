@@ -77,11 +77,11 @@ module.exports = {
                 msg.write('u8', 1);                                         // Appear Type
                 msg.write('i32>', data.uid);                                // Unique ID
                 msg.write('i32>', parseInt(data.id));                       // NPC ID
-                msg.write('f<', parseFloat(data.position.x).toFixed(1));    // X
-                msg.write('f<', parseFloat(data.position.z).toFixed(1));    // Z
-                msg.write('f<', parseFloat(data.position.h).toFixed(1));    // H
-                msg.write('f<', parseFloat(data.position.r).toFixed(1));    // R
-                msg.write('u8', 0);                                         // Y LAYER
+                msg.write('f<', data.position.x);                           // X
+                msg.write('f<', data.position.z);                           // Z
+                msg.write('f<', data.position.h);                           // H
+                msg.write('f<', data.position.r);                           // R
+                msg.write('u8', data.position.y);                           // Y LAYER
                 msg.write('i32>', 10000);                                   // Health
                 msg.write('i32>', 10000);                                   // Max Health
                 msg.write('i32>', 0);                                       // Assist State
@@ -92,8 +92,9 @@ module.exports = {
             };
 
             const subTypeHandler = {
-                'CHARACTER': () => appearCharacter(data),
-                'NPC': () => appearNpc(data)
+                'character': () => appearCharacter(data),
+                'npc': () => appearNpc(data),
+                'monster': () => appearNpc(data)
             };
 
             if(subType in subTypeHandler)

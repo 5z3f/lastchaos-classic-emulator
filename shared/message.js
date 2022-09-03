@@ -1,6 +1,8 @@
 
 const SmartBuffer = require('smart-buffer').SmartBuffer;
 const lccrypt = require('@local/shared/lccrypt');
+const game = require('../GameServer/src/game'); // TODO: move this
+const server = require('./server');
 
 const message = class
 {
@@ -27,12 +29,12 @@ const message = class
             'packetSize': this.read('u32>'),
         } : null;
 
-        if(buffer && this.encrypted) {
+        if(buffer && this.encrypted && game.encryption) {
             var decrypted = message.decrypt(buffer.slice(12));          // TODO: implement error handler
             this._sb = SmartBuffer.fromBuffer(decrypted);
         }
 
-        if(type)     this.write('u8', type);
+        if(type)     this.write('u8', game.packDefault ? type | 0x80 : type);
         if(subType)  this.write('u8', subType);
     }
 
@@ -78,14 +80,14 @@ const message = class
             writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));                       // reliable
             writer.writeUInt32BE(0);                                                    // sequence
             writer.writeUInt16BE(0);                                                    // packet id
-            writer.writeUInt32BE(encrypt !== false ? (messageSize + 5) : messageSize);  // message size + lccrypt sum  || FIXME: write it smarter
+            writer.writeUInt32BE(encrypt !== false && game.encryption ? (messageSize + 5) : messageSize);  // message size + lccrypt sum  || FIXME: write it smarter
 
             return writer;
         };
 
         return header === false
             ? this._sb.toBuffer()
-            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false ? message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer() ]);
+            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false && game.encryption ? message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer() ]);
     }
 
     /**

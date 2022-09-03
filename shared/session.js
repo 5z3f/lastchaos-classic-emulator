@@ -1,6 +1,7 @@
 const message = require('@local/shared/message');
 const log = require("@local/shared/logger");
 const farmhash = require('farmhash');
+const game = require('../GameServer/src/game');
 
 const session = class
 {
@@ -23,7 +24,7 @@ const session = class
             this.socket.on('data', (data) =>
             {
                 var msg = new message({ buffer: data });
-                var id = msg.read('u8');
+                var id = game.packDefault ? msg.read('u8') & 0x3f : msg.read('u8');
                 
                 // TODO: restrict access to all packets except '0x03' if client is not logged in
                 if(id in that.handlers)
@@ -52,7 +53,7 @@ const session = class
 
     close = () => {
         this.socket.destroy();
-        this.server.removeSession(this.uid);
+        this.server.session.remove(this.uid);
     }
 
     toString = () => `uid: ${ this.uid }, address: ${ this.socket.remoteAddress }:${ this.socket.remotePort }`;

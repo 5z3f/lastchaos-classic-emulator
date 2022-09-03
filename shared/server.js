@@ -4,18 +4,19 @@ const session = require('@local/shared/session');
 
 const server = class
 {
-    constructor({ host, port, handlers, senders })
+    //static World = null;
+    constructor({ host, port, handlers, senders, world, encryption })
     {
         var that = this;
 
-        this.host = host ?? '127.0.0.1';
-        this.port = port ??  43594;
+        this.host = host || '127.0.0.1';
+        this.port = port ||  43594;
 
         // hold current sessions
         this.sessions = [];
 
         // hold game data
-        // this.gamedata = new GameData();
+        // this.World = world || null;
 
         const srv = net.createServer();
     
@@ -28,7 +29,7 @@ const server = class
                 senders: senders
             });
 
-            that.sessions[sess.uid] = sess;
+            this.sessions[sess.uid] = sess;
         });
     
         srv.listen(this.port, this.host, () => {
@@ -38,7 +39,7 @@ const server = class
 
     // remove existing session
     session = { 
-        remove: (uid) => { delete this.sessions[uid]; }
+        remove: (uid) => { delete server.sessions[uid]; }
     }
 }
 

@@ -26,11 +26,11 @@ module.exports = {
                 msg.write('i32>', 1000);            // Current Mana Points
                 msg.write('i32>', 1000);            // Max Mana Points
     
-                var wear = [ 75, 34, 48, 38, 49, 39, 41 ];
-                var plus = [ 15, 15, 15, 15, 15, 15, 15 ];
+                var wear = [ 75, 34, 1889,   38, -1, 39, 41 ];
+                var plus = [ 15, 15, 15,     15, 0, 15, 15 ];
     
                 // WEAR_COUNT = 7
-                for(var i = 1; i < 7 ; ++i) {
+                for(var i = 0; i < 7 ; ++i) {
                     msg.write('i32>', wear[i]);
                     msg.write('i32>', plus[i]);
                 }

@@ -6,7 +6,6 @@ module.exports = {
     {
         return (data) =>
         {
-            // MSG_AT
             var msg = new message({ type: msgId });
             
             msg.write('i32>', data.uid);                        // Unique ID
@@ -15,8 +14,8 @@ module.exports = {
             msg.write('u8', data.jobType);                      // Job
             msg.write('u8', data.hairType);                     // Hair
             msg.write('u8', data.faceType);                     // Face
-            msg.write('i32>', data.position.zoneId);            // Zone ID
-            msg.write('i32>', data.position.areaId);            // Area ID
+            msg.write('i32>', data.zoneId);                     // Zone ID
+            msg.write('i32>', data.areaId);                     // Area ID
             msg.write('f<', data.position.x);                   // X
             msg.write('f<', data.position.z);                   // Z
             msg.write('f<', data.position.h);                   // H

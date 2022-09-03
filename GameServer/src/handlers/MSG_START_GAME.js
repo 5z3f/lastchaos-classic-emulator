@@ -1,57 +1,50 @@
 const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
-const object = require('../object');
+const Character = require('../object/character');
+const Monster = require('../object/monster');
+const { Statistic, Position } = require('../types');
+
+const game = require('../game');
 
 module.exports = {
     name: 'MSG_START_GAME',
     handle: function (session, msg)
-    {
-        // spawn character
-        var obj = new object({
-            uid: session.uid,
-            type: 0,
-            position: {
-                'zoneId': 0,
-                'areaId': 0,
-                'x': 1111,
-                'z': 951,
-                'h': 160,
-                'r': 0,
-                'y': 0
+    {        
+        var character = new Character({
+            session: session,
+            progress: {
+                level: 1,
+                experience: 500000,
+                maxExperience: 23223182, // probably will be removed later (?)
+                skillpoint: 10000
             },
-            character: {
-                'name': 'test',
-                'classType': 1,
-                'jobType': 1,
-                'hairType': 2,
-                'faceType': 2,
-            }
+            stats: {
+                runSpeed: new Statistic(20.0),
+                health: new Statistic(10000)
+            },
+            nickname: "test",
+            position: new Position(1111, 951, 160.3)
         });
-        
-        obj.appear(session);
+
+        character.spawn();
+
+        session.send.inventory();
 
         // send current time
         session.send.env('MSG_ENV_TIME');
 
-        var idtest2 = 0;
+        /*var idtest2 = 0;
         for(var i = 0; i < 8; i++)
         {
-            // create test object
-            let npc = new object({
-                type: 1,
+            let monster = new Monster({
                 id: 40,
-                position: {
-                    'zoneId': 0,
-                    'areaId': 0,
-                    'x': 1116 - (i + 1),
-                    'z': 965,
-                    'h': 160,
-                    'r': 0,
-                    'y': 0
-                }
+                zoneId: 0,
+                areaId: 0,
+                position: new Position(1111 - (i + 1), 965, 160.3),
             });
 
-            npc.appear(session);
+            game.add({ type: 'monster', zoneId: 0, data: monster });
+            monster.appear(session);
             
             let idtest1 = idtest2++;
 
@@ -70,14 +63,14 @@ module.exports = {
                 session.send.move({
                     objType: 1,
                     moveType: 1,
-                    uid: npc.uid,
+                    uid: monster.uid,
                     runSpeed: 6,
                     position: {
                         'x': waypoints[idtest1 % waypoints.length].x,
                         'z': waypoints[idtest1 % waypoints.length].z,
-                        'h': npc.position.h,
-                        'r': npc.position.r,
-                        'y': npc.position.y
+                        'h': monster.position.h,
+                        'r': monster.position.r,
+                        'y': monster.position.y
                     }
                 });
 
@@ -86,9 +79,15 @@ module.exports = {
                 if(idtest1 >= waypoints.length)
                     idtest1 = 0;
 
-            }, 1000)
+            }, 1000);
+        }*/
 
+        var tospawn = game.filter('monster', m => m.zoneId == 0);
+        for(let npc of tospawn)
+        {
+            for(let res of npc.result)
+                res.appear(session);
         }
-        
+    
     }
 }

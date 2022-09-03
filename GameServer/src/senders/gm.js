@@ -44,7 +44,7 @@ module.exports = {
             {
                 //var msg = new message({ type: msgId, subType: 0 });
                 //msg.write('i8', level) // level
-                
+                //
                 //session.write(msg.build({ }));
             }
 

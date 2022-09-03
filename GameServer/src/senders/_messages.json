@@ -3,12 +3,14 @@
     "MSG_STATUS": 6,
     "MSG_APPEAR": 7,
     "MSG_AT": 9,
+    "MSG_INVENTORY": 10,
     "MSG_MOVE": 12,
     "MSG_ATTACK": 13,
     "MSG_DAMAGE": 14,
     "MSG_CHAT": 15,
     "MSG_ENV": 22,
     "MSG_GM": 23,
+    "MSG_QUEST": 35,
     "MSG_PULSE": 38,
     "MSG_RIGHT_ATTACK": 45
 }
