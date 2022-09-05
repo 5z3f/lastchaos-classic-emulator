@@ -4,53 +4,65 @@ module.exports = {
     messageName: 'MSG_INVENTORY',
     send: function (session, msgId)
     {
-        return () =>
+        return (inventory) =>
         {
-            const item = (msg, uid, id, wearpos, plus, flag, durability, count) =>
+            const itemMsg = (msg, uid, item, flag, wearing, count, plus, options) =>
             {
-                if(id == -1) {
+                if(item == undefined) {
                     msg.write('i32>', -1);      // unique index
                     return;
                 }
 
-                msg.write('i32>', uid);         // unique index
-                msg.write('i32>', id);          // db index
-                msg.write('u8', wearpos);       // wear position
-                msg.write('i32>', plus);        // plus
-                msg.write('i32>', flag);        // flag
-                msg.write('i32>', durability);  // durability
-                msg.write('i64>', count);       // count
+                msg.write('i32>', uid);                                     // unique index
+                msg.write('i32>', item.id);                                 // item index
+                msg.write('u8', wearing ? item.wearingPosition : 255);      // wear position
+                msg.write('i32>', plus);                                    // plus
+                msg.write('i32>', flag);                                    // flag
+                msg.write('i32>', item.durability);                         // durability
+                msg.write('i64>', count);                                   // count
 
-                msg.write('u8', 0);             // option count
+                msg.write('u8', options.length);                            // option count
 
-                //for(var j = 0; j < optionCount; j++)
-                //{
-                //    msg.write('u8', 0);             // optionType
-                //    msg.write('u8', 0);             // optionLevel
-                //}
+                for(var i = 0; i < options.length; i++) {
+                    msg.write('u8', options[i].type);                       // option type
+                    msg.write('u8', options[i].level);                      // option level
+                }
             };
 
-            const row = () =>
+            const inven = (inv) =>
             {
-                var wear =      [ 75, 34, 1901, 38, -1, 39, 41 ];
-                var plus =      [ 15, 15, 15,   15, 15, 15, 15 ];
-                var wearpos =   [ 0,  1,  2,    3,  4,  5,  6  ];
+                var items = inv.get();
 
-                var msg = new message({ type: msgId });
+                // tabs
+                for(var i = 0; i < items.length; i++)
+                {
+                    // columns
+                    for(var j = 0; j < items[i].length; j++)
+                    {
+                        var msg = new message({ type: msgId });
 
-                msg.write('u8', 1);       // resultArrange
-                msg.write('u8', 0);       // tabId
-                msg.write('u8', 0);       // rowId
+                        msg.write('u8', 0);       // resultArrange
+                        msg.write('u8', i);       // tabId
+                        msg.write('u8', j);       // colId
 
-                // ITEMS_PER_ROW = 5
-                for(var i = 0; i < 5; i++)
-                    item(msg, i + 1, wear[i], wearpos[i], 15, 62, -1, 0);
+                        for(var k = 0; k < items[i][j].length; k++)
+                        {
+                            let row = items[i][j][k];
 
+                            if(row == undefined) {
+                                itemMsg(msg, undefined);
+                                continue;
+                            }
+                            
+                            itemMsg(msg, row.uid, row.item, row.flag, row.wearing, row.count, row.plus, row.options);
+                        }
 
-                session.write(msg.build({ }));
+                        session.write(msg.build());
+                    }
+                }
             }
 
-            row();
+            inven(inventory);
         }
     }
 }

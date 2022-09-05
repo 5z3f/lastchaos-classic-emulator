@@ -16,7 +16,7 @@ module.exports = {
             msg.write('u8', multicount ?? 0); // private dungeon
             //msg.write('i32>', targetIndex); // private dungeon
         
-            session.write(msg.build({ }));
+            session.write(msg.build());
         }
     }
 }

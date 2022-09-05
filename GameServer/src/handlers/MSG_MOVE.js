@@ -1,7 +1,7 @@
 const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
-const object = require('../object');
 const game = require('../game');
+
 const { Position } = require('../types');
 
 module.exports = {
@@ -27,7 +27,7 @@ module.exports = {
             3: 'MSG_MOVE_STOP',
         };
 
-        var character = game.find('character', data.uid);
+        var character = game.find('character', (ch) => ch.uid == data.uid);
 
         var newPosition = new Position(
             parseFloat(data.x.toFixed(1)),

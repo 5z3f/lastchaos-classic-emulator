@@ -1,8 +1,8 @@
 
 const SmartBuffer = require('smart-buffer').SmartBuffer;
+
 const lccrypt = require('@local/shared/lccrypt');
 const game = require('../GameServer/src/game'); // TODO: move this
-const server = require('./server');
 
 const message = class
 {
@@ -71,7 +71,7 @@ const message = class
      * @param {Boolean} [encrypt=true] encrypt packet?
      * @return {Buffer}
      */
-    build = ({ header, encrypt }) => {
+    build = (header, encrypt) => {
 
         const makeHeader = (messageSize) =>
         {

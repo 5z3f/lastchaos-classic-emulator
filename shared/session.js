@@ -1,7 +1,8 @@
+const farmhash = require('farmhash');
+
 const message = require('@local/shared/message');
 const log = require("@local/shared/logger");
-const farmhash = require('farmhash');
-const game = require('../GameServer/src/game');
+const game = require('../GameServer/src/game'); // TODO: move this
 
 const session = class
 {

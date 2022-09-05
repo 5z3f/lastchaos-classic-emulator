@@ -1,8 +1,10 @@
 const EventEmitter = require('events');
 
-const { Position, Statistic } = require('../types');
-const game = require('../game');
 const log = require("@local/shared/logger");
+const game = require('../game');
+
+const { Inventory } = require('../system/inventory');
+const { Position, Statistic } = require('../types');
 
 const Character = class
 {
@@ -14,6 +16,8 @@ const Character = class
         this.id = 0;  // character database id
 
         this.nickname = "";
+
+        this.inventory = new Inventory();
 
         this.progress = {
             level: 1,

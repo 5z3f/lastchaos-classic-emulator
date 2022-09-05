@@ -1,9 +1,11 @@
-const server = require("@local/shared/server");
-const game = require("./game");
-const Monster = require('./object/monster');
-const Zone = require('./zone');
-const { Position } = require('./types');
 const log = require('@local/shared/logger');
+const server = require("@local/shared/server");
+
+const game = require("./game");
+const Zone = require('./zone');
+
+const Monster = require('./object/monster');
+const { Position } = require('./types');
 
 game.initialize();
 
@@ -32,12 +34,12 @@ const initJuno = () =>
             })
 
             juno.add('monster', monster);
-            log.info(`adding '${ n.name }' spawn`)
+            //log.info(`adding '${ n.name }' spawn`)
         }
     }
 
     game.add({ type: 'zone', data: juno });
-    console.log(juno)
+    //console.log(juno)
 }
 
 initJuno();

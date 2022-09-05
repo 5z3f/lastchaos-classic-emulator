@@ -1,6 +1,6 @@
 # lastchaos-classic-emulator
 
-![Nksp_9ulkIyPx49](https://user-images.githubusercontent.com/39301116/188268831-1a2ff0a4-9459-4311-943d-39a8fdf98206.png)
+![Nksp_afU26nv1Yk](https://user-images.githubusercontent.com/39301116/188494163-949f54da-c681-4d57-ba36-f7f3f3bf84b0.png)
 
 https://user-images.githubusercontent.com/39301116/187806343-64885c75-1463-4ced-ba07-f3c042920a7b.mp4
 

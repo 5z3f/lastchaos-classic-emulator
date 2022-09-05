@@ -12,7 +12,7 @@ module.exports = {
             msg.write('u8', targetObjType);
             msg.write('i32>', targetIndex);
         
-            session.write(msg.build({ }));           
+            session.write(msg.build());           
         }
     }
 }

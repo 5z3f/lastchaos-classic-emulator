@@ -6,22 +6,32 @@ module.exports = {
     {
         return (subType, data) =>
         {
+            const taxChange = () => {
+                var msg = new message({ type: msgId, subType: 0 });
+
+                msg.write('i32>', 0);
+                msg.write('i32>', 70);
+                msg.write('i32>', 20);
+    
+                session.write(msg.build());
+            }
+
             const gameTime = (date) =>
             {
                 var msg = new message({ type: msgId, subType: 2 });
-    
-                msg.write('i32>', date.getFullYear());
-                msg.write('u8', date.getMonth() + 1);
-                msg.write('u8', date.getDate());
+
+                msg.write('i32>', date.getFullYear() - 2001);
+                msg.write('u8', date.getMonth());
+                msg.write('u8', date.getDate() - 1);
                 msg.write('u8', date.getHours());
                 msg.write('u8', date.getMinutes());
                 msg.write('u8', date.getSeconds());
     
-                session.write(msg.build({ }));
+                session.write(msg.build());
             }
 
             const subTypeHandler = {
-                //'MSG_ENV_TAX_CHANGE': () =>
+                'MSG_ENV_TAX_CHANGE': () => taxChange(),
                 //'MSG_ENV_WEATHER': () =>
                 'MSG_ENV_TIME': () => gameTime(new Date())
             };

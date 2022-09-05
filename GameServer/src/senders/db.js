@@ -37,18 +37,18 @@ module.exports = {
     
                 msg.write('i32>', -1);              // Remain Character Delete Time
     
-                session.write(msg.build({ }));
+                session.write(msg.build());
             }
     
             const characterExistEnd = () => {
                 // MSG_DB -> MSG_DB_CHAR_END
                 var msg = new message({ type: msgId, subType: 3 });
-                session.write(msg.build({ }));
+                session.write(msg.build());
             }
 
             const startGame = () => {
                 var msg = new message({ type: msgId, subType: 1 });
-                session.write(msg.build({ }));
+                session.write(msg.build());
             }
 
             const subTypeHandler = {

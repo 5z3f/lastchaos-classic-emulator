@@ -18,7 +18,7 @@ module.exports = {
             msg.write('u8', position.y);
             msg.write('u8', 0);             // TODO: attributepos
 
-            session.write(msg.build({ }));
+            session.write(msg.build());
         }
     }
 }

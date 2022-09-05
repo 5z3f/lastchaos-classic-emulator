@@ -1,6 +1,7 @@
 const log = require('@local/shared/logger');
-const Monster = require('../object/monster');
 const game = require('../game');
+
+const Monster = require('../object/monster');
 const { Statistic } = require('../types');
 
 module.exports = {
@@ -20,7 +21,7 @@ module.exports = {
             var params = data.text.split(' ');
             var speed = parseFloat(params[1]);
 
-            var character = game.find('character', data.senderId);
+            var character = game.find('character', (ch) => ch.uid == data.senderId);
             var runSpeedBefore = character.statistics.runSpeed.total;
 
             character.update('stats', {

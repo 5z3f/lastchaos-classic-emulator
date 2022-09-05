@@ -34,12 +34,12 @@ const World = class
         return results;
     }
 
-    find(type, uid)
+    find(type, opts)
     {
         var result = null;
 
         for(let zone of this.zones) {
-            result = zone.find(type, uid);
+            result = zone.find(type, opts);
             if(result != null)
                 break;
         }

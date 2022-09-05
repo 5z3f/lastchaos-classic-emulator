@@ -24,7 +24,7 @@ module.exports = {
             msg.write('i32>', 1);                               // m_desc->m_index   // TODO:
             msg.write('i32>', 0);                               // m_guildoutdate    // TODO:
     
-            session.write(msg.build({ }));            
+            session.write(msg.build());            
         }
     }
 }

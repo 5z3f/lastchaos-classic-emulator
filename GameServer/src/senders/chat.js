@@ -15,7 +15,7 @@ module.exports = {
             msg.write('stringnt', receiverName);    // receiverName
             msg.write('stringnt', text);            // text
     
-            session.write(msg.build({ }));           
+            session.write(msg.build());           
         }
     }
 }

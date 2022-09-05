@@ -11,7 +11,7 @@ module.exports = {
             msg.write('i32>', 0);       // pulse id
             msg.write('u8', 9);         // nation
 
-            session.write(msg.build({ }));
+            session.write(msg.build());
         }
     }
 }

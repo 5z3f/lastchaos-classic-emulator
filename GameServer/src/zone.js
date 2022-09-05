@@ -1,7 +1,3 @@
-
-var NPC = require('./object/npc');
-var { Position } = require('./types');
-
 const Zone = class
 {
     npcs = [];
@@ -34,23 +30,23 @@ const Zone = class
         }
     }
 
-    find(type, uid)
+    find(type, opts)
     {
         var result = null;
 
         switch(type)
         {
             case 'character':
-                result = this.characters.find(ch => ch.uid == uid)
+                result = this.characters.find(opts);
                 break;
             case 'npc':
-                result = this.npcs.find(ch => ch.uid == uid)
+                result = this.npcs.find(opts);
                 break;
             case 'monster':
-                result = this.monsters.filter(opts);
+                result = this.monsters.find(opts);
                 break;
             case 'item':
-                result = this.items.find(ch => ch.uid == uid)
+                result = this.items.find(opts);
                 break;
         }
 

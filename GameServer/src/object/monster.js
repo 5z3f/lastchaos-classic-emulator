@@ -73,7 +73,7 @@ const Monster = class
 
     appear = (session) =>
     {
-        log.data(`[INFO] Spawning Monster (uid: ${ this.uid }, id: ${ this.id }, zone: ${ this.zoneId })`);
+        //log.data(`[INFO] Spawning Monster (uid: ${ this.uid }, id: ${ this.id }, zone: ${ this.zoneId })`);
             
         session.send.appear('monster', { 
             uid: this.uid, 

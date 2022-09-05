@@ -1,6 +1,5 @@
 const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
-const object = require('../object');
 
 module.exports = {
     name: 'MSG_GM',

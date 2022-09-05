@@ -57,7 +57,7 @@ module.exports = {
             msg.write('u8', 0);                             // UNK2
             msg.write('i32>', 0);                           // UNK3
 
-            session.write(msg.build({ }));
+            session.write(msg.build());
         }
     }
 }

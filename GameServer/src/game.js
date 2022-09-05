@@ -1,5 +1,5 @@
+const Database = require("./database");
 const World = require("./world");
-const Zone = require("./zone");
 
 const game = class
 {
@@ -10,14 +10,15 @@ const game = class
 
     static initialize = () => {
         game.world = new World();
+        game.database = new Database();
     }
 
     static add({ type, zoneId, data }) {
         game.world.add({ type: type, data: data, zoneId: zoneId })
     }
 
-    static find(type, uid) {
-        return game.world.find(type, uid)
+    static find(type, opts) {
+        return game.world.find(type, opts)
     }
 
     static filter(type, opts) {

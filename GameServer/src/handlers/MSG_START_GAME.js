@@ -1,10 +1,11 @@
 const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
-const Character = require('../object/character');
-const Monster = require('../object/monster');
-const { Statistic, Position } = require('../types');
-
 const game = require('../game');
+const util = require('../util');
+
+const Character = require('../object/character');
+const { Statistic, Position } = require('../types');
+const { InventoryItem } = require('../system/inventory');
 
 module.exports = {
     name: 'MSG_START_GAME',
@@ -28,10 +29,28 @@ module.exports = {
 
         character.spawn();
 
-        session.send.inventory();
+        // character inventory
+        {
+            var equipment = [
+                game.database.find('item', (el) => el.name == 'Warnin Heavy Shirt'),
+                game.database.find('item', (el) => el.name == 'Warnin Pants'),
+                game.database.find('item', (el) => el.name == 'Warnin Gauntlets'),
+                game.database.find('item', (el) => el.name == 'Warnin Boots'),
+                game.database.find('item', (el) => el.name == 'Warnin Helm'),
+                game.database.find('item', (el) => el.name == 'Siegfried Double Sword'),
+            ];
+
+            for(var i in equipment) {
+                let item = new InventoryItem({ uid: util.generateId(), item: equipment[i], plus: 15, wearing: true, count: 1, options: [ { type: 0, level: 1 },  ] });
+                character.inventory.add(0, item);
+            }
+
+            session.send.inventory(character.inventory);
+        }
 
         // send current time
         session.send.env('MSG_ENV_TIME');
+        session.send.env('MSG_ENV_TAX_CHANGE');
 
         /*var idtest2 = 0;
         for(var i = 0; i < 8; i++)
@@ -82,7 +101,7 @@ module.exports = {
             }, 1000);
         }*/
 
-        var tospawn = game.filter('monster', m => m.zoneId == 0);
+        var tospawn = game.filter('monster', (m) => m.zoneId == 0);
         for(let npc of tospawn)
         {
             for(let res of npc.result)

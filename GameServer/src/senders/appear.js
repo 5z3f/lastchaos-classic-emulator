@@ -65,7 +65,7 @@ module.exports = {
                 msg.write('i32>', -1);                     // 
                 msg.write('i32>', -1);                     // 
     
-                session.write(msg.build({ }));
+                session.write(msg.build());
             }
 
             // data = { uid, id, isNew, position }
@@ -88,7 +88,7 @@ module.exports = {
                 msg.write('u8', 0);                                         // Assist Count
                 msg.write('u8', 0);                                         // Attribute Position
 
-                session.write(msg.build({ }));
+                session.write(msg.build());
             };
 
             const subTypeHandler = {
