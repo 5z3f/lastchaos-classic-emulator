@@ -64,7 +64,7 @@ module.exports = {
         //    speed: character.statistics.runSpeed,
         //    position: newPosition
         //});
-//
+        
         // update character position
         character.update('position', newPosition);
     }

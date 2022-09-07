@@ -45,7 +45,7 @@ const NPC = class //extends Object
                 Object.assign(this.position, data);
 
             session.send.move({
-                objType: this.type,
+                objType: 1,
                 uid: this.uid,
                 moveType: 1, // TODO
                 runSpeed: this.stats.runSpeed,

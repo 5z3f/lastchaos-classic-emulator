@@ -8,6 +8,8 @@
     "MSG_ATTACK": 13,
     "MSG_DAMAGE": 14,
     "MSG_CHAT": 15,
+    "MSG_ITEM": 16,
+    "MSG_SYS": 17,
     "MSG_ENV": 22,
     "MSG_GM": 23,
     "MSG_QUEST": 35,

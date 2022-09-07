@@ -18,7 +18,7 @@ const Database = class
 
             for(var i in items)
             {
-                if(items[i].name.length < 1 || items[i].description.length < 1)
+                if(items[i].name.length < 1 /*|| items[i].description.length < 1*/)
                     continue;
 
                 this.items.push(new Item(items[i]));

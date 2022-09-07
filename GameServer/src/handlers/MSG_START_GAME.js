@@ -32,6 +32,13 @@ module.exports = {
         // character inventory
         {
             var equipment = [
+                // game.database.find('item', (el) => el.name == 'pormudus jacket'),
+                // game.database.find('item', (el) => el.name == 'pormudus Pants'),
+                // game.database.find('item', (el) => el.name == 'Aventics Gauntlets'),
+                // game.database.find('item', (el) => el.name == 'Aventics Boots'),
+                // game.database.find('item', (el) => el.name == 'Poseidon helm'),
+                // game.database.find('item', (el) => el.name == 'eglain dual sword'),
+
                 game.database.find('item', (el) => el.name == 'Warnin Heavy Shirt'),
                 game.database.find('item', (el) => el.name == 'Warnin Pants'),
                 game.database.find('item', (el) => el.name == 'Warnin Gauntlets'),
@@ -45,6 +52,15 @@ module.exports = {
                 character.inventory.add(0, item);
             }
 
+            // additional item
+            var shirt = game.database.find('item', (el) => el.name == 'Drun Mail Shirt');
+            character.inventory.add(0, new InventoryItem({ uid: util.generateId(), item: shirt, plus: 15, wearing: false, count: 1, options: [ { type: 0, level: 1 },  ] }));
+
+            // additional item
+            var shirt = game.database.find('item', (el) => el.name == 'Poseidon helm');
+            character.inventory.add(0, new InventoryItem({ uid: util.generateId(), item: shirt, plus: 15, wearing: false, count: 1, options: [ { type: 0, level: 1 },  ] }));
+
+
             session.send.inventory(character.inventory);
         }
 
@@ -52,61 +68,12 @@ module.exports = {
         session.send.env('MSG_ENV_TIME');
         session.send.env('MSG_ENV_TAX_CHANGE');
 
-        /*var idtest2 = 0;
-        for(var i = 0; i < 8; i++)
-        {
-            let monster = new Monster({
-                id: 40,
-                zoneId: 0,
-                areaId: 0,
-                position: new Position(1111 - (i + 1), 965, 160.3),
-            });
-
-            game.add({ type: 'monster', zoneId: 0, data: monster });
-            monster.appear(session);
-            
-            let idtest1 = idtest2++;
-
-            var waypoints = [
-                { x: 1121, z: 948 },
-                { x: 1121, z: 955 },
-                { x: 1116, z: 961 },
-                { x: 1108, z: 961 },
-                { x: 1102, z: 955 },
-                { x: 1102, z: 948 },
-                { x: 1107, z: 942 },
-                { x: 1115, z: 942 }
-            ];
-
-            var intervalId = setInterval(function() {
-                session.send.move({
-                    objType: 1,
-                    moveType: 1,
-                    uid: monster.uid,
-                    runSpeed: 6,
-                    position: {
-                        'x': waypoints[idtest1 % waypoints.length].x,
-                        'z': waypoints[idtest1 % waypoints.length].z,
-                        'h': monster.position.h,
-                        'r': monster.position.r,
-                        'y': monster.position.y
-                    }
-                });
-
-                idtest1 += 1;
-
-                if(idtest1 >= waypoints.length)
-                    idtest1 = 0;
-
-            }, 1000);
-        }*/
-
         var tospawn = game.filter('monster', (m) => m.zoneId == 0);
         for(let npc of tospawn)
         {
             for(let res of npc.result)
                 res.appear(session);
         }
-    
+
     }
 }

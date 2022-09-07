@@ -2,5 +2,7 @@
 
 ### commands:
 - .whoami
-- .speedup
-- .spawn
+- .speedup \<float value>
+- .spawn \<npcId>
+- .itemdrop \<itemId> \<itemCount> \<itemPlus>
+- .itemget \<itemId> \<itemCount> \<itemPlus>
