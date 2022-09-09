@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_CHAT',
@@ -6,7 +6,7 @@ module.exports = {
     {
         return ({ chatType, senderId, senderName, receiverName, text }) =>
         {
-            var msg = new message({ type: msgId });
+            var msg = new Message({ type: msgId });
             
             msg.write('u8', chatType);
     

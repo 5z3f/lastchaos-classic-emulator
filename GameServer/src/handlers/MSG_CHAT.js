@@ -2,8 +2,8 @@ const log = require('@local/shared/logger');
 const game = require('../game');
 
 const Monster = require('../object/monster');
-const { InventoryItem } = require('../system/inventory');
-const { Statistic } = require('../types');
+const { InventoryRow } = require('../system/inventory');
+const { Statistic, Position } = require('../types');
 const util = require('../util');
 
 module.exports = {
@@ -23,7 +23,7 @@ module.exports = {
             var params = data.text.split(' ');
             var speed = parseFloat(params[1]);
 
-            var character = game.find('character', (ch) => ch.uid == data.senderId);
+            var character = game.world.find('character', (ch) => ch.uid == data.senderId);
             var runSpeedBefore = character.statistics.runSpeed.total;
 
             character.update('stats', {
@@ -43,7 +43,7 @@ module.exports = {
             var params = data.text.split(' ');
             var npcId = parseInt(params[1]);
 
-            var character = game.find('character', (ch) => ch.uid == data.senderId);
+            var character = game.world.find('character', (ch) => ch.uid == data.senderId);
 
             let monster = new Monster({
                 id: npcId,
@@ -52,7 +52,7 @@ module.exports = {
                 position: character.position,
             });
     
-            game.add('monster', monster);
+            game.world.add('monster', monster);
             monster.appear(session);
 
             character.event.on('move', (pos) =>
@@ -88,24 +88,31 @@ module.exports = {
             var itemCount = parseInt(params[2]);
             var itemPlus = parseInt(params[3]);
 
-            var character = game.find('character', (ch) => ch.uid == data.senderId);
-            var foundItem = game.database.find('item', (el) => el.id == itemId);
+            var character = game.world.find('character', (ch) => ch.uid == data.senderId);
+            var dbItem = game.database.find('item', (el) => el.id == itemId);
 
-            if(foundItem == null)
+            if(dbItem == null)
                 return; // raise error message
             
             // add item to inventory
-            var invenRow = character.inventory.add(0, new InventoryItem({ uid: util.generateId(), item: foundItem, plus: itemPlus || 0, wearing: false, count: itemCount }));
+            var invenRow = new InventoryRow({
+                itemId: dbItem.id,
+                plus: itemPlus || 0,
+                count: itemCount
+            });
             
+            var success = character.inventory.add(0, invenRow);
+            
+            if(!success)
+                return;
+                
             session.send.chat({
                 chatType: 6,
                 senderId: data.senderId,
                 senderName: data.senderName,
                 receiverName: data.receiverName,
-                text: `itemget [uid: ${ invenRow.inventoryItem.uid }, itemId: ${ invenRow.inventoryItem.item.id }, name: ${ invenRow.inventoryItem.item.name }]`
-            });
-            
-            session.send.item('MSG_ITEM_ADD', invenRow);
+                text: `itemget [uid: ${ invenRow.itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
+            });            
         }
         if(data.text.includes('.itemdrop'))
         {
@@ -115,29 +122,38 @@ module.exports = {
             var itemCount = parseInt(params[2]);
             var itemPlus = parseInt(params[3]);
 
-            var character = game.find('character', (ch) => ch.uid == data.senderId);
-            var foundItem = game.database.find('item', (el) => el.id == itemId);
+            var character = game.world.find('character', (ch) => ch.uid == data.senderId);
+            var dbItem = game.database.find('item', (el) => el.id == itemId);
 
-            if(foundItem == null)
+            if(dbItem == null)
                 return; // raise error message
                         
             var itemUid = util.generateId();
+
+            // add item to on-ground item list
+            game.world.add({ type: 'item', zoneId: character.zoneId, data: {
+                uid: itemUid,
+                id: itemId,
+                count: itemCount || 1,
+                charUid: character.uid,
+                position: new Position(character.position)
+            }});
+            
+            session.send.item('MSG_ITEM_DROP', {
+                uid: itemUid,
+                id: itemId,
+                count: itemCount || 1,
+                position: character.position,
+                objType: 1,
+                objUid: character.uid
+            });
 
             session.send.chat({
                 chatType: 6,
                 senderId: data.senderId,
                 senderName: data.senderName,
                 receiverName: data.receiverName,
-                text: `itemdrop [uid: ${ itemUid }, itemId: ${ itemId }, name: ${ foundItem.name }]`
-            });
-            
-            session.send.item('MSG_ITEM_DROP', {
-                uid: itemUid,
-                id: itemId,
-                count: itemCount,
-                position: character.position,
-                objType: 1,
-                objUid: character.uid
+                text: `itemdrop [uid: ${ itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
             });
         }
         else

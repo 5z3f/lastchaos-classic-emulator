@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_ENV',
@@ -7,7 +7,7 @@ module.exports = {
         return (subType, data) =>
         {
             const taxChange = () => {
-                var msg = new message({ type: msgId, subType: 0 });
+                var msg = new Message({ type: msgId, subType: 0 });
 
                 msg.write('i32>', 0);
                 msg.write('i32>', 70);
@@ -18,7 +18,7 @@ module.exports = {
 
             const gameTime = (date) =>
             {
-                var msg = new message({ type: msgId, subType: 2 });
+                var msg = new Message({ type: msgId, subType: 2 });
 
                 msg.write('i32>', date.getFullYear() - 2001);
                 msg.write('u8', date.getMonth());

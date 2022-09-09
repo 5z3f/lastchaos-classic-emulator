@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_APPEAR',
@@ -8,7 +8,7 @@ module.exports = {
         {
             const appearCharacter = () =>
             {            
-                var msg = new message({ type: msgId });
+                var msg = new Message({ type: msgId });
                        
                 msg.write('u8', 1);             // new
                 msg.write('u8', 0);             // m_type
@@ -71,7 +71,7 @@ module.exports = {
             // data = { uid, id, isNew, position }
             const appearNpc = (data) =>
             {
-                var msg = new message({ type: msgId });
+                var msg = new Message({ type: msgId });
     
                 msg.write('u8', data.isNew ?? 0);                           // New
                 msg.write('u8', 1);                                         // Appear Type

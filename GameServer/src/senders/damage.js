@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_DAMAGE',
@@ -6,7 +6,7 @@ module.exports = {
     {
         return ({ attackerObjType, attackerIndex, damageType, skillId, targetObjType, targetIndex, targetHp, targetMp, damage }) =>
         {
-            var msg = new message({ type: msgId });
+            var msg = new Message({ type: msgId });
             
             msg.write('u8', attackerObjType);
             msg.write('i32>', attackerIndex);

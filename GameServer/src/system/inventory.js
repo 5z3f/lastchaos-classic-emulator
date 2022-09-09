@@ -1,5 +1,22 @@
+const util = require('../util');
 
-class InventoryItem
+class InventoryRow
+{
+    constructor({ itemUid, itemId, plus, count, wearingPosition, flag, durability, options })
+    {
+        this.itemUid = itemUid ?? util.generateId();
+        this.itemId = itemId;
+
+        this.wearingPosition = wearingPosition ?? 255;
+        this.count = count || 1;
+        this.plus = plus || 0;
+        this.flag = flag || 0;
+        this.durability = durability || -1;
+        this.options = options || [];
+    }
+}
+
+class Inventory
 {
     PLATINUM_MAX_PLUS = 127;
     FLAG_ITEM_PLATINUM_GET = (a, b) => (b = a & PLATINUM_MAX_PLUS);
@@ -15,21 +32,6 @@ class InventoryItem
     FLAG_ITEM_LENT = (1 << 15);
     FLAG_ITEM_LEVELDOWN = (1 << 16);
 
-    constructor({ uid, item, plus, count, wearing, flag, options })
-    {
-        this.uid = uid || -1;
-
-        this.item = item;
-        this.wearing = wearing;
-        this.count = count || 1;
-        this.plus = plus || 0;
-        this.flag = flag || 0;
-        this.options = options || [];
-    }
-}
-
-class Inventory
-{
     MAX_TABS = 3;
     MAX_COLUMNS = 20;
     MAX_ROWS = 5;
@@ -38,7 +40,8 @@ class Inventory
     TAB_QUEST = 1;
     TAB_EVENT = 2;
 
-    constructor() {
+    constructor({ owner }) {
+        this.owner = owner;
         this.items = Array.from(Array(this.MAX_TABS), () => Array.from(Array(this.MAX_COLUMNS), () => new Array(this.MAX_ROWS)));
     }
 
@@ -50,8 +53,17 @@ class Inventory
         {
             var row = this.items[tab][col].findIndex(opts);
 
-            if(row != -1) {
-                result = { col: col, row: row, item: this.items[tab][col][row] };
+            if(row != -1)
+            {
+                result = {
+                    position: {
+                        tab: tab,
+                        col: col,
+                        row: row
+                     },
+                     data: this.items[tab][col][row]
+                };
+
                 break;
             }
         }
@@ -67,8 +79,14 @@ class Inventory
         {
             var row = this.items[tab][col].findIndex((i) => (typeof i === "undefined"));
 
-            if(row != -1) {
-                result = [col, row];
+            if(row != -1)
+            {
+                result = {
+                    tab: tab,
+                    col: col,
+                    row: row
+                };
+
                 break;
             }
         }
@@ -76,35 +94,59 @@ class Inventory
         return result;
     }
 
-    add(tab, item)
+    add(tab, item, sendMsg)
     {
+        sendMsg = (sendMsg == undefined || !!sendMsg) ? true : false;
+
         var result = this.findEmptyRow(tab);
 
-        // TODO: if result is null raise not enough slot message
+        if(result == null) {
+            this.owner.session.send.sys(3); // MSG_SYS_FULL_INVENTORY
+            return false;
+        }
 
-        this.items[tab][result[0]][result[1]] = item;
+        this.items[tab][result.col][result.row] = item;
 
-        // return InventoryItem and its position on which it was added
-        return { tab: tab, col: result[0], row: result[1], inventoryItem: item };
+        var pos = {
+            position: {
+                tab: tab,
+                col: result.col,
+                row: result.row
+            }
+        };
+
+        if(sendMsg)
+            // send item to client
+            this.owner.session.send.item('MSG_ITEM_ADD', { ...item, ...pos });
+
+        return pos;
     }
 
     swap(tab, src, dst)
     {    
-        var srcRow = this.items[tab][src.col][src.row];
-        var dstRow = this.items[tab][dst.col][dst.row];
+        var srcRow = this.items[tab][src.position.col][src.position.row];
+        var dstRow = this.items[tab][dst.position.col][dst.position.row];
 
-        if(srcRow == undefined || src.uid != srcRow.uid || (dst.uid != -1 && dstRow == undefined))
+        // TODO: packet seems to be malformed, better log it in the future
+        if(src.uid != srcRow.itemUid)
+            return false;
+
+        if(srcRow == undefined || (dst.uid != -1 && dstRow == undefined))
             return false;
         
-        this.items[tab][src.col][src.row] = dstRow;
-        this.items[tab][dst.col][dst.row] = srcRow;
+        this.items[tab][src.position.col][src.position.row] = dstRow;
+        this.items[tab][dst.position.col][dst.position.row] = srcRow;
+
+        // send swap to client
+        this.owner.session.send.item('MSG_ITEM_SWAP', { tab, src, dst });
 
         return true;
     }
 
-    update(tab, col, row, opts) {
+    update(position, opts)
+    {
         if(opts != undefined)
-            Object.assign(this.items[tab][col][row], opts);
+            Object.assign(this.items[position.tab][position.col][position.row], opts);
     }
 
     unequip(position)
@@ -113,11 +155,20 @@ class Inventory
 
         for(var col = 0; col < this.MAX_COLUMNS; col++)
         {
-            var row = this.items[this.TAB_DEFAULT][col].findIndex((i) => (i?.wearing && i?.item.wearingPosition == position));
+            var row = this.items[this.TAB_DEFAULT][col].findIndex((i) => (i?.wearingPosition == position));
 
-            if(row != -1) {
-                this.items[this.TAB_DEFAULT][col][row].wearing = false;
-                result = { col: col, row: row, item: this.items[this.TAB_DEFAULT][col][row] };
+            if(row != -1)
+            {
+                this.items[this.TAB_DEFAULT][col][row].wearingPosition = 255;
+
+                result = {
+                    position: {
+                        tab: this.TAB_DEFAULT,
+                        col: col,
+                        row: row
+                    },
+                    data: this.items[this.TAB_DEFAULT][col][row]
+                };
             }
         }
 
@@ -129,4 +180,4 @@ class Inventory
     }
 }
 
-module.exports = { Inventory, InventoryItem };
+module.exports = { Inventory, InventoryRow };

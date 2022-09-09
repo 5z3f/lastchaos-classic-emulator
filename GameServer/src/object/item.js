@@ -20,6 +20,11 @@ const Item = class
         this.durability = durability;
         this.values = values || [ 0, 0, 0, 0, 0];
     }
+
+    create(uid, position) {
+        Object.assign(this, { uid: uid, position: position });
+        return this;
+    }
 }
 
 

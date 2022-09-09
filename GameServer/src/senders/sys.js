@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_SYS',
@@ -6,7 +6,7 @@ module.exports = {
     {
         return (subType, data) =>
         {
-            var msg = new message({ type: msgId, subType: subType })
+            var msg = new Message({ type: msgId, subType: subType })
             session.write(msg.build());
         }
     }

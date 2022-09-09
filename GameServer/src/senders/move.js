@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_MOVE',
@@ -6,7 +6,7 @@ module.exports = {
     {
         return ({ objType, moveType, uid, speed, position }) =>
         {
-            var msg = new message({ type: msgId, subType: objType })
+            var msg = new Message({ type: msgId, subType: objType })
             
             msg.write('u8', moveType);
             msg.write('i32>', uid);

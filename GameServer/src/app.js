@@ -38,8 +38,7 @@ const initJuno = () =>
         }
     }
 
-    game.add({ type: 'zone', data: juno });
-    //console.log(juno)
+    game.world.add({ type: 'zone', data: juno });
 }
 
 initJuno();

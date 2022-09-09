@@ -1,6 +1,6 @@
-const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
 const game = require('../game');
+const { InventoryRow } = require('../system/inventory');
 
 module.exports = {
     name: 'MSG_ITEM',
@@ -27,36 +27,78 @@ module.exports = {
             24: 'MSG_ITEM_MAKE_REQ',
             26: 'MSG_ITEM_MIX_REQ',
             // TODO: add more types
-
         };
 
         const subTypeHandler =
         {
             MSG_ITEM_USE: () => { },
-            MSG_ITEM_TAKE: () => { },
+            MSG_ITEM_TAKE: () =>
+            {
+                var msgdata = {
+                    'objType': msg.read('u8'),
+                    'objUid': msg.read('i32>'),
+                    'itemUid': msg.read('i32>')
+                }
+                
+                // find character by session id
+                var character = game.world.find('character', (ch) => ch.uid == session.uid);
+
+                // TODO: only character pickup is supported for now
+                if(msgdata.objType != 0)
+                    return;
+
+                // TODO: packet is probably malformed, log this in future
+                if(msgdata.objUid != character.uid)
+                    return;
+                
+                // find ground item
+                var found = game.world.find('item', (i) => i.uid == msgdata.itemUid && i.charUid == character.uid);
+
+                // remove item from groud items queue
+                game.world.remove({ type: 'item', zoneId: 0 }, (i) => i.uid != found.uid);
+
+                // create inventory row
+                var invenRow = new InventoryRow({
+                    itemUid: found.uid,
+                    itemId: found.id,
+                    count: found.count
+                });
+            
+                // add row to inventory
+                character.inventory.add(0, invenRow);
+
+                // send item take message
+                session.send.item('MSG_ITEM_TAKE', {
+                    objType: 0,
+                    objUid: character.uid,
+                    itemUid: found.uid
+                });
+            },
             MSG_ITEM_THROW: () => { },
             MSG_ITEM_ARRANGE: () => { },
             MSG_ITEM_DELETE: () => { },
             MSG_ITEM_WEAR: () =>
             {
-                var data = {
-                    'position': msg.read('u8'),
+                var msgdata = {
+                    'wearingPosition': msg.read('u8'),
                     'item': {
-                        'tab': msg.read('u8'),
-                        'col': msg.read('u8'),
-                        'row': msg.read('u8'),
+                        'position': {
+                            'tab': msg.read('u8'),
+                            'col': msg.read('u8'),
+                            'row': msg.read('u8'),
+                        },
                         'uid': msg.read('i32>'),
                     }
                 }
 
                 // find character by session id
-                var character = game.find('character', (ch) => ch.uid == session.uid);
+                var character = game.world.find('character', (ch) => ch.uid == session.uid);
 
                 // if character tries to take an item off
-                if(data.item.uid == -1)
+                if(msgdata.item.uid == -1)
                 {
-                    // unequip already equipped item by its wearing position and return following data: col, row, inventory item
-                    var result = character.inventory.unequip(data.position);
+                    // unequip already equipped item by its wearing position and return following data: position, row data
+                    var result = character.inventory.unequip(msgdata.wearingPosition);
 
                     if(result == null) {
                         session.send.sys(2); // MSG_SYS_CANNOT_WEAR
@@ -64,79 +106,91 @@ module.exports = {
                     }
 
                     session.send.item('MSG_ITEM_WEAR', {
-                        position: data.position,
-                        tabSrc: 0,
-                        colSrc: 0,
-                        rowSrc: 0,
-                        uidSrc: -1,
-                        tabDst: 0,
-                        colDst: result.col,
-                        rowDst: result.row,
-                        uidDst: result.item.uid
+                        wearingPosition: msgdata.wearingPosition,
+                        srcRow: {
+                            position: { tab: 0, col: 0, row: 0 },
+                            itemUid: -1
+                        },
+                        dstRow: {
+                            position: result.position,
+                            itemUid: result.data.itemUid
+                        }
                     });
 
                     return;
                 }
 
                 // find inventory row by unique id and if its not equipped already
-                var requestedRow = character.inventory.find(data.item.tab, (i) => i?.wearing == false && i?.uid == data.item.uid);
+                var requestedRow = character.inventory.find(msgdata.item.position.tab, (i) => i?.wearingPosition == 255 && i?.itemUid == msgdata.item.uid);
 
                 if(requestedRow == null) {
                     session.send.sys(2); // MSG_SYS_CANNOT_WEAR
                     return;
                 }
                 
-                // unequip already equipped item by its wearing position and return following data: col, row, inventory item
-                var unequippedRow = character.inventory.unequip(data.position);
+                var dbItem = game.database.find('item', (i) => i.id == requestedRow.data.itemId);
 
-                // find already equipped row by wearing position
-                // var found2 = character.inventory.find(data.item.tab, (i) => i?.wearing == true && i?.item.wearingPosition == data.position);                
+                // TODO: check if dbItem class is equal with characters class
+
+                // TODO: packet is probably malformed, log this in future
+                if(msgdata.wearingPosition != dbItem.wearingPosition) {
+                    return false;
+                }
+                
+                // unequip already equipped item by its wearing position and return following data: position, row data
+                // this will return null if character is trying to equip gear while being nude
+                var unequippedRow = character.inventory.unequip(msgdata.wearingPosition);
 
                 session.send.item('MSG_ITEM_WEAR', {
-                    position: data.position,
-                    tabSrc: 0,
-                    colSrc: data.item.col,
-                    rowSrc: data.item.row,
-                    uidSrc: data.item.uid,
-                    tabDst: 0,
-                    colDst: unequippedRow?.col ?? 0,
-                    rowDst: unequippedRow?.row ?? 0,
-                    uidDst: unequippedRow?.item.uid ?? -1
+                    wearingPosition: msgdata.wearingPosition,
+                    srcRow: {
+                        position: {
+                            tab: 0,
+                            col: msgdata.item.position.col,
+                            row: msgdata.item.position.row
+                        },
+                        itemUid: msgdata.item.uid
+                    },
+                    dstRow: {
+                        position: {
+                            tab: unequippedRow?.position.tab ?? 0,
+                            col: unequippedRow?.position.col ?? 0,
+                            row: unequippedRow?.position.row ?? 0
+                        },
+                        itemUid: unequippedRow?.data.itemUid ?? -1
+                    }
                 });
 
                 // character is wearing this item now so lets update its status
-                character.inventory.update(0, requestedRow.col, requestedRow.row, { wearing: true });
+                character.inventory.update(requestedRow.position, { wearingPosition: msgdata.wearingPosition });
             },
             MSG_ITEM_SWAP: () =>
             {
-                var data = {
+                var msgdata = {
                     'tabId': msg.read('u8'),
-                    'items': {
+                    'item': {
                         'src': {
-                            'col': msg.read('u8'),
-                            'row': msg.read('u8'),
+                            'position': {
+                                'col': msg.read('u8'),
+                                'row': msg.read('u8')
+                            },
                             'uid': msg.read('i32>'),
                         },
                         'dst': {
-                            'col': msg.read('u8'),
-                            'row': msg.read('u8'),
+                            'position': {
+                                'col': msg.read('u8'),
+                                'row': msg.read('u8'),
+                            },
                             'uid': msg.read('i32>'),
                         },
                     }
                 }
 
                 // find character by session id
-                var character = game.find('character', (ch) => ch.uid == session.uid);
+                var character = game.world.find('character', (ch) => ch.uid == session.uid);
 
                 // swap item
-                var swapped = character.inventory.swap(data.tabId, data.items.src, data.items.dst);
-
-                // if(!swapped)
-                //   raise error message (if exists)
-                //   return;
-
-                // send swap message
-                session.send.item('MSG_ITEM_SWAP', data);
+                character.inventory.swap(msgdata.tabId, msgdata.item.src, msgdata.item.dst);
             },
             MSG_ITEM_BUY: () => { },
             MSG_ITEM_SELL: () => { },

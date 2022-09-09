@@ -1,20 +1,19 @@
-const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
 const game = require('../game');
-const util = require('../util');
 
 const Character = require('../object/character');
+
 const { Statistic, Position } = require('../types');
-const { InventoryItem } = require('../system/inventory');
+const { InventoryRow } = require('../system/inventory');
 
 module.exports = {
     name: 'MSG_START_GAME',
     handle: function (session, msg)
-    {        
+    {
         var character = new Character({
             session: session,
             progress: {
-                level: 1,
+                level: 85,
                 experience: 500000,
                 maxExperience: 23223182, // probably will be removed later (?)
                 skillpoint: 10000
@@ -47,19 +46,38 @@ module.exports = {
                 game.database.find('item', (el) => el.name == 'Siegfried Double Sword'),
             ];
 
-            for(var i in equipment) {
-                let item = new InventoryItem({ uid: util.generateId(), item: equipment[i], plus: 15, wearing: true, count: 1, options: [ { type: 0, level: 1 },  ] });
-                character.inventory.add(0, item);
+            for(var i in equipment)
+            {
+                let row = new InventoryRow({
+                    itemId: equipment[i].id,
+                    plus: 15,
+                    wearingPosition: equipment[i].wearingPosition,
+                    count: 1,
+                    options: [ { type: 0, level: 1 } ] }
+                );
+
+                character.inventory.add(0, row, false);
             }
 
-            // additional item
-            var shirt = game.database.find('item', (el) => el.name == 'Drun Mail Shirt');
-            character.inventory.add(0, new InventoryItem({ uid: util.generateId(), item: shirt, plus: 15, wearing: false, count: 1, options: [ { type: 0, level: 1 },  ] }));
+            // additional item 1
+            var item1 = game.database.find('item', (el) => el.name == 'Drun Mail Shirt');
 
-            // additional item
-            var shirt = game.database.find('item', (el) => el.name == 'Poseidon helm');
-            character.inventory.add(0, new InventoryItem({ uid: util.generateId(), item: shirt, plus: 15, wearing: false, count: 1, options: [ { type: 0, level: 1 },  ] }));
+            character.inventory.add(0, new InventoryRow({
+                itemId: item1.id,
+                plus: 15,
+                count: 1,
+                options: [ { type: 0, level: 1 } ]
+            }));
 
+            // additional item 2
+            var item2 = game.database.find('item', (el) => el.name == 'Poseidon helm');
+
+            character.inventory.add(0, new InventoryRow({
+                itemId: item2.id,
+                plus: 15,
+                count: 1,
+                options: [ { type: 0, level: 1 } ]
+            }));
 
             session.send.inventory(character.inventory);
         }
@@ -68,7 +86,7 @@ module.exports = {
         session.send.env('MSG_ENV_TIME');
         session.send.env('MSG_ENV_TAX_CHANGE');
 
-        var tospawn = game.filter('monster', (m) => m.zoneId == 0);
+        var tospawn = game.world.filter('monster', (m) => m.zoneId == 0);
         for(let npc of tospawn)
         {
             for(let res of npc.result)

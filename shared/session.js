@@ -1,6 +1,6 @@
 const farmhash = require('farmhash');
 
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 const log = require("@local/shared/logger");
 const game = require('../GameServer/src/game'); // TODO: move this
 
@@ -24,7 +24,7 @@ const session = class
     
             this.socket.on('data', (data) =>
             {
-                var msg = new message({ buffer: data });
+                var msg = new Message({ buffer: data });
                 var id = game.packDefault ? msg.read('u8') & 0x3f : msg.read('u8');
                 
                 // TODO: restrict access to all packets except '0x03' if client is not logged in

@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 const log = require('@local/shared/logger');
 
 module.exports = {
@@ -42,7 +42,7 @@ module.exports = {
 
             const whoami = (level) =>
             {
-                //var msg = new message({ type: msgId, subType: 0 });
+                //var msg = new Message({ type: msgId, subType: 0 });
                 //msg.write('i8', level) // level
                 //
                 //session.write(msg.build());

@@ -9,7 +9,7 @@ const World = class
         if(type == 'zone') {
             this.zones.push(data);
         }
-        else if([ 'character', 'monster', 'npc' ].includes(type))
+        else if([ 'character', 'monster', 'npc', 'item' ].includes(type))
         {
             let zone = this.get('zone', zoneId);
             zone.add(type, data);
@@ -45,6 +45,14 @@ const World = class
         }
 
         return result;
+    }
+
+    remove({ type, zoneId }, opts)
+    {
+        for(let zone of this.zones) {
+            if(zone.id == zoneId)
+                zone.remove(type, opts);
+        }
     }
 }
 

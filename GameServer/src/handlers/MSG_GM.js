@@ -1,4 +1,3 @@
-const message = require('@local/shared/message');
 const log = require('@local/shared/logger');
 
 module.exports = {

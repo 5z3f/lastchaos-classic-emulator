@@ -12,18 +12,6 @@ const game = class
         game.world = new World();
         game.database = new Database();
     }
-
-    static add({ type, zoneId, data }) {
-        game.world.add({ type: type, data: data, zoneId: zoneId })
-    }
-
-    static find(type, opts) {
-        return game.world.find(type, opts)
-    }
-
-    static filter(type, opts) {
-        return game.world.filter(type, opts)
-    }
 }
 
 module.exports = game;

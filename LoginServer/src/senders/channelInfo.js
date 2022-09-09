@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_LOGINSERV_PLAYER',
@@ -6,7 +6,7 @@ module.exports = {
     {
         return (data) =>
         {
-            var msg = new message({ type: msgId });
+            var msg = new Message({ type: msgId });
         
             msg.write('i32>', 1);                   // recentServer
             msg.write('i32>', 1);                   // recentSubNum

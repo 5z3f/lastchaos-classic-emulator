@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_DB',
@@ -9,7 +9,7 @@ module.exports = {
             const characterExists = (data) =>
             {
                 // MSG_DB -> MSG_DB_CHAR_EXIST
-                var msg = new message({ type: msgId, subType: 2 });
+                var msg = new Message({ type: msgId, subType: 2 });
     
                 msg.write('i32>', 1);               // Character ID (uid)
                 msg.write('stringnt', 'test');      // Name
@@ -42,12 +42,12 @@ module.exports = {
     
             const characterExistEnd = () => {
                 // MSG_DB -> MSG_DB_CHAR_END
-                var msg = new message({ type: msgId, subType: 3 });
+                var msg = new Message({ type: msgId, subType: 3 });
                 session.write(msg.build());
             }
 
             const startGame = () => {
-                var msg = new message({ type: msgId, subType: 1 });
+                var msg = new Message({ type: msgId, subType: 1 });
                 session.write(msg.build());
             }
 

@@ -17,7 +17,7 @@ const Character = class
 
         this.nickname = "";
 
-        this.inventory = new Inventory();
+        this.inventory = new Inventory({ owner: this });
 
         this.progress = {
             level: 1,
@@ -188,7 +188,7 @@ const Character = class
             position: this.position
         });
 
-        game.add({ type: 'character', zoneId: this.zoneId, data: this });
+        game.world.add({ type: 'character', zoneId: this.zoneId, data: this });
 
         // send stats to client
         this.update('stats');

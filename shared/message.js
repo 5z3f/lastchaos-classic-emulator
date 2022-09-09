@@ -4,7 +4,7 @@ const SmartBuffer = require('smart-buffer').SmartBuffer;
 const lccrypt = require('@local/shared/lccrypt');
 const game = require('../GameServer/src/game'); // TODO: move this
 
-const message = class
+const Message = class
 {
     /**
      * Constructor
@@ -155,4 +155,4 @@ const message = class
     }
 };
 
-module.exports = message;
+module.exports = Message;

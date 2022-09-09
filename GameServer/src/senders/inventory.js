@@ -1,4 +1,4 @@
-const message = require('@local/shared/message');
+const Message = require('@local/shared/message');
 
 module.exports = {
     messageName: 'MSG_INVENTORY',
@@ -6,19 +6,19 @@ module.exports = {
     {
         return (inventory) =>
         {
-            const itemMsg = (msg, uid, item, flag, wearing, count, plus, options) =>
+            const itemMsg = (msg, itemUid, itemId, wearingPosition, plus, flag, durability, count, options) =>
             {
-                if(item == undefined) {
+                if(itemId == undefined) {
                     msg.write('i32>', -1);      // unique index
                     return;
                 }
 
-                msg.write('i32>', uid);                                     // unique index
-                msg.write('i32>', item.id);                                 // item index
-                msg.write('u8', wearing ? item.wearingPosition : 255);      // wear position
+                msg.write('i32>', itemUid);                                 // unique index
+                msg.write('i32>', itemId);                                  // item index
+                msg.write('u8', wearingPosition);                           // wear position
                 msg.write('i32>', plus);                                    // plus
                 msg.write('i32>', flag);                                    // flag
-                msg.write('i32>', item.durability);                         // durability
+                msg.write('i32>', durability);                              // durability
                 msg.write('i64>', count);                                   // count
 
                 msg.write('u8', options.length);                            // option count
@@ -39,7 +39,7 @@ module.exports = {
                     // columns
                     for(var j = 0; j < items[i].length; j++)
                     {
-                        var msg = new message({ type: msgId });
+                        var msg = new Message({ type: msgId });
 
                         msg.write('u8', 0);       // resultArrange
                         msg.write('u8', i);       // tabId
@@ -53,8 +53,8 @@ module.exports = {
                                 itemMsg(msg, undefined);
                                 continue;
                             }
-                            
-                            itemMsg(msg, row.uid, row.item, row.flag, row.wearing, row.count, row.plus, row.options);
+
+                            itemMsg(msg, row.itemUid, row.itemId, row.wearingPosition, row.plus, row.flag, row.durability, row.count, row.options);
                         }
 
                         session.write(msg.build());
