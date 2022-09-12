@@ -1,4 +1,5 @@
 const log = require('@local/shared/logger');
+const game = require('../game');
 
 module.exports = {
     name: 'MSG_ATTACK',
@@ -15,24 +16,8 @@ module.exports = {
 
         log.debug(`[ATTACK] (uid: ${ data.attackerIndex } >> uid: ${ data.targetIndex})`);
 
-        session.send.attack({
-            attackerObjType: data.targetObjType,
-            attackerIndex: data.targetIndex,
-            targetObjType: data.attackerObjType,
-            targetIndex: data.attackerIndex,
-            attackType: 3   // MSG_DAMAGE_MELEE
-        })
-
-        session.send.damage({
-            attackerObjType: data.targetObjType,
-            attackerIndex: data.targetIndex,
-            damageType: 3,
-            skillId: -1,
-            targetObjType: data.attackerObjType,
-            targetIndex: data.attackerIndex,
-            targetHp: 1000,
-            targetMp: 1000,
-            damage: 300
-        })
+        var character = game.world.find('character', (ch) => ch.uid == data.attackerIndex);
+        var monster = game.world.find('monster', (m) => m.uid == data.targetIndex);
+        monster.damage(character);
     }
 }

@@ -14,7 +14,7 @@ const session = class
         this.uid = parseInt(farmhash.hash32(this.socket.remoteAddress + Date.now()) / 200);
 
         this.handlers = handlers;
-        this.send = senders({ session: this });
+        this.send = senders(this);
 
         log.info(`New session: ${ this.toString() }`);
 

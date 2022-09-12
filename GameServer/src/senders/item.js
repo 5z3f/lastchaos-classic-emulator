@@ -1,6 +1,4 @@
 const Message = require('@local/shared/message');
-const { WebGLArrayRenderTarget } = require('three');
-const { add } = require('../game');
 
 module.exports = {
     messageName: 'MSG_ITEM',
@@ -50,10 +48,10 @@ module.exports = {
                 msg.write('i32>', id);          // item id
                 msg.write('i64>', count);       // item count
                 msg.write('f<', position.x);
+                msg.write('f<', position.y);
                 msg.write('f<', position.z);
-                msg.write('f<', position.h);
                 msg.write('f<', position.r);
-                msg.write('u8', position.y);
+                msg.write('u8', position.layer);
 
                 msg.write('u8', objType);       // object type
                 msg.write('i32>', objUid);      // object uid

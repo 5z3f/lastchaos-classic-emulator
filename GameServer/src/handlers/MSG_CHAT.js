@@ -1,7 +1,7 @@
 const log = require('@local/shared/logger');
 const game = require('../game');
 
-const Monster = require('../object/monster');
+const Monster = require('../gameobject/monster');
 const { InventoryRow } = require('../system/inventory');
 const { Statistic, Position } = require('../types');
 const util = require('../util');
@@ -45,15 +45,38 @@ module.exports = {
 
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
 
-            let monster = new Monster({
-                id: npcId,
-                zoneId: character.zoneId,
+            // find monster from database by id
+            var baseMonster = game.database.find('monster', (m) => m.id == npcId);
+
+            console.log('baseMonster', baseMonster);
+
+            var monster = new Monster({
+                id: baseMonster.id,
+                zone: character.zone,
                 areaId: character.areaId,
                 position: character.position,
+                statistics: {
+                    health:         new Statistic(baseMonster.statistics.health),
+                    maxHealth:      new Statistic(baseMonster.statistics.health),
+                    mana:           new Statistic(baseMonster.statistics.mana),
+                    maxMana:        new Statistic(baseMonster.statistics.mana),
+                    strength:       new Statistic(baseMonster.statistics.strength),
+                    dexterity:      new Statistic(baseMonster.statistics.dexterity),
+                    intelligence:   new Statistic(baseMonster.statistics.intelligence),
+                    condition:      new Statistic(baseMonster.statistics.condition),
+                    attack:         new Statistic(baseMonster.statistics.attack),
+                    magicAttack:    new Statistic(baseMonster.statistics.magicAttack),
+                    defense:        new Statistic(baseMonster.statistics.defense),
+                    magicResist:    new Statistic(baseMonster.statistics.magicResist),
+                    walkSpeed:      new Statistic(baseMonster.statistics.walkSpeed),
+                    runSpeed:       new Statistic(baseMonster.statistics.runSpeed),
+                    attackRange:    new Statistic(baseMonster.statistics.attackRange),
+                    attackSpeed:    new Statistic(baseMonster.statistics.attackSpeed),                    
+                }
             });
     
-            game.world.add('monster', monster);
-            monster.appear(session);
+            game.world.add({ type: 'monster', zoneId: 0, data: monster });
+            monster.appear(character);
 
             character.event.on('move', (pos) =>
             {
@@ -61,13 +84,13 @@ module.exports = {
                     objType: 1,
                     moveType: 1,
                     uid: monster.uid,
-                    speed: new Statistic(5),
+                    speed: 5,
                     position: {
                         'x': character.position.x-2,
-                        'z': character.position.z-2,
-                        'h': character.position.h,
+                        'y': character.position.y-2,
+                        'z': character.position.z,
                         'r': character.position.r,
-                        'y': character.position.y
+                        'layer': character.position.layer
                     }
                 })
             });
@@ -131,7 +154,7 @@ module.exports = {
             var itemUid = util.generateId();
 
             // add item to on-ground item list
-            game.world.add({ type: 'item', zoneId: character.zoneId, data: {
+            game.world.add({ type: 'item', zoneId: character.zone.id, data: {
                 uid: itemUid,
                 id: itemId,
                 count: itemCount || 1,
@@ -155,6 +178,22 @@ module.exports = {
                 receiverName: data.receiverName,
                 text: `itemdrop [uid: ${ itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
             });
+        }
+        if(data.text.includes('.search item'))
+        {
+            var params = data.text.split(' ');
+            var items = game.database.filter('item', (i) => i.name.includes(params[2]))
+
+            for(var item of items)
+            {
+                session.send.chat({
+                    chatType: 0,
+                    senderId: -1,
+                    senderName: '',
+                    receiverName: data.receiverName,
+                    text: `ID: ${ item.id} [${ item.name }]`
+                });  
+            }
         }
         else
         {

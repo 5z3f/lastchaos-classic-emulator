@@ -32,7 +32,7 @@ module.exports = {
             msg.write('i32>', data.defense.total);          // Defense
             msg.write('i32>', data.magicResist.total);      // Magic Resist
             
-            msg.write('i32>', data.skillpoint.total);       // Skillpoint
+            msg.write('i32>', data.skillpoint);             // Skillpoint
 
             msg.write('i32>', data.weight);                 // Weight
             msg.write('i32>', data.maxWeight);              // Max Weight

@@ -1,7 +1,14 @@
+
+const Zone = require('./zone');
+
 const World = class
 {
-    constructor() {
+    constructor()
+    {
         this.zones = [];
+
+        // add juno
+        this.zones.push(new Zone(0, 1536, 1536));
     }
 
     add({ type, zoneId, data })

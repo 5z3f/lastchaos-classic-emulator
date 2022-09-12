@@ -40,9 +40,14 @@ class Inventory
     TAB_QUEST = 1;
     TAB_EVENT = 2;
 
-    constructor({ owner }) {
+    constructor({ owner })
+    {
         this.owner = owner;
         this.items = Array.from(Array(this.MAX_TABS), () => Array.from(Array(this.MAX_COLUMNS), () => new Array(this.MAX_ROWS)));
+        
+        // TODO:
+        this.weight = 3000;
+        this.maxWeight = 150000;
     }
 
     find(tab, opts)

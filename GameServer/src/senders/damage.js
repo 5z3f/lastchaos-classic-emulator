@@ -30,7 +30,7 @@ module.exports = {
                     break;
             }
 
-            msg.write('u8', 1) // damage flag: dodge (0), hit (1), critical (2)
+            msg.write('u8', 2) // damage flag: dodge (0), hit (1), critical (2)
         
             session.write(msg.build());           
         }

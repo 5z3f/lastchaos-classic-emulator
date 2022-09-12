@@ -1,14 +1,152 @@
+const { QuadTree, Box } = require('js-quadtree');
+
+const fs = require('fs');
+const path = require('path');
+const SmartBuffer = require('smart-buffer').SmartBuffer;
+
+const Monster = require('./gameobject/monster');
+const NPC = require('./gameobject/npc');
+
+const { Statistic } = require('./types');
+
 const Zone = class
 {
-    npcs = [];
-    monsters = [];
-    characters = [];
-    items = []; // on ground
-
-    constructor(id) {
+    constructor(id, width, height)
+    {
         this.id = id ?? -1;
-        // this.attributeMap = null;
-        //this.load();
+
+        this.npcs = [];
+        this.monsters = [];
+        this.characters = [];
+        this.items = []; // on ground
+    
+        this.width = width;
+        this.height = height;
+
+        this.attributeMap = Array.from(Array(width), e => Array(height));
+        this.heightMap = Array.from(Array(width), e => Array(height));
+        
+        this.quadTree = new QuadTree(new Box(0, 0, width, height), {
+            capacity: 64,
+            arePointsEqual: (p1, p2) => {
+                return (p1.uid === p2.uid && p1.x === p2.x && p1.y === p2.y);
+            }
+        });
+
+        this.load();
+    }
+
+    load()
+    {        
+        for(var baseMonster of global.game.database.monsters)
+        {
+            for(var spawn of baseMonster.spawns)
+            {
+                if(spawn.zoneId != this.id)
+                    continue;
+                
+                var m = new Monster({
+                    id: baseMonster.id,
+                    zone: this,
+                    position: spawn.position,
+                    respawnTime: spawn.respawnTime * 1000,
+                    statistics: {
+                        health:         new Statistic(baseMonster.statistics.health),
+                        maxHealth:      new Statistic(baseMonster.statistics.health),
+                        mana:           new Statistic(baseMonster.statistics.mana),
+                        maxMana:        new Statistic(baseMonster.statistics.mana),
+                        strength:       new Statistic(baseMonster.statistics.strength),
+                        dexterity:      new Statistic(baseMonster.statistics.dexterity),
+                        intelligence:   new Statistic(baseMonster.statistics.intelligence),
+                        condition:      new Statistic(baseMonster.statistics.condition),
+                        attack:         new Statistic(baseMonster.statistics.attack),
+                        magicAttack:    new Statistic(baseMonster.statistics.magicAttack),
+                        defense:        new Statistic(baseMonster.statistics.defense),
+                        magicResist:    new Statistic(baseMonster.statistics.magicResist),
+                        walkSpeed:      new Statistic(baseMonster.statistics.walkSpeed),
+                        runSpeed:       new Statistic(baseMonster.statistics.runSpeed),
+                        attackRange:    new Statistic(baseMonster.statistics.attackRange),
+                        attackSpeed:    new Statistic(baseMonster.statistics.attackSpeed),                    
+                    }
+                });
+
+                this.add('monster', m);
+            }
+        }
+
+        for(var baseNPC of game.database.npcs)
+        {
+            for(var spawn of baseNPC.spawns)
+            {
+                if(spawn.zoneId != this.id)
+                    continue;
+                
+                var n = new NPC({
+                    id: baseNPC.id,
+                    zone: this,
+                    statistics: {
+                        health:         new Statistic(baseNPC.statistics.health),
+                        maxHealth:      new Statistic(baseNPC.statistics.health),
+                        mana:           new Statistic(baseNPC.statistics.mana),
+                        maxMana:        new Statistic(baseNPC.statistics.mana),
+                        strength:       new Statistic(baseNPC.statistics.strength),
+                        dexterity:      new Statistic(baseNPC.statistics.dexterity),
+                        intelligence:   new Statistic(baseNPC.statistics.intelligence),
+                        condition:      new Statistic(baseNPC.statistics.condition),
+                        attack:         new Statistic(baseNPC.statistics.attack),
+                        magicAttack:    new Statistic(baseNPC.statistics.magicAttack),
+                        defense:        new Statistic(baseNPC.statistics.defense),
+                        magicResist:    new Statistic(baseNPC.statistics.magicResist),
+                        walkSpeed:      new Statistic(baseNPC.statistics.walkSpeed),
+                        runSpeed:       new Statistic(baseNPC.statistics.runSpeed),
+                        attackRange:    new Statistic(baseNPC.statistics.attackRange),
+                        attackSpeed:    new Statistic(baseNPC.statistics.attackSpeed),                    
+                    },
+                    position: spawn.position
+                });
+
+                this.add('npc', n);
+            }
+        }
+
+        var flags =
+        {
+            0:      'FIELD',      
+            10:     'PEACEZONE', 
+            20:     'PRODUCT_PUBLIC',
+            30:     'PRODUCT_PRIVATE',
+            40:     'STAIR_UP',
+            50:     'STAIR_DOWN',
+            60:     'WARZONE',
+            70:     'FREEPKZONE',
+            255:    'BLOCK',
+        }
+
+        var heightData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${ this.id }.sht`);
+        const reader1 = SmartBuffer.fromBuffer(heightData);
+
+        for (var h = 0; h < this.height; h++)
+            for (var w = 0; w < this.width; w++)
+                this.heightMap[w][h] = reader1.readUInt16BE() / 100.0;
+
+        var attrData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${ this.id }.sat`);
+        const reader2 = SmartBuffer.fromBuffer(attrData);
+
+        for (var h = 0; h < this.height; h++) {
+            for (var w = 0; w < this.width; w++) {
+                var val = reader2.readUInt8();
+                this.attributeMap[w][h] = Object.keys(flags).includes(String(val)) ? flags[String(val)] : 'BLOCK';
+            }
+        }
+
+    }
+
+    getObjectInArea(x, y, range)
+    {
+        x -= Math.floor(range / 2);
+        y -= Math.floor(range / 2);
+
+        return this.quadTree.query(new Box(x, y, range, range));
     }
 
     add(type, data)
@@ -16,7 +154,7 @@ const Zone = class
         // return if object doesn't have unique identifier
         if(!('uid' in data))
             return;
-            
+
         switch(type)
         {
             case 'character':
@@ -24,6 +162,13 @@ const Zone = class
                 
                 if(found != -1)
                     return;
+
+                this.quadTree.insert({
+                    x: data.position.x,
+                    y: data.position.y,
+                    uid: data.uid,
+                    type: 'character'
+                });
 
                 this.characters.push(data);
                 break;
@@ -33,6 +178,13 @@ const Zone = class
                 if(found != -1)
                     return;
 
+                this.quadTree.insert({
+                    x: data.position.x,
+                    y: data.position.y,
+                    uid: data.uid,
+                    type: 'npc'
+                });
+
                 this.npcs.push(data);
                 break;
             case 'monster':
@@ -41,6 +193,13 @@ const Zone = class
                 if(found != -1)
                     return;
 
+                this.quadTree.insert({
+                    x: data.position.x,
+                    y: data.position.y,
+                    uid: data.uid,
+                    type: 'monster'
+                });
+
                 this.monsters.push(data);
                 break;
             case 'item':
@@ -48,6 +207,13 @@ const Zone = class
                 
                 if(found != -1)
                     return;
+
+                this.quadTree.insert({
+                    x: data.position.x,
+                    y: data.position.y,
+                    uid: data.uid,
+                    type: 'item'
+                });
 
                 this.items.push(data);
                 break;
@@ -120,9 +286,27 @@ const Zone = class
         }
     }
 
-    // load()
-    // {
-    // }
+    getAttribute(x, y)
+    {
+        x = parseInt(x);
+        y = parseInt(y);
+
+        if(x < 0 || x >= this.width || y < 0 || y >= this.height)
+            return 'BLOCK';
+
+        return this.attributeMap[x][y];
+    }
+
+    getHeight(x, y)
+    {
+        x = parseInt(x);
+        y = parseInt(y);
+
+        if(x < 0 || x >= this.width || y < 0 || y >= this.height)
+            return 0;
+
+        return this.heightMap[x][y];
+    }
 }
 
 module.exports = Zone;

@@ -1,7 +1,7 @@
 const log = require('@local/shared/logger');
 const game = require('../game');
 
-const Character = require('../object/character');
+const Character = require('../gameobject/character');
 
 const { Statistic, Position } = require('../types');
 const { InventoryRow } = require('../system/inventory');
@@ -10,20 +10,96 @@ module.exports = {
     name: 'MSG_START_GAME',
     handle: function (session, msg)
     {
+        var juno = game.world.get('zone', 0);
+
         var character = new Character({
             session: session,
+            uid: session.uid,
+            id: 1,
+            classType: 1,
+            jobType: 0,
+            zone: juno,
+            areaId: 0,
+            appearance: {
+                hairType: 2,
+                faceType: 2
+            },
             progress: {
                 level: 85,
                 experience: 500000,
                 maxExperience: 23223182, // probably will be removed later (?)
-                skillpoint: 10000
+                skillpoint: 100000
             },
-            stats: {
+            statistics: {
                 runSpeed: new Statistic(20.0),
-                health: new Statistic(10000)
+                health: new Statistic(1000),
+                maxHealth: new Statistic(1000),
+                mana: new Statistic(1000),
+                maxMana: new Statistic(1000),
+                strength: new Statistic(100),
+                dexterity: new Statistic(100),
+                intelligence: new Statistic(100),
+                condition: new Statistic(100),
+                attack: new Statistic(100),
+                magicAttack: new Statistic(100),
+                defense: new Statistic(100),
+                magicResist: new Statistic(100),
+                walkSpeed: new Statistic(10.0),
+                attackRange: new Statistic(2.3),
+                attackSpeed: new Statistic(10.0),
             },
-            nickname: "test",
+            nickname: 'test',
             position: new Position(1111, 951, 160.3)
+        });
+
+        var visionRange = 50;
+        character.event.on('move', (pos) =>
+        {
+            var objectPoints = character.zone.getObjectInArea(pos.x, pos.y, visionRange);
+            
+            for(var apo of objectPoints)
+            {
+                // TODO: currently only monster objects are supported
+                if(apo.type != 'monster')
+                    continue;
+
+                var obj = game.world.find(apo.type, (o) => o.uid == apo.uid);
+
+                if(obj.state.dead)
+                    continue;
+
+                if(character.isObjectVisible(apo.type, apo.uid))
+                    continue;
+
+                obj.appear(character);
+            }
+            
+            for(var objType of Object.keys(character.visibleObjectUids))
+            {
+                var objectUids = character.visibleObjectUids[objType];
+
+                for(var objUid of objectUids)
+                {
+                    var inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
+
+                    if(!inVisionRange)
+                    {
+                        var o = game.world.find(objType, (o) => o.uid == objUid);
+
+                        // TODO: this condition will likely disappear when the character will be added to the session
+                        if((objType == 'character' && o.uid == character.uid) || objType == 'npc')
+                            continue;
+                        
+                        if(o.state.dead)
+                            continue;
+
+                        if(o?.zone.id != character.zone.id)
+                            continue;
+
+                        o.disappear(character);
+                    }
+                }
+            }
         });
 
         character.spawn();
@@ -31,13 +107,6 @@ module.exports = {
         // character inventory
         {
             var equipment = [
-                // game.database.find('item', (el) => el.name == 'pormudus jacket'),
-                // game.database.find('item', (el) => el.name == 'pormudus Pants'),
-                // game.database.find('item', (el) => el.name == 'Aventics Gauntlets'),
-                // game.database.find('item', (el) => el.name == 'Aventics Boots'),
-                // game.database.find('item', (el) => el.name == 'Poseidon helm'),
-                // game.database.find('item', (el) => el.name == 'eglain dual sword'),
-
                 game.database.find('item', (el) => el.name == 'Warnin Heavy Shirt'),
                 game.database.find('item', (el) => el.name == 'Warnin Pants'),
                 game.database.find('item', (el) => el.name == 'Warnin Gauntlets'),
@@ -46,12 +115,12 @@ module.exports = {
                 game.database.find('item', (el) => el.name == 'Siegfried Double Sword'),
             ];
 
-            for(var i in equipment)
+            for(var item of equipment)
             {
                 let row = new InventoryRow({
-                    itemId: equipment[i].id,
+                    itemId: item.id,    
                     plus: 15,
-                    wearingPosition: equipment[i].wearingPosition,
+                    wearingPosition: item.wearingPosition,
                     count: 1,
                     options: [ { type: 0, level: 1 } ] }
                 );
@@ -84,14 +153,15 @@ module.exports = {
 
         // send current time
         session.send.env('MSG_ENV_TIME');
-        session.send.env('MSG_ENV_TAX_CHANGE');
+        //session.send.env('MSG_ENV_TAX_CHANGE');
 
-        var tospawn = game.world.filter('monster', (m) => m.zoneId == 0);
-        for(let npc of tospawn)
+        // all npcs are spawned only once per session
+        var result = game.world.filter('npc', (n) => n.zone.id == character.zone.id);
+
+        for(let res of result)
         {
-            for(let res of npc.result)
-                res.appear(session);
+            for(let npc of res.result)
+                npc.appear(character.session);
         }
-
     }
 }

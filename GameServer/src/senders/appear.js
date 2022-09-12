@@ -68,25 +68,24 @@ module.exports = {
                 session.write(msg.build());
             }
 
-            // data = { uid, id, isNew, position }
-            const appearNpc = (data) =>
+            const appearNpc = ({ uid, id, firstAppearance, position, health, maxHealth }) =>
             {
                 var msg = new Message({ type: msgId });
     
-                msg.write('u8', data.isNew ?? 0);                           // New
-                msg.write('u8', 1);                                         // Appear Type
-                msg.write('i32>', data.uid);                                // Unique ID
-                msg.write('i32>', parseInt(data.id));                       // NPC ID
-                msg.write('f<', data.position.x);                           // X
-                msg.write('f<', data.position.z);                           // Z
-                msg.write('f<', data.position.h);                           // H
-                msg.write('f<', data.position.r);                           // R
-                msg.write('u8', data.position.y);                           // Y LAYER
-                msg.write('i32>', 10000);                                   // Health
-                msg.write('i32>', 10000);                                   // Max Health
-                msg.write('i32>', 0);                                       // Assist State
-                msg.write('u8', 0);                                         // Assist Count
-                msg.write('u8', 0);                                         // Attribute Position
+                msg.write('u8', firstAppearance);   // New
+                msg.write('u8', 1);                 // Appear Type
+                msg.write('i32>', uid);             // Unique ID
+                msg.write('i32>', id);              // NPC ID
+                msg.write('f<', position.x);        // X
+                msg.write('f<', position.y);        // Z
+                msg.write('f<', position.z);        // H
+                msg.write('f<', position.r);        // R
+                msg.write('u8', position.layer);    // LAYER
+                msg.write('i32>', health.total);    // Health
+                msg.write('i32>', maxHealth.total); // Max Health
+                msg.write('i32>', 0);               // Assist State
+                msg.write('u8', 0);                 // Assist Count
+                msg.write('u8', 0);                 // Attribute Position
 
                 session.write(msg.build());
             };

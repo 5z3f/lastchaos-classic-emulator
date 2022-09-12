@@ -1,16 +1,13 @@
 const Database = require("./database");
 const World = require("./world");
 
-const game = class
-{
+class game {
     static encryption = false; // TODO: move this
     static packDefault = true; // TODO: move this
 
-    static world = null;
-
-    static initialize = () => {
-        game.world = new World();
-        game.database = new Database();
+    static initialize() {
+        this.database = new Database();
+        this.world = new World();
     }
 }
 

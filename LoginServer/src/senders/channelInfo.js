@@ -20,8 +20,7 @@ module.exports = {
             msg.write('stringnt', '127.0.0.1');     // ipAddress
             msg.write('i32>', 4190);                // port
             
-            var buf = msg.build();
-            session.write(buf);
+            session.write(msg.build());
         }
     }
 }

@@ -1,29 +1,46 @@
-const Item = require("./object/item");
+const BaseItem = require('./baseobject/item');
+const BaseMonster = require('./baseobject/monster');
+const BaseNPC = require('./baseobject/npc');
 
 const Database = class
 {
-    constructor() {
+    constructor()
+    {
         this.items = [];
         this.monsters = [];
         this.npcs = [];
 
-        this.load('items');
+        this.load('items', '../data/items.json');
+        this.load('monsters', '../data/monsters.json');
+        this.load('npcs', '../data/npcs.json');
     }
 
-    load(type)
+    load(type, fp)
     {
-        if(type == 'items')
+        const objs = require(fp);
+
+        for(var o of objs)
         {
-            const items = require('../data/item_test.json');
+            if(!o.enabled)
+                continue;
 
-            for(var i in items)
+            if(o.name.length < 1 /*|| o.description.length < 1*/)
+                continue;
+            
+            switch(type)
             {
-                if(items[i].name.length < 1 /*|| items[i].description.length < 1*/)
-                    continue;
-
-                this.items.push(new Item(items[i]));
+                case 'items':
+                    this.items.push(new BaseItem(o));
+                    break;
+                case 'monsters':
+                    this.monsters.push(new BaseMonster(o));
+                    break;
+                case 'npcs':
+                    this.npcs.push(new BaseNPC(o));
+                    break;
             }
         }
+
     }
 
     find(type, opts)
@@ -40,6 +57,26 @@ const Database = class
                 break;
             case 'item':
                 result = this.items.find(opts);
+                break;
+        }
+
+        return result;
+    }
+
+    filter(type, opts)
+    {
+        var result = null;
+
+        switch(type)
+        {
+            case 'npc':
+                result = this.npcs.filter(opts);
+                break;
+            case 'monster':
+                result = this.monsters.filter(opts);
+                break;
+            case 'item':
+                result = this.items.filter(opts);
                 break;
         }
 

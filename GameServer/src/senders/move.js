@@ -10,12 +10,12 @@ module.exports = {
             
             msg.write('u8', moveType);
             msg.write('i32>', uid);
-            msg.write('f<', speed.total);
+            msg.write('f<', speed);
             msg.write('f<', position.x);
+            msg.write('f<', position.y);
             msg.write('f<', position.z);
-            msg.write('f<', position.h);
             msg.write('f<', position.r);
-            msg.write('u8', position.y);
+            msg.write('u8', position.layer);
             msg.write('u8', 0);             // TODO: attributepos
 
             session.write(msg.build());

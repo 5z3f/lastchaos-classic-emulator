@@ -21,7 +21,7 @@ fs.readdirSync(__dirname).forEach((file) =>
     }
 });
 
-module.exports = ({ session }) =>
+module.exports = (session) =>
 {
     var send = [];
     

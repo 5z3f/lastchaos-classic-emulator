@@ -1,6 +1,6 @@
 {
   "name": "lastchaos-classic-emulator",
-  "version": "1.5.0",
+  "version": "1.6.1",
   "description": "Last Chaos Classic Emulator",
   "scripts": {
     "loginserver": "node LoginServer/src/app.js",
@@ -11,6 +11,7 @@
     "@local/shared": "file:./shared/",
     "chalk": "^4.1.0",
     "farmhash": "^3.2.2",
+    "js-quadtree": "^3.3.6",
     "smart-buffer": "^4.2.0",
     "three": "^0.144.0"
   }
