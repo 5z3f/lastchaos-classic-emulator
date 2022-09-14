@@ -1,5 +1,5 @@
 const log = require('@local/shared/logger');
-const game = require('../game');
+const game = global.game;
 
 const Monster = require('../gameobject/monster');
 const { InventoryRow } = require('../system/inventory');
@@ -159,7 +159,7 @@ module.exports = {
                 id: itemId,
                 count: itemCount || 1,
                 charUid: character.uid,
-                position: new Position(character.position)
+                position: character.position.clone()
             }});
             
             session.send.item('MSG_ITEM_DROP', {

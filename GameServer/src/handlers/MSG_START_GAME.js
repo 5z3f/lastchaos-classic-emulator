@@ -1,5 +1,5 @@
 const log = require('@local/shared/logger');
-const game = require('../game');
+const game = global.game;
 
 const Character = require('../gameobject/character');
 
@@ -52,11 +52,11 @@ module.exports = {
             position: new Position(1111, 951, 160.3)
         });
 
-        var visionRange = 50;
+        var visionRange = 250;
         character.event.on('move', (pos) =>
         {
             var objectPoints = character.zone.getObjectInArea(pos.x, pos.y, visionRange);
-            
+
             for(var apo of objectPoints)
             {
                 // TODO: currently only monster objects are supported
@@ -82,6 +82,7 @@ module.exports = {
                 {
                     var inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
 
+                    // TODO: dont disappear objects that are in vision range of party members (if you are close to them - 100~150 units)
                     if(!inVisionRange)
                     {
                         var o = game.world.find(objType, (o) => o.uid == objUid);
@@ -158,10 +159,8 @@ module.exports = {
         // all npcs are spawned only once per session
         var result = game.world.filter('npc', (n) => n.zone.id == character.zone.id);
 
-        for(let res of result)
-        {
-            for(let npc of res.result)
-                npc.appear(character.session);
+        for(let npc of result) {
+            npc.appear(character.session);
         }
     }
 }

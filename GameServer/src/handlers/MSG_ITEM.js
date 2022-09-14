@@ -1,5 +1,5 @@
 const log = require('@local/shared/logger');
-const game = require('../game');
+const game = global.game;
 const { InventoryRow } = require('../system/inventory');
 
 module.exports = {

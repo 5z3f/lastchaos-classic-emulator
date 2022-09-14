@@ -1,6 +1,5 @@
 const log = require('@local/shared/logger');
 
-const game = require('../game');
 const util = require('../util');
 
 const { Statistic, Position } = require('../types');
@@ -80,6 +79,10 @@ const Character = class extends util.extender(GameObject, Attackable)
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
+    send = (type, data) => {
+        this.session.send[type](data);
+    }
+
     addVisibleObject = (type, uid) => {
         if(!this.visibleObjectUids[type].includes(uid))
             this.visibleObjectUids[type].push(uid);
@@ -103,7 +106,7 @@ const Character = class extends util.extender(GameObject, Attackable)
     {
         if(type == 'position')
         {
-            this.previousPosition = new Position(this.position);
+            this.previousPosition = this.position.clone();
 
             Object.assign(this.position, data);
 
@@ -128,11 +131,7 @@ const Character = class extends util.extender(GameObject, Attackable)
                 character: this
             });
 
-            // update previous position
-            this.previousPosition = this.position;
-
-            console.log('attr', this.zone.getAttribute(this.position.x, this.position.y));
-            console.log('height', this.zone.getHeight(this.position.x, this.position.y));
+            log.data(`[MOVE] uid: ${ this.uid } [from: (${ this.previousPosition.toString() }, ${ this.zone.getAttribute(this.previousPosition, true) }) to (${ this.position.toString() }, ${ this.zone.getAttribute(this.position, true) })]`)
 
             this.event.emit('move', data);
         }

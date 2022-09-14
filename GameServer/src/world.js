@@ -36,7 +36,7 @@ const World = class
         var results = [];
 
         for(let zone of this.zones)
-            results.push({ zoneId: zone.id, result: zone.filter(type, opts) });
+            results = [...results, ...zone.filter(type, opts)]
 
         return results;
     }

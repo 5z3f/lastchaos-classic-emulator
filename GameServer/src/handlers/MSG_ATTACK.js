@@ -1,5 +1,5 @@
 const log = require('@local/shared/logger');
-const game = require('../game');
+const game = global.game;
 
 module.exports = {
     name: 'MSG_ATTACK',

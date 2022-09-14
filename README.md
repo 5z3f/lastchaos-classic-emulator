@@ -31,9 +31,10 @@ https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-
 > --------------------------
 ```
 
-# patches
+# patches [USA Client 1107]
 ```
-> Description:      USA Client 1107 IP Filter Patch
+> File:             Engine.dll
+> Description:      IP Filter Patch
 > Starting Offset:  0x107379
 > Replace:          3c 3d 75 16 80 3d 29 c1 58 10 68
 >                   ->
@@ -41,7 +42,8 @@ https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-
 ```
 
 ```
-> Description:      USA Client 1107 SendToServerNew Encryption Patch
+> File:             Engine.dll
+> Description:      ReceiveFromServerNew() Encryption Patch
 > Starting Offset:  0x11110f
 > Replace:          85 c0 7d 04 33 f6 eb 1f 8b 7b 04 8b c8 8b d1 c1
 >                   e9 02 8d b5 0c fc ff ff f3 a5 8b ca 83 e1 03 f3
@@ -53,7 +55,8 @@ https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-
 ```
 
 ```
-> Description:      USA Client 1107 ReceiveFromServerNew Encryption Patch
+> File:             Engine.dll
+> Description:      SendToServerNew() Encryption Patch
 > Starting Offset:  0x111295
 > Replace:          50 8d 4d bc e8 e2 0e 00 00
 >                   ->
@@ -61,8 +64,22 @@ https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-
 ```
 
 ```
+> File:             EntitiesMP.dll
+> Description:      SendMyNextMovePosition() Tick Patch (1s -> 100ms)
+> Starting Offset:  0x00ED880
+> Replace:          E8 03 00 00
+>                   ->
+>                   64 00 00 00
+```
+
+```
 > Patched Engine.dll:
 > https://mega.nz/file/LvRX2CxI#K7vSD1BZp2DXUM6aBEkmkm-UMWPj0vWfgLHcO6gywEk
+```
+
+```
+> Patched EntitiesMP.dll:
+> https://mega.nz/file/G6wWwDTT#uyy6BMqm9WX2QvW8VzKZtl6ryRVm9fKgWna4W0Ks9zk
 ```
 
 # about

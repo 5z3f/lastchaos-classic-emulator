@@ -10,10 +10,10 @@ module.exports = {
     
             msg.write('u8', data.type);
             msg.write('i32>', data.uid);
-            msg.write('i32>', data.health.total);
-            msg.write('i32>', data.maxHealth.total);
-            msg.write('i32>', data.mana.total);
-            msg.write('i32>', data.maxMana.total);
+            msg.write('i32>', data.health);
+            msg.write('i32>', data.maxHealth);
+            msg.write('i32>', data.mana);
+            msg.write('i32>', data.maxMana);
 
             if(data.type == 0) // MSG_CHAR_PC
             {

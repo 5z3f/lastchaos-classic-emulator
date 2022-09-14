@@ -39,30 +39,21 @@ module.exports = {
         const subTypeHandler =
         {
             MSG_MOVE_WALK: () => {
-                log.data(`[MOVE WALK] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
+                //log.data(`[MOVE WALK] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
             },
             MSG_MOVE_RUN: () => {
-                log.data(`[MOVE RUN] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
+                //log.data(`[MOVE RUN] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
             },
             MSG_MOVE_PLACE: () => {
-                log.data(`[MOVE PLACE] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
+                //log.data(`[MOVE PLACE] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
             },
             MSG_MOVE_STOP: () => {
-                log.data(`[MOVE STOP] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
+                //log.data(`[MOVE STOP] uid: ${ data.uid } [from: (${ character.position.x }, ${ character.position.y }) to (${ newPosition.x }, ${ newPosition.y })]`)
             },
         };
 
         if(moveTypeMap[data.moveType] in subTypeHandler)
             subTypeHandler[moveTypeMap[data.moveType]]();
-
-        // resend message
-        //session.send.move({
-        //    objType: data.objType,
-        //    moveType: data.moveType,
-        //    uid: data.uid,
-        //    speed: character.statistics.runSpeed,
-        //    position: newPosition
-        //});
         
         // update character position
         character.update('position', newPosition);

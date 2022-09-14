@@ -20,6 +20,10 @@ class Position extends Vector2
         this.layer = layer || 0;
     }
 
+    clone() {
+        return new Position(this);
+    }
+
     static setRandomWithinRange(originalPosition, range)
     {
         var randomOffset = new Vector2().random().subScalar(0.5).multiplyScalar(range);
@@ -33,8 +37,13 @@ class Position extends Vector2
     setRandomWithinRange(range) {
         return this.constructor.setRandomWithinRange(this, range);
     }
+
     getRandomWithinRange(range) {
         return this.constructor.getRandomWithinRange(this, range);
+    }
+
+    toString() {
+        return `(${this.x}, ${this.y}, ${this.z}, ${this.r}, ${this.layer})`;
     }
 }
 

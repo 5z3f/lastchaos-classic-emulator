@@ -11,6 +11,20 @@ const { Statistic } = require('./types');
 
 const Zone = class
 {
+    // TODO: move this?
+    AttributeFlags =
+    {
+        0:      'FIELD',      
+        10:     'PEACEZONE', 
+        20:     'PRODUCT_PUBLIC',
+        30:     'PRODUCT_PRIVATE',
+        40:     'STAIR_UP',
+        50:     'STAIR_DOWN',
+        60:     'WARZONE',
+        70:     'FREEPKZONE',
+        255:    'BLOCK',
+    }
+
     constructor(id, width, height)
     {
         this.id = id ?? -1;
@@ -47,6 +61,8 @@ const Zone = class
                 
                 var m = new Monster({
                     id: baseMonster.id,
+                    flags: baseMonster.flags,
+                    level: baseMonster.level,
                     zone: this,
                     position: spawn.position,
                     respawnTime: spawn.respawnTime * 1000,
@@ -84,6 +100,8 @@ const Zone = class
                 var n = new NPC({
                     id: baseNPC.id,
                     zone: this,
+                    flags: baseNPC.flags,
+                    level: baseNPC.level,
                     statistics: {
                         health:         new Statistic(baseNPC.statistics.health),
                         maxHealth:      new Statistic(baseNPC.statistics.health),
@@ -109,19 +127,7 @@ const Zone = class
             }
         }
 
-        var flags =
-        {
-            0:      'FIELD',      
-            10:     'PEACEZONE', 
-            20:     'PRODUCT_PUBLIC',
-            30:     'PRODUCT_PRIVATE',
-            40:     'STAIR_UP',
-            50:     'STAIR_DOWN',
-            60:     'WARZONE',
-            70:     'FREEPKZONE',
-            255:    'BLOCK',
-        }
-
+        // read height map
         var heightData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${ this.id }.sht`);
         const reader1 = SmartBuffer.fromBuffer(heightData);
 
@@ -129,13 +135,15 @@ const Zone = class
             for (var w = 0; w < this.width; w++)
                 this.heightMap[w][h] = reader1.readUInt16BE() / 100.0;
 
+        // read attribute map
         var attrData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${ this.id }.sat`);
         const reader2 = SmartBuffer.fromBuffer(attrData);
 
+        var flagsKeys = Object.keys(this.AttributeFlags);
         for (var h = 0; h < this.height; h++) {
             for (var w = 0; w < this.width; w++) {
                 var val = reader2.readUInt8();
-                this.attributeMap[w][h] = Object.keys(flags).includes(String(val)) ? flags[String(val)] : 'BLOCK';
+                this.attributeMap[w][h] = flagsKeys.includes(String(val)) ? val : 255;
             }
         }
 
@@ -158,16 +166,17 @@ const Zone = class
         switch(type)
         {
             case 'character':
-                var found = this.characters.findIndex((ch) => ch.uid == data.uid);
+                var found = this.characters.find((ch) => ch.uid == data.uid);
                 
-                if(found != -1)
+                if(found == null)
                     return;
 
                 this.quadTree.insert({
                     x: data.position.x,
                     y: data.position.y,
                     uid: data.uid,
-                    type: 'character'
+                    type: 'character',
+                    character: found
                 });
 
                 this.characters.push(data);
@@ -286,21 +295,21 @@ const Zone = class
         }
     }
 
-    getAttribute(x, y)
+    getAttribute(position, asText)
     {
-        x = parseInt(x);
-        y = parseInt(y);
+        var x = parseInt(position.x);
+        var y = parseInt(position.y);
 
         if(x < 0 || x >= this.width || y < 0 || y >= this.height)
-            return 'BLOCK';
+            return !!asText ? this.AttributeFlags[255] : 255;
 
-        return this.attributeMap[x][y];
+        return !!asText ? this.AttributeFlags[this.attributeMap[x][y]] : this.attributeMap[x][y];
     }
 
-    getHeight(x, y)
+    getHeight(position)
     {
-        x = parseInt(x);
-        y = parseInt(y);
+        var x = parseInt(position.x);
+        var y = parseInt(position.y);
 
         if(x < 0 || x >= this.width || y < 0 || y >= this.height)
             return 0;
