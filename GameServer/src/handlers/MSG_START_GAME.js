@@ -53,12 +53,11 @@ module.exports = {
         });
 
         var visionRange = 250;
-        character.event.on('move', (pos) =>
-        {
+
+        character.event.on('move', (pos) => {
             var objectPoints = character.zone.getObjectInArea(pos.x, pos.y, visionRange);
 
-            for(var apo of objectPoints)
-            {
+            for(var apo of objectPoints) {
                 // TODO: currently only monster objects are supported
                 if(apo.type != 'monster')
                     continue;
@@ -74,17 +73,14 @@ module.exports = {
                 obj.appear(character);
             }
             
-            for(var objType of Object.keys(character.visibleObjectUids))
-            {
+            for(var objType of Object.keys(character.visibleObjectUids)) {
                 var objectUids = character.visibleObjectUids[objType];
 
-                for(var objUid of objectUids)
-                {
+                for(var objUid of objectUids) {
                     var inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
 
                     // TODO: dont disappear objects that are in vision range of party members (if you are close to them - 100~150 units)
-                    if(!inVisionRange)
-                    {
+                    if(!inVisionRange) {
                         var o = game.world.find(objType, (o) => o.uid == objUid);
 
                         // TODO: this condition will likely disappear when the character will be added to the session
@@ -116,8 +112,7 @@ module.exports = {
                 game.database.find('item', (el) => el.name == 'Siegfried Double Sword'),
             ];
 
-            for(var item of equipment)
-            {
+            for(var item of equipment) {
                 let row = new InventoryRow({
                     itemId: item.id,    
                     plus: 15,

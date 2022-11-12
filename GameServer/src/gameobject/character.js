@@ -8,10 +8,9 @@ const { Inventory } = require('../system/inventory');
 const GameObject = require('./index');
 const Attackable = require('./traits/attackable');
 
-const Character = class extends util.extender(GameObject, Attackable)
-{
-    constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics })
-    {
+class Character extends util.extender(GameObject, Attackable) {
+
+    constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics }) {
         // get all properties from GameObject class
         super(...arguments);
 
@@ -79,33 +78,31 @@ const Character = class extends util.extender(GameObject, Attackable)
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
-    send = (type, data) => {
+    send(type, data) {
         this.session.send[type](data);
     }
 
-    addVisibleObject = (type, uid) => {
+    addVisibleObject(type, uid) {
         if(!this.visibleObjectUids[type].includes(uid))
             this.visibleObjectUids[type].push(uid);
     }
 
-    removeVisibleObject = (type, uid) => {
+    removeVisibleObject(type, uid) {
         var objArray = this.visibleObjectUids[type];
         if(objArray.includes(uid))
             objArray.splice(objArray.indexOf(uid), 1);
     }
 
-    getVisibleObjects = (type) => {
+    getVisibleObjects(type) {
         return this.visibleObjectUids[type];
     }
 
-    isObjectVisible = (type, uid) => {
+    isObjectVisible(type, uid) {
         return this.visibleObjectUids[type].includes(uid);
     }
 
-    update = (type, data) =>
-    {
-        if(type == 'position')
-        {
+    update(type, data) {
+        if(type == 'position') {
             this.previousPosition = this.position.clone();
 
             Object.assign(this.position, data);
@@ -135,8 +132,7 @@ const Character = class extends util.extender(GameObject, Attackable)
 
             this.event.emit('move', data);
         }
-        else if(type == 'stats')
-        {
+        else if(type == 'stats') {
             Object.assign(this.statistics, data);
 
             this.session.send.status({
@@ -180,8 +176,7 @@ const Character = class extends util.extender(GameObject, Attackable)
         this.event.emit('update', data);
     };
 
-    spawn = () =>
-    {
+    spawn() {
         log.data(`[INFO] Spawning Character (uid: ${ this.uid }, id: ${ this.id }, zone: ${ this.zone.id })`);
 
         this.session.send.at({

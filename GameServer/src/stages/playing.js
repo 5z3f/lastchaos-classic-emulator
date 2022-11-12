@@ -6,6 +6,6 @@ const Message = require("@local/shared/message");
 
 const state = require("./state");
 
-const playing = class
-{
+class playing {
+        
 }

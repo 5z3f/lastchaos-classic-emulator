@@ -18,8 +18,7 @@ module.exports = {
             'text': msg.read('stringnt')
         };
 
-        if(data.text.includes('.speedup'))
-        {
+        if(data.text.includes('.speedup')) {
             var params = data.text.split(' ');
             var speed = parseFloat(params[1]);
 
@@ -38,8 +37,7 @@ module.exports = {
                 text: `speedup [uid: ${ character.uid }] (before: ${ runSpeedBefore }, after: ${ speed })`
             });
         }
-        if(data.text.includes('.spawn'))
-        {
+        else if(data.text.includes('.spawn')) {
             var params = data.text.split(' ');
             var npcId = parseInt(params[1]);
 
@@ -78,8 +76,7 @@ module.exports = {
             game.world.add({ type: 'monster', zoneId: 0, data: monster });
             monster.appear(character);
 
-            character.event.on('move', (pos) =>
-            {
+            character.event.on('move', (pos) => {
                 session.send.move({
                     objType: 1,
                     moveType: 1,
@@ -103,8 +100,7 @@ module.exports = {
                 text: `spawn [uid: ${ monster.uid }, npcId: ${ npcId }]`
             });
         }
-        if(data.text.includes('.itemget'))
-        {
+        else if(data.text.includes('.itemget')) {
             var params = data.text.split(' ');
 
             var itemId = parseInt(params[1]);
@@ -114,7 +110,7 @@ module.exports = {
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
             var dbItem = game.database.find('item', (el) => el.id == itemId);
 
-            if(dbItem == null)
+            if(!dbItem)
                 return; // raise error message
             
             // add item to inventory
@@ -137,8 +133,7 @@ module.exports = {
                 text: `itemget [uid: ${ invenRow.itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
             });            
         }
-        if(data.text.includes('.itemdrop'))
-        {
+        else if(data.text.includes('.itemdrop')) {
             var params = data.text.split(' ');
 
             var itemId = parseInt(params[1]);
@@ -148,7 +143,7 @@ module.exports = {
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
             var dbItem = game.database.find('item', (el) => el.id == itemId);
 
-            if(dbItem == null)
+            if(!dbItem)
                 return; // raise error message
                         
             var itemUid = util.generateId();
@@ -179,13 +174,11 @@ module.exports = {
                 text: `itemdrop [uid: ${ itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
             });
         }
-        if(data.text.includes('.search item'))
-        {
+        else if(data.text.includes('.search item')) {
             var params = data.text.split(' ');
             var items = game.database.filter('item', (i) => i.name.includes(params[2]))
 
-            for(var item of items)
-            {
+            for(var item of items) {
                 session.send.chat({
                     chatType: 0,
                     senderId: -1,
@@ -195,8 +188,7 @@ module.exports = {
                 });  
             }
         }
-        else
-        {
+        else {
             // resend
             session.send.chat(data);
         }

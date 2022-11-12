@@ -10,14 +10,20 @@ class game {
         this.world = new World();
     }
 
-    static sendInArea(zone, position, msgType, msgData)
-    {
+    static sendInArea(zone, position, msgType, msgData) {
         //var characters = this.world.filter('character', (ch) => ch.zone.id == zone.id && ch.distance(position) < 250);
         var objectPoints = zone.getObjectInArea(position.x, position.y, 250);
 
-        for (var obj of objectPoints)
-            if(obj.type == 'character')
+        for(var obj of objectPoints) {
+            if(obj.type == 'character') {
+                if(!obj.character) {
+                    // TODO: fix this one
+                    continue;
+                }
+
                 obj.character.send(msgType, msgData);
+            }
+        }
     }
 }
 

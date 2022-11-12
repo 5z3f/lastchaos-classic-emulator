@@ -1,6 +1,5 @@
 
-class lccrypt
-{
+class lccrypt {
     /* key rotation is currently not supported */
     static KEY = 1852535664;
 
@@ -24,8 +23,7 @@ class lccrypt
 
     static CNM_CRC             = 0x8003;
 
-    static CNM_TransTable = 
-    [
+    static CNM_TransTable = [
         0xa7, 0x79, 0x0a, 0x15, 0xcf, 0xd2, 0x8d, 0xf5, 0x01, 0x48, 0xe7, 0x31, 0x3e, 0x21, 0x73, 0xe4, 
         0x7c, 0x0b, 0x67, 0x0e, 0x86, 0x53, 0x5e, 0x8a, 0x6b, 0xc6, 0xbb, 0xc1, 0x2f, 0xf4, 0x17, 0x38, 
         0x63, 0xba, 0x68, 0xb6, 0x25, 0x1e, 0xfa, 0x60, 0x19, 0x00, 0x66, 0xc5, 0x56, 0xd8, 0xb9, 0x2c, 
@@ -44,8 +42,7 @@ class lccrypt
         0x05, 0x54, 0xbd, 0x49, 0xae, 0x08, 0x51, 0xf2, 0x3a, 0xe9, 0x55, 0xa8, 0xe5, 0x4b, 0xaf, 0xd1, 
     ];
     
-    static CNM_RTransTable = 
-    [
+    static CNM_RTransTable = [
         0x29, 0x08, 0xcd, 0xa2, 0x7b, 0xf0, 0xa6, 0xb8, 0xf5, 0x7e, 0x02, 0x11, 0xd4, 0xb4, 0x13, 0x9e, 
         0x44, 0xc3, 0xe6, 0x88, 0x67, 0x03, 0x69, 0x1e, 0xaa, 0x28, 0x3e, 0x31, 0x3d, 0x7c, 0x25, 0x92, 
         0xc2, 0x0d, 0x8a, 0xd2, 0xbb, 0x24, 0xca, 0x91, 0xe9, 0xd1, 0xbd, 0x79, 0x2f, 0xd0, 0x99, 0x1c, 
@@ -64,14 +61,12 @@ class lccrypt
         0x42, 0x36, 0xf7, 0xb6, 0x1d, 0x07, 0x84, 0x93, 0xa8, 0x98, 0x26, 0xeb, 0x82, 0xe0, 0xcc, 0x83, 
     ];
 
-    static crc = (pDest, nLen) =>
-    {
+    static crc(pDest, nLen) {
         var crc = 0;
         var i;
         var j = 0;
     
-        while (nLen-- > 0)
-        {
+        while (nLen-- > 0) {
             crc = crc ^ (pDest[j++] << 8);
 
             i = 8;
@@ -86,8 +81,7 @@ class lccrypt
         return crc;
     }
         
-    static decrypt = (buffer) =>
-    {
+    static decrypt(buffer) {
         buffer = new Uint8Array(buffer);
 
         var bufferLen = buffer.byteLength;
@@ -111,8 +105,7 @@ class lccrypt
         // exclude dummy byte
         nIndexSrc = this.CNM_DUMMY_SIZE;
         
-        while (nIndexSrc < bufferLen)
-        {
+        while (nIndexSrc < bufferLen) {
             // save the current decoded value
             btTrans = buffer[nIndexSrc];
     
@@ -155,8 +148,7 @@ class lccrypt
         return Buffer.from(aa.buffer);
     }
 
-    static encrypt = (buffer) =>
-    {
+    static encrypt(buffer) {
         buffer = new Uint8Array(buffer);
 
         var bufferLen = buffer.byteLength;
@@ -187,8 +179,7 @@ class lccrypt
         nIndexDest++;
 
         // copy data
-        while (nIndexSrc < bufferLen)
-        {
+        while (nIndexSrc < bufferLen) {
             pTmpBuf[nIndexDest] = buffer[nIndexSrc];
             nIndexDest++;
             nIndexSrc++;
@@ -210,8 +201,7 @@ class lccrypt
         // exclude dummy
         nIndexDest = this.CNM_DUMMY_SIZE;
 
-        while (nIndexDest < nLenDest)
-        {
+        while (nIndexDest < nLenDest) {
             btTrans = this.CNM_TransTable[pTmpBuf[nIndexDest]]; // convert byte to an equivalent in the table 
             btTrans ^= btKey[nIndexDest % 4];                   // perform xor key operation
             btTrans = this.CNM_ROTATE_RIGHT(btTrans);           // rotate right

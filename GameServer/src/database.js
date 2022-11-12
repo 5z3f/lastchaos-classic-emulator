@@ -2,33 +2,29 @@ const BaseItem = require('./baseobject/item');
 const BaseMonster = require('./baseobject/monster');
 const BaseNPC = require('./baseobject/npc');
 
-const Database = class
-{
-    constructor()
-    {
-        this.items = [];
-        this.monsters = [];
-        this.npcs = [];
+class Database {
 
+    items = [];
+    monsters = [];
+    npcs = [];
+
+    constructor() {
         this.load('items', '../data/items.json');
         this.load('monsters', '../data/monsters.json');
         this.load('npcs', '../data/npcs.json');
     }
 
-    load(type, fp)
-    {
+    load(type, fp) {
         const objs = require(fp);
 
-        for(var o of objs)
-        {
+        for(var o of objs) {
             if(!o.enabled)
                 continue;
 
             if(o.name.length < 1 /*|| o.description.length < 1*/)
                 continue;
             
-            switch(type)
-            {
+            switch(type) {
                 case 'items':
                     this.items.push(new BaseItem(o));
                     break;
@@ -43,44 +39,26 @@ const Database = class
 
     }
 
-    find(type, opts)
-    {
-        var result = null;
-
-        switch(type)
-        {
+    find(type, opts) {
+        switch(type) {
             case 'npc':
-                result = this.npcs.find(opts);
-                break;
+                return this.npcs.find(opts);
             case 'monster':
-                result = this.monsters.find(opts);
-                break;
+                return this.monsters.find(opts);
             case 'item':
-                result = this.items.find(opts);
-                break;
+                return this.items.find(opts);
         }
-
-        return result;
     }
 
-    filter(type, opts)
-    {
-        var result = null;
-
-        switch(type)
-        {
+    filter(type, opts) {
+        switch(type) {
             case 'npc':
-                result = this.npcs.filter(opts);
-                break;
+                return this.npcs.filter(opts);
             case 'monster':
-                result = this.monsters.filter(opts);
-                break;
+                return this.monsters.filter(opts);
             case 'item':
-                result = this.items.filter(opts);
-                break;
+                return this.items.filter(opts);
         }
-
-        return result;
     }
 }
 

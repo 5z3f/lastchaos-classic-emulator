@@ -1,9 +1,8 @@
 const BaseObject = require('./index');
 
-const BaseNPC = class extends BaseObject
-{
-    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward })
-    {
+class BaseNPC extends BaseObject {
+
+    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward }) {
         super(...arguments)
 
         this.level = level;
@@ -11,8 +10,7 @@ const BaseNPC = class extends BaseObject
 
         this.attackType = attackType; // melee, range or magic (0, 1, 2)
 
-        this.statistics = 
-        {
+        this.statistics = {
             health:         0,
             mana:           0,
             strength:       0,

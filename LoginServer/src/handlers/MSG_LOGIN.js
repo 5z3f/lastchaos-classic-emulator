@@ -16,4 +16,4 @@ module.exports = {
         log.data(`[IN]  >> client login request: [ver: ${ data.version }, username: ${ data.username }, password: ${ data.password }, nation: ${ data.nation }`);
         session.send.channelInfo();
     }
-}
+};

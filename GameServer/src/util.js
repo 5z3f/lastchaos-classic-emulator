@@ -1,9 +1,7 @@
 const farmhash = require('farmhash');
 
-const util = class
-{
-    static generateId = () =>
-    {
+class util {
+    static generateId() {
         // FIXME: not sure about hash collision rate on this one, probably need to do something better
         var randomstr = Math.random().toString(15).substring(10, 20);
         var inthash = farmhash.hash32(randomstr + Date.now())
@@ -12,8 +10,7 @@ const util = class
         return uid;
     };
 
-    static getRandomInt(min, max)
-    {
+    static getRandomInt(min, max) {
         min = Math.ceil(min);
         max = Math.floor(max);
 
@@ -21,8 +18,7 @@ const util = class
     }
 
     // github.com/rse/aggregation/blob/master/src/aggregation-es6.js
-    static extender = (base, ...mixins) =>
-    {
+    static extender = (base, ...mixins) => {
         /*  create aggregation class  */
         let aggregate = class __Aggregate extends base {
             constructor (...args) {

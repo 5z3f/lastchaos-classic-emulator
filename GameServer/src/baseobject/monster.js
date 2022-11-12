@@ -1,18 +1,16 @@
 const BaseObject = require('./index');
 
-const BaseMonster = class extends BaseObject
-{
-    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward })
-    {
-        super(...arguments)
+class BaseMonster extends BaseObject {
+    
+    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward }) {
+        super(...arguments);
 
         this.level = level;
         this.vision = vision; // currently unused
 
         this.attackType = attackType; // melee, range or magic (0, 1, 2)
 
-        this.statistics = 
-        {
+        this.statistics = {
             health:         0,
             mana:           0,
             strength:       0,
@@ -44,6 +42,7 @@ const BaseMonster = class extends BaseObject
         Object.assign(this.statistics, statistics, this.statistics);
         Object.assign(this.reward, reward, this.reward);
     }
+
 }
 
 module.exports = BaseMonster;

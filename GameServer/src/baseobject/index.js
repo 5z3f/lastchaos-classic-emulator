@@ -1,7 +1,6 @@
 
 // TODO: move this?
-const MonsterFlags =
-{
+const MonsterFlags = {
     SHOPPER:        (1 << 0),	// store owner
     AGGRESSIVE:     (1 << 1),	//
     ATTACK:         (1 << 2),	// can attack
@@ -30,11 +29,10 @@ const MonsterFlags =
     DISPLAY_MAP:    (1 << 25),	// visible on the map
     QUEST_COLLECT:  (1 << 26),	// for collection quests
     PARTY:          (1 << 27)	// in group
-}
+};
 
 // TODO: move this?
-const ItemFlags =
-{
+const ItemFlags = {
     COUNT:          (1 << 0),
     DROP:           (1 << 1),
     UPGRADE:        (1 << 2),
@@ -51,12 +49,11 @@ const ItemFlags =
     CASHMOON:       (1 << 13),
     LENT:           (1 << 14),
     RARE:           (1 << 15)
-}
+};
 
-const BaseObject = class
-{
-    constructor({ id, enabled, name, description, level, flags })
-    {
+class BaseObject {
+    
+    constructor({ id, enabled, name, description, level, flags }) {
         this.id = id;
         this.enabled = !!enabled;
 
@@ -66,6 +63,7 @@ const BaseObject = class
         this.level = level;
         this.flags = flags;
     }
+
 }
 
 module.exports = BaseObject;

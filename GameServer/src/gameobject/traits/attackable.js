@@ -1,8 +1,7 @@
 
-class Attackable
-{
-    damage(attacker)
-    {
+class Attackable {
+
+    damage(attacker) {
         this.statistics.health.total -= attacker.statistics.attack.total;
         attacker.statistics.health.total -= this.statistics.attack.total;
 
@@ -21,8 +20,7 @@ class Attackable
 
         this.lastAttackTime = performance.now();
 
-        if(this.statistics.health.total <= 0)
-        {
+        if(this.statistics.health.total <= 0) {
             this.statistics.health.total = 0;
 
             // kill monster

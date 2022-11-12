@@ -7,10 +7,9 @@ const Attackable = require('./traits/attackable');
 const { Vector2 } = require('three');
 
 
-const Monster = class extends util.extender(GameObject, Attackable)
-{
-    constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime })
-    {
+class Monster extends util.extender(GameObject, Attackable) {
+
+    constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime }) {
         // get all properties from GameObject class
         super(...arguments);
 
@@ -31,8 +30,7 @@ const Monster = class extends util.extender(GameObject, Attackable)
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
-    appear = (character) =>
-    {
+    appear(character) {
         if(this.state.dead)
             return;
         
@@ -55,8 +53,7 @@ const Monster = class extends util.extender(GameObject, Attackable)
         this.event.emit('appear', /* appearedFirstTime */);
     }
     
-    appearInRange = (range) =>
-    {
+    appearInRange(range) {
         var characterPoints = this.zone.getObjectInArea(this.position.x, this.position.y, range)
             .filter(obj => obj.type === 'character');
 
@@ -64,8 +61,7 @@ const Monster = class extends util.extender(GameObject, Attackable)
             this.appear(obj.character);
     }
 
-    disappear = (character) =>
-    {
+    disappear(character) {
         if(this.state.dead)
             return;
 
@@ -80,12 +76,10 @@ const Monster = class extends util.extender(GameObject, Attackable)
         this.event.emit('disappear', /* disappearedFirstTime */);
     }
 
-    die = () =>
-    {
+    die() {
         this.state.dead = true;
 
-        setTimeout(function(that)
-        {
+        setTimeout(function(that) {
             that.statistics.health.total = that.statistics.maxHealth.total;
             that.state.dead = false;
 

@@ -4,8 +4,7 @@ const SmartBuffer = require('smart-buffer').SmartBuffer;
 const lccrypt = require('@local/shared/lccrypt');
 const game = require('../GameServer/src/game'); // TODO: move this
 
-const Message = class
-{
+class Message {
     /**
      * Constructor
      * @param {Buffer} buffer initialize from given `Buffer` object
@@ -14,8 +13,7 @@ const Message = class
      * @param {Boolean} [header=true] read lc packet header?
      * @param {Boolean} [encrypted=true] is packet encrypted?
      */
-    constructor({ buffer, type, subType, header, encrypted })
-    {
+    constructor({ buffer, type, subType, header, encrypted }) {
         this._sb = buffer
             ? SmartBuffer.fromBuffer(buffer) 
             : new SmartBuffer();
@@ -43,14 +41,14 @@ const Message = class
      * @param {Buffer} buffer message buffer
      * @return {Buffer}
      */
-     static decrypt = (buffer) => lccrypt.decrypt(buffer);
+    static decrypt = (buffer) => lccrypt.decrypt(buffer);
 
     /**
      * Encrypt buffer using LCCrypt library
      * @param {Buffer} buffer message buffer
      * @return {Buffer}
      */
-     static encrypt = (buffer) => lccrypt.encrypt(buffer);
+    static encrypt = (buffer) => lccrypt.encrypt(buffer);
 
     /**
      * Get Buffer object
@@ -71,10 +69,8 @@ const Message = class
      * @param {Boolean} [encrypt=true] encrypt packet?
      * @return {Buffer}
      */
-    build = (header, encrypt) => {
-
-        const makeHeader = (messageSize) =>
-        {
+    build(header, encrypt) {
+        const makeHeader = (messageSize) => {
             var writer = new SmartBuffer();
 
             writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));                       // reliable
@@ -97,8 +93,7 @@ const Message = class
      * @param {string} type type
      * @param {value} val value
      */
-    read = (type) =>
-    {
+    read(type) {
         var val;
 
         switch(type) {
@@ -131,8 +126,7 @@ const Message = class
      * @param {string} type type
      * @param {value} val value
      */
-    write = (type, val) =>
-    {
+    write(type, val) {
         switch(type) {
             case 'i8':          this._sb.writeInt8(val); break;
             case 'u8':          this._sb.writeUInt8(val); break;

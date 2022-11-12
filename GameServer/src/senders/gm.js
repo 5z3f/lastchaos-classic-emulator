@@ -40,8 +40,7 @@ module.exports = {
             // }
             // -------------------------------------------------------------------------------
 
-            const whoami = (level) =>
-            {
+            const whoami = (level) => {
                 //var msg = new Message({ type: msgId, subType: 0 });
                 //msg.write('i8', level) // level
                 //

@@ -6,8 +6,7 @@ module.exports = {
     {
         return (subType, data) =>
         {
-            const wear = ({ wearingPosition, srcRow, dstRow }) =>
-            {
+            const wear = ({ wearingPosition, srcRow, dstRow }) => {
                 var msg = new Message({ type: msgId, subType: 5 });
             
                 msg.write('u8', wearingPosition);
@@ -25,8 +24,7 @@ module.exports = {
                 session.write(msg.build());
             }
 
-            const swap = ({ tab, src, dst }) =>
-            {
+            const swap = ({ tab, src, dst }) => {
                 var msg = new Message({ type: msgId, subType: 6 });
             
                 msg.write('u8', tab);
@@ -40,8 +38,7 @@ module.exports = {
                 session.write(msg.build());  
             };
 
-            const drop = ({ uid, id, count, position, objType, objUid }) =>
-            {
+            const drop = ({ uid, id, count, position, objType, objUid }) => {
                 var msg = new Message({ type: msgId, subType: 9 });
             
                 msg.write('i32>', uid);         // item uid
@@ -61,8 +58,7 @@ module.exports = {
                 session.write(msg.build());
             }
 
-            const add = ({ itemUid, itemId, position, wearingPosition, plus, flag, durability, count/* TODO: , options */}) =>
-            {
+            const add = ({ itemUid, itemId, position, wearingPosition, plus, flag, durability, count/* TODO: , options */}) => {
                 var msg = new Message({ type: msgId, subType: 7 });
             
                 msg.write('u8', position.tab);

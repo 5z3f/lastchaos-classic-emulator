@@ -95,12 +95,11 @@ module.exports = {
                 var character = game.world.find('character', (ch) => ch.uid == session.uid);
 
                 // if character tries to take an item off
-                if(msgdata.item.uid == -1)
-                {
+                if(msgdata.item.uid == -1) {
                     // unequip already equipped item by its wearing position and return following data: position, row data
                     var result = character.inventory.unequip(msgdata.wearingPosition);
 
-                    if(result == null) {
+                    if(!result) {
                         session.send.sys(2); // MSG_SYS_CANNOT_WEAR
                         return;
                     }
@@ -123,7 +122,7 @@ module.exports = {
                 // find inventory row by unique id and if its not equipped already
                 var requestedRow = character.inventory.find(msgdata.item.position.tab, (i) => i?.wearingPosition == 255 && i?.itemUid == msgdata.item.uid);
 
-                if(requestedRow == null) {
+                if(!requestedRow) {
                     session.send.sys(2); // MSG_SYS_CANNOT_WEAR
                     return;
                 }

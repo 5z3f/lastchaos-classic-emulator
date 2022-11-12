@@ -6,8 +6,7 @@ module.exports = {
     {
         return (subType, data) =>
         {
-            const appearCharacter = () =>
-            {            
+            const appearCharacter = () => {        
                 var msg = new Message({ type: msgId });
                        
                 msg.write('u8', 1);             // new
@@ -68,8 +67,7 @@ module.exports = {
                 session.write(msg.build());
             }
 
-            const appearNpc = ({ uid, id, firstAppearance, position, health, maxHealth }) =>
-            {
+            const appearNpc = ({ uid, id, firstAppearance, position, health, maxHealth }) => {
                 var msg = new Message({ type: msgId });
     
                 msg.write('u8', firstAppearance);   // New

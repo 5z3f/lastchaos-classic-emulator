@@ -2,10 +2,9 @@ const EventEmitter = require('events');
 const { Statistic, Position } = require('../types');
 const util = require('../util');
 
-const GameObject = class
-{
-    constructor({ uid, id, flags, zone, position, areaId })
-    {
+class GameObject {
+
+    constructor({ uid, id, flags, zone, position, areaId }) {
         this.uid = uid || util.generateId();   // unique id
         this.id = id;
 
@@ -32,8 +31,7 @@ const GameObject = class
 
         this.lastAttackTime = 0;
 
-        this.statistics = 
-        {            
+        this.statistics = {            
             health:         new Statistic(0),
             maxHealth:      new Statistic(0),
             mana:           new Statistic(0),
@@ -64,8 +62,7 @@ const GameObject = class
     distance = (position) =>
         Math.sqrt(Math.pow(position.x - this.position.x, 2) + Math.pow(position.y - this.position.y, 2));
 
-    updatePosition = ({ position, moveType }) =>
-    {
+    updatePosition({ position, moveType }) {
         // set previous position
         this.previousPosition = new Position(this.position);
 
@@ -94,16 +91,14 @@ const GameObject = class
         this.event.emit('move', this.position);
     };
 
-    testMoveInRange(range)
-    {
+    testMoveInRange(range) {
         // if object has MOVING flag, then it can move
         if(!this.hasFlag('MOVING'))
             return;
 
         var randomMovementTick = util.getRandomInt(3, 15) * 1000;
 
-        setInterval(function(that, range)
-        {
+        setInterval(function(that, range) {
             var randomMoveType = util.getRandomInt(0, 2);
 			
 			if (!that.canMove())
@@ -113,8 +108,7 @@ const GameObject = class
             newPosition.z = that.zone.getHeight(newPosition);
             var posAttr = that.zone.getAttribute(newPosition);
 
-            while(posAttr == 255 /* BLOCK */)
-            {
+            while(posAttr == 255 /* BLOCK */) {
                 newPosition = that.originalPosition.getRandomWithinRange(50);
                 newPosition.z = that.zone.getHeight(newPosition);
                 posAttr = that.zone.getAttribute(newPosition);
@@ -128,12 +122,10 @@ const GameObject = class
         }, randomMovementTick, this, range);
     }
 
-    testRegenInRange = (range) =>
-    {
+    testRegenInRange(range) {
         var regenTick = 1 * 100;
             
-        setInterval(function(that, range)
-        {
+        setInterval(function(that, range) {
             if(that.state.dead || that.statistics.health.total == that.statistics.maxHealth.total)
                 return;
 

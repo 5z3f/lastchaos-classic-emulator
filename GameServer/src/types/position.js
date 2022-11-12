@@ -1,11 +1,8 @@
 const { Vector2 } = require('three');
 
-class Position extends Vector2
-{
-    constructor(x, y, z, r, layer)
-    {
-        if(typeof x === 'object')
-        {
+class Position extends Vector2 {
+    constructor(x, y, z, r, layer) {
+        if(typeof x === 'object') {
             y = x.y;
             z = x.z;
             r = x.r;
@@ -24,8 +21,7 @@ class Position extends Vector2
         return new Position(this);
     }
 
-    static setRandomWithinRange(originalPosition, range)
-    {
+    static setRandomWithinRange(originalPosition, range) {
         var randomOffset = new Vector2().random().subScalar(0.5).multiplyScalar(range);
         return new Position(originalPosition).add(randomOffset);
     }

@@ -18,6 +18,11 @@ module.exports = {
 
         var character = game.world.find('character', (ch) => ch.uid == data.attackerIndex);
         var monster = game.world.find('monster', (m) => m.uid == data.targetIndex);
+
+        if(!monster) {
+            return console.debug(`monster which doesn't exist has been attacked`);
+        }
+            
         monster.damage(character);
     }
 }

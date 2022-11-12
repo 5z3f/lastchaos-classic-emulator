@@ -2,11 +2,9 @@ const net = require('net');
 const log = require('@local/shared/logger');
 const session = require('@local/shared/session');
 
-const server = class
-{
+class server {
     //static World = null;
-    constructor({ host, port, handlers, senders, world, encryption })
-    {
+    constructor({ host, port, handlers, senders, world, encryption }) {
         var that = this;
 
         this.host = host || '127.0.0.1';
@@ -20,8 +18,7 @@ const server = class
 
         const srv = net.createServer();
     
-        srv.on('connection', (socket) =>
-        {            
+        srv.on('connection', (socket) => {     
             var sess = new session({
                 server: that,
                 socket: socket,

@@ -16,8 +16,7 @@ module.exports = {
                 session.write(msg.build());
             }
 
-            const gameTime = (date) =>
-            {
+            const gameTime = (date) => {
                 var msg = new Message({ type: msgId, subType: 2 });
 
                 msg.write('i32>', date.getFullYear() - 2001);

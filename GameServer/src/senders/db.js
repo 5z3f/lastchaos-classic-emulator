@@ -6,8 +6,7 @@ module.exports = {
     {
         return (subType, data) =>
         {
-            const characterExists = (data) =>
-            {
+            const characterExists = (data) => {
                 // MSG_DB -> MSG_DB_CHAR_EXIST
                 var msg = new Message({ type: msgId, subType: 2 });
     

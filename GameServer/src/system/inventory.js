@@ -1,9 +1,7 @@
 const util = require('../util');
 
-class InventoryRow
-{
-    constructor({ itemUid, itemId, plus, count, wearingPosition, flag, durability, options })
-    {
+class InventoryRow {
+    constructor({ itemUid, itemId, plus, count, wearingPosition, flag, durability, options }) {
         this.itemUid = itemUid ?? util.generateId();
         this.itemId = itemId;
 
@@ -16,8 +14,7 @@ class InventoryRow
     }
 }
 
-class Inventory
-{
+class Inventory {
     PLATINUM_MAX_PLUS = 127;
     FLAG_ITEM_PLATINUM_GET = (a, b) => (b = a & PLATINUM_MAX_PLUS);
     FLAG_ITEM_PLATINUM_SET = (a, b)	=> (a = ( (a &~ PLATINUM_MAX_PLUS) | b ));
@@ -40,8 +37,7 @@ class Inventory
     TAB_QUEST = 1;
     TAB_EVENT = 2;
 
-    constructor({ owner })
-    {
+    constructor({ owner }) {
         this.owner = owner;
         this.items = Array.from(Array(this.MAX_TABS), () => Array.from(Array(this.MAX_COLUMNS), () => new Array(this.MAX_ROWS)));
         
@@ -50,17 +46,12 @@ class Inventory
         this.maxWeight = 150000;
     }
 
-    find(tab, opts)
-    {
-        var result = null;
-
-        for(var col = 0; col < this.MAX_COLUMNS; col++)
-        {
+    find(tab, opts) {
+        for(var col = 0; col < this.MAX_COLUMNS; col++) {
             var row = this.items[tab][col].findIndex(opts);
 
-            if(row != -1)
-            {
-                result = {
+            if(row != -1) {
+                return {
                     position: {
                         tab: tab,
                         col: col,
@@ -68,44 +59,29 @@ class Inventory
                      },
                      data: this.items[tab][col][row]
                 };
-
-                break;
             }
         }
-
-        return result;
     }
 
-    findEmptyRow(tab)
-    {
-        var result = null;
-
-        for(var col = 0; col < this.MAX_COLUMNS; col++)
-        {
+    findEmptyRow(tab) {
+        for(var col = 0; col < this.MAX_COLUMNS; col++) {
             var row = this.items[tab][col].findIndex((i) => (typeof i === "undefined"));
 
-            if(row != -1)
-            {
-                result = {
+            if(row != -1) {
+                return {
                     tab: tab,
                     col: col,
                     row: row
                 };
-
-                break;
             }
         }
-
-        return result;
     }
 
-    add(tab, item, sendMsg)
-    {
-        sendMsg = (sendMsg == undefined || !!sendMsg) ? true : false;
+    add(tab, item, sendMsg = true) {
 
         var result = this.findEmptyRow(tab);
 
-        if(result == null) {
+        if(!result) {
             this.owner.session.send.sys(3); // MSG_SYS_FULL_INVENTORY
             return false;
         }
@@ -120,15 +96,14 @@ class Inventory
             }
         };
 
+        // send item to client
         if(sendMsg)
-            // send item to client
             this.owner.session.send.item('MSG_ITEM_ADD', { ...item, ...pos });
 
         return pos;
     }
 
-    swap(tab, src, dst)
-    {    
+    swap(tab, src, dst) {
         var srcRow = this.items[tab][src.position.col][src.position.row];
         var dstRow = this.items[tab][dst.position.col][dst.position.row];
 
@@ -148,22 +123,18 @@ class Inventory
         return true;
     }
 
-    update(position, opts)
-    {
-        if(opts != undefined)
+    update(position, opts) {
+        if(opts)
             Object.assign(this.items[position.tab][position.col][position.row], opts);
     }
 
-    unequip(position)
-    {
-        var result = null;
+    unequip(position) {
+        var result;
 
-        for(var col = 0; col < this.MAX_COLUMNS; col++)
-        {
+        for(var col = 0; col < this.MAX_COLUMNS; col++) {
             var row = this.items[this.TAB_DEFAULT][col].findIndex((i) => (i?.wearingPosition == position));
 
-            if(row != -1)
-            {
+            if(row != -1) {
                 this.items[this.TAB_DEFAULT][col][row].wearingPosition = 255;
 
                 result = {

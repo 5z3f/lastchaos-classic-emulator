@@ -1,5 +1,5 @@
 
-const Statistic = class {
+class Statistic {
     constructor(value) {
         this.baseValue = value;
         this.total = this.baseValue; // temp

@@ -1,11 +1,10 @@
 
 const BaseObject = require('./index');
 
-const BaseItem = class extends BaseObject
-{
-    constructor({ id, name, description, enabled, type, subType, flags, jobFlag, wearingPosition, level, weight, price, durability, values })
-    {
-        super(...arguments)
+class BaseItem extends BaseObject {
+
+    constructor({ id, name, description, enabled, type, subType, flags, jobFlag, wearingPosition, level, weight, price, durability, values }) {
+        super(...arguments);
 
         this.type = type;
         this.subType = subType;
@@ -19,6 +18,7 @@ const BaseItem = class extends BaseObject
         this.durability = durability;
         this.values = values || [ 0, 0, 0, 0, 0];
     }
+
 }
 
 module.exports = BaseItem;

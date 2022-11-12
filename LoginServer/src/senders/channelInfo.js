@@ -23,4 +23,4 @@ module.exports = {
             session.write(msg.build());
         }
     }
-}
+};

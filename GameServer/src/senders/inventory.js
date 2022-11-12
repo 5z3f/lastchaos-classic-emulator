@@ -6,9 +6,8 @@ module.exports = {
     {
         return (inventory) =>
         {
-            const itemMsg = (msg, itemUid, itemId, wearingPosition, plus, flag, durability, count, options) =>
-            {
-                if(itemId == undefined) {
+            const itemMsg = (msg, itemUid, itemId, wearingPosition, plus, flag, durability, count, options) => {
+                if(!itemId) {
                     msg.write('i32>', -1);      // unique index
                     return;
                 }
@@ -29,27 +28,23 @@ module.exports = {
                 }
             };
 
-            const inven = (inv) =>
-            {
+            const inven = (inv) => {
                 var items = inv.get();
 
                 // tabs
-                for(var i = 0; i < items.length; i++)
-                {
+                for(var i = 0; i < items.length; i++) {
                     // columns
-                    for(var j = 0; j < items[i].length; j++)
-                    {
+                    for(var j = 0; j < items[i].length; j++) {
                         var msg = new Message({ type: msgId });
 
                         msg.write('u8', 0);       // resultArrange
                         msg.write('u8', i);       // tabId
                         msg.write('u8', j);       // colId
 
-                        for(var k = 0; k < items[i][j].length; k++)
-                        {
+                        for(var k = 0; k < items[i][j].length; k++) {
                             let row = items[i][j][k];
 
-                            if(row == undefined) {
+                            if(!row) {
                                 itemMsg(msg, undefined);
                                 continue;
                             }

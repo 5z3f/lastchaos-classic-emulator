@@ -18,8 +18,7 @@ module.exports = {
             msg.write('i32>', targetMp);
             msg.write('i32>', damage);
 
-            switch (damageType)
-            {
+            switch (damageType) {
                 case 0: // MSG_DAMAGE_MELEE
                 case 1: // MSG_DAMAGE_RANGE
                 case 2: // MSG_DAMAGE_MAGIC

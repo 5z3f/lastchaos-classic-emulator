@@ -4,10 +4,8 @@ const util = require('../util');
 const GameObject = require('./index');
 const Attackable = require('./traits/attackable');
 
-const NPC = class extends util.extender(GameObject, Attackable)
-{
-    constructor({ uid, id, level, statistics, reward, position })
-    {
+class NPC extends util.extender(GameObject, Attackable) {
+    constructor({ uid, id, level, statistics, reward, position }) {
         // get all properties from GameObject class
         super(...arguments);
 
@@ -23,9 +21,8 @@ const NPC = class extends util.extender(GameObject, Attackable)
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
-    appear = (session) =>
-    {            
-        session.send.appear('npc', { 
+    appear(session) {
+        session.send.appear('npc', {
             uid: this.uid, 
             appeared: this.appeared, 
             id: this.id,
@@ -40,8 +37,7 @@ const NPC = class extends util.extender(GameObject, Attackable)
         this.event.emit('appear', /* appearedFirstTime */);
     }
 
-    disappear = (session) =>
-    {
+    disappear(session) {
         session.send.disappear({
             objType: 1,
             uid: this.uid
@@ -51,10 +47,8 @@ const NPC = class extends util.extender(GameObject, Attackable)
         this.event.emit('disappear', /* disappearedFirstTime */);
     }
 
-    update = ({ session, type, data }) =>
-    {
-        if(type == 'position')
-        {
+    update({ session, type, data }) {
+        if(type == 'position') {
             Object.assign(this.position, data);
 
             session.send.move({

@@ -4,10 +4,8 @@ const Message = require('@local/shared/message');
 const log = require("@local/shared/logger");
 const game = require('../GameServer/src/game'); // TODO: move this
 
-const session = class
-{
-    constructor({ server, socket, handlers, senders })
-    {
+class session {
+    constructor({ server, socket, handlers, senders }) {
         this.server = server;
         this.socket = socket;
 
@@ -18,12 +16,10 @@ const session = class
 
         log.info(`New session: ${ this.toString() }`);
 
-        const listen = () => 
-        {
+        const listen = () => {
             var that = this;
     
-            this.socket.on('data', (data) =>
-            {
+            this.socket.on('data', (data) => {
                 var msg = new Message({ buffer: data });
                 var id = game.packDefault ? msg.read('u8') & 0x3f : msg.read('u8');
                 
@@ -48,11 +44,11 @@ const session = class
         listen();
     }
 
-    write = (buffer) => {
+    write(buffer) {
         this.socket.write(buffer);
     }
 
-    close = () => {
+    close() {
         this.socket.destroy();
         this.server.session.remove(this.uid);
     }

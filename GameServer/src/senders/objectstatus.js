@@ -15,13 +15,12 @@ module.exports = {
             msg.write('i32>', data.mana);
             msg.write('i32>', data.maxMana);
 
-            if(data.type == 0) // MSG_CHAR_PC
-            {
+            // MSG_CHAR_PC
+            if(data.type == 0) {
                 msg.write('i32>', data.pkPenalty);
                 msg.write('u8', data.pkName);
             }
-            else
-            {
+            else {
                 msg.write('i32>', 0);
                 msg.write('u8', 0);
             }

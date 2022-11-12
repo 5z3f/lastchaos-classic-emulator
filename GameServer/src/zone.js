@@ -9,11 +9,9 @@ const NPC = require('./gameobject/npc');
 
 const { Statistic } = require('./types');
 
-const Zone = class
-{
+class Zone {
     // TODO: move this?
-    AttributeFlags =
-    {
+    AttributeFlags = {
         0:      'FIELD',      
         10:     'PEACEZONE', 
         20:     'PRODUCT_PUBLIC',
@@ -25,15 +23,14 @@ const Zone = class
         255:    'BLOCK',
     }
 
-    constructor(id, width, height)
-    {
+    npcs = [];
+    monsters = [];
+    characters = [];
+    items = []; // on ground
+
+    constructor(id, width, height) {
         this.id = id ?? -1;
 
-        this.npcs = [];
-        this.monsters = [];
-        this.characters = [];
-        this.items = []; // on ground
-    
         this.width = width;
         this.height = height;
 
@@ -50,12 +47,9 @@ const Zone = class
         this.load();
     }
 
-    load()
-    {        
-        for(var baseMonster of global.game.database.monsters)
-        {
-            for(var spawn of baseMonster.spawns)
-            {
+    load() {
+        for(var baseMonster of global.game.database.monsters) {
+            for(var spawn of baseMonster.spawns) {
                 if(spawn.zoneId != this.id)
                     continue;
                 
@@ -90,10 +84,8 @@ const Zone = class
             }
         }
 
-        for(var baseNPC of game.database.npcs)
-        {
-            for(var spawn of baseNPC.spawns)
-            {
+        for(var baseNPC of game.database.npcs) {
+            for(var spawn of baseNPC.spawns) {
                 if(spawn.zoneId != this.id)
                     continue;
                 
@@ -149,26 +141,22 @@ const Zone = class
 
     }
 
-    getObjectInArea(x, y, range)
-    {
+    getObjectInArea(x, y, range) {
         x -= Math.floor(range / 2);
         y -= Math.floor(range / 2);
 
         return this.quadTree.query(new Box(x, y, range, range));
     }
 
-    add(type, data)
-    {
+    add(type, data) {
         // return if object doesn't have unique identifier
         if(!('uid' in data))
             return;
 
-        switch(type)
-        {
+        switch(type) {
             case 'character':
                 var found = this.characters.find((ch) => ch.uid == data.uid);
-                
-                if(found == null)
+                if(found)
                     return;
 
                 this.quadTree.insert({
@@ -229,57 +217,35 @@ const Zone = class
         }
     }
 
-    find(type, opts)
-    {
-        var result = null;
-
-        switch(type)
-        {
+    find(type, opts) {
+        switch(type) {
             case 'character':
-                result = this.characters.find(opts);
-                break;
+                return this.characters.find(opts);
             case 'npc':
-                result = this.npcs.find(opts);
-                break;
+                return this.npcs.find(opts);
             case 'monster':
-                result = this.monsters.find(opts);
-                break;
+                return this.monsters.find(opts);
             case 'item':
-                result = this.items.find(opts);
-                break;
+                return this.items.find(opts);
         }
-
-        return result;
     }
 
-    filter(type, opts)
-    {
-        var result = null;
-
-        switch(type)
-        {
+    filter(type, opts) {
+        switch(type) {
             case 'character':
-                result = this.characters.filter(opts);
-                break;
+                return this.characters.filter(opts);
             case 'npc':
-                result = this.npcs.filter(opts);
-                break;
+                return this.npcs.filter(opts);
             case 'monster':
-                result = this.monsters.filter(opts);
-                break;
+                return this.monsters.filter(opts);
             case 'item':
-                result = this.items.filter(opts);
-                break;
+                return this.items.filter(opts);
         }
-
-        return result;
     }
 
     // TODO: this is not the best way, but sufficient for now
-    remove(type, opts)
-    {
-        switch(type)
-        {
+    remove(type, opts) {
+        switch(type) {
             case 'character':
                 this.characters = this.characters.filter(opts);
                 break;
@@ -295,8 +261,7 @@ const Zone = class
         }
     }
 
-    getAttribute(position, asText)
-    {
+    getAttribute(position, asText) {
         var x = parseInt(position.x);
         var y = parseInt(position.y);
 
@@ -306,8 +271,7 @@ const Zone = class
         return !!asText ? this.AttributeFlags[this.attributeMap[x][y]] : this.attributeMap[x][y];
     }
 
-    getHeight(position)
-    {
+    getHeight(position) {
         var x = parseInt(position.x);
         var y = parseInt(position.y);
 
