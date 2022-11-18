@@ -31,6 +31,17 @@ https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-
 > --------------------------
 ```
 
+**How to run it**
+
+[sl.dta (test 127.0.0.1 4191)](https://github.com/5z3f/lastchaos-classic-emulator/files/10030763/sl.zip)
+
+[LastChaosDTA.exe](https://github.com/5z3f/lastchaos-classic-emulator/files/10042812/LastChaosDTA.zip)
+
+```
+> 1. Change IP to localhost inside sl.dta using LastChaosDTA editor (or replace the file with the one I provided above)
+> 2. start bin/Nksp.exe 6574
+```
+
 # patches [USA Client 1107]
 ```
 > File:             Engine.dll
