@@ -16,14 +16,12 @@ module.exports = {
             MSG_GM_WHOAMI: () => {
                 session.send.gm('MSG_GM_WHOAMI');
 
-                var character = object.get({ uid: session.uid });
-                
                 session.send.chat({
                     chatType: 7,
-                    senderId: character.uid,
-                    senderName: character.character.name,
-                    receiverName: character.character.name,
-                    text: `You're level 10 admin`
+                    senderId: session.character.uid,
+                    senderName: session.character.nickname,
+                    receiverName: session.character.nickname,
+                    text: `You're admin`
                 });
             }
         }

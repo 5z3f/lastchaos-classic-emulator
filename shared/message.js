@@ -13,12 +13,15 @@ class Message {
      * @param {Boolean} [header=true] read lc packet header?
      * @param {Boolean} [encrypted=true] is packet encrypted?
      */
-    constructor({ buffer, type, subType, header, encrypted }) {
+    constructor({ buffer, type, subType, header, encrypted = true }) {
+        if(buffer && type)
+            buffer.writeUInt8(buffer.readUInt8(0) | 0x80, 0);
+
         this._sb = buffer
             ? SmartBuffer.fromBuffer(buffer) 
             : new SmartBuffer();
 
-        this.encrypted = encrypted ?? true;
+        this.encrypted = encrypted;
     
         this.header = (header !== false && this._sb.length > 12) ? {    // 12 - header length
             'reliable': this.read('u16>'),                              // ntohs
@@ -28,12 +31,12 @@ class Message {
         } : null;
 
         if(buffer && this.encrypted && game.encryption) {
-            var decrypted = message.decrypt(buffer.slice(12));          // TODO: implement error handler
+            var decrypted = this.decrypt(buffer.slice(12));          // TODO: implement error handler
             this._sb = SmartBuffer.fromBuffer(decrypted);
         }
 
-        if(type)     this.write('u8', game.packDefault ? type | 0x80 : type);
-        if(subType)  this.write('u8', subType);
+        if(type || type === 0)          this.write('u8', game.packDefault ? type | 0x80 : type);
+        if(subType || subType === 0)    this.write('u8', subType);
     }
 
     /**
@@ -83,7 +86,7 @@ class Message {
 
         return header === false
             ? this._sb.toBuffer()
-            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false && game.encryption ? message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer() ]);
+            : Buffer.concat([ makeHeader(this._sb.length).toBuffer(), encrypt !== false && game.encryption ? this.encrypt(this._sb.toBuffer()) : this._sb.toBuffer() ]);
     }
 
     /**

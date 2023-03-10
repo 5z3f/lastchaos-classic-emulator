@@ -1,4 +1,6 @@
 {
+    "CUSTOM_PACKET": -1,
+    "MSG_FAIL": 1,
     "MSG_DB": 2,
     "MSG_STATUS": 6,
     "MSG_APPEAR": 7,
@@ -15,6 +17,10 @@
     "MSG_GM": 23,
     "MSG_CHAR_STATUS": 29,
     "MSG_QUEST": 35,
+    "MSG_EFFECT": 31,
+    "MSG_STATPOINT": 36,
     "MSG_PULSE": 38,
-    "MSG_RIGHT_ATTACK": 45
+    "MSG_RIGHT_ATTACK": 45,
+    "MSG_FRIEND": 51,
+    "MSG_EXTEND": 55
 }

@@ -7,7 +7,7 @@ const SmartBuffer = require('smart-buffer').SmartBuffer;
 const Monster = require('./gameobject/monster');
 const NPC = require('./gameobject/npc');
 
-const { Statistic } = require('./types');
+const { Statistic, Modifier, ModifierType } = require('./types/statistic');
 
 class Zone {
     // TODO: move this?
@@ -48,12 +48,12 @@ class Zone {
     }
 
     load() {
-        for(var baseMonster of global.game.database.monsters) {
+        for(var baseMonster of global.game.content.monsters) {
             for(var spawn of baseMonster.spawns) {
                 if(spawn.zoneId != this.id)
                     continue;
                 
-                var m = new Monster({
+                var monster = new Monster({
                     id: baseMonster.id,
                     flags: baseMonster.flags,
                     level: baseMonster.level,
@@ -80,11 +80,11 @@ class Zone {
                     }
                 });
 
-                this.add('monster', m);
+                this.add('monster', monster);
             }
         }
 
-        for(var baseNPC of game.database.npcs) {
+        for(var baseNPC of game.content.npcs) {
             for(var spawn of baseNPC.spawns) {
                 if(spawn.zoneId != this.id)
                     continue;
@@ -141,7 +141,7 @@ class Zone {
 
     }
 
-    getObjectInArea(x, y, range) {
+    getObjectsInArea(x, y, range) {
         x -= Math.floor(range / 2);
         y -= Math.floor(range / 2);
 
@@ -156,6 +156,7 @@ class Zone {
         switch(type) {
             case 'character':
                 var found = this.characters.find((ch) => ch.uid == data.uid);
+                
                 if(found)
                     return;
 
@@ -164,7 +165,7 @@ class Zone {
                     y: data.position.y,
                     uid: data.uid,
                     type: 'character',
-                    character: found
+                    character: data
                 });
 
                 this.characters.push(data);

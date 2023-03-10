@@ -1,37 +1,37 @@
 const Message = require('@local/shared/message');
 
+const WEAR_COUNT = 7;
+
 module.exports = {
     messageName: 'MSG_DB',
     send: function (session, msgId)
     {
         return (subType, data) =>
         {
-            const characterExists = (data) => {
+            const characterExists = ([dbCharacter, wearingItems]) => {
                 // MSG_DB -> MSG_DB_CHAR_EXIST
                 var msg = new Message({ type: msgId, subType: 2 });
     
-                msg.write('i32>', 1);               // Character ID (uid)
-                msg.write('stringnt', 'test');      // Name
-                msg.write('u8', 1);                 // Job
-                msg.write('u8', 1);                 // Job2
-                msg.write('u8', 1);                 // Hair
-                msg.write('u8', 1);                 // Face
-                msg.write('i32>', 15);              // Level
-                msg.write('u64>', 10);              // Current Experience
-                msg.write('u64>', 1000);            // Max Experience
-                msg.write('i32>', 10);              // Skill Points
-                msg.write('i32>', 1000);            // Current Health Points
-                msg.write('i32>', 1000);            // Max Health Points
-                msg.write('i32>', 1000);            // Current Mana Points
-                msg.write('i32>', 1000);            // Max Mana Points
-    
-                var wear = [ 75, 34, 1889,   38, -1, 39, 41 ];
-                var plus = [ 15, 15, 15,     15, 0, 15, 15 ];
-    
-                // WEAR_COUNT = 7
-                for(var i = 0; i < 7 ; ++i) {
-                    msg.write('i32>', wear[i]);
-                    msg.write('i32>', plus[i]);
+                msg.write('i32>', dbCharacter.id);             // Character ID (UID)
+                msg.write('stringnt', dbCharacter.nickname);   // Nickname
+                msg.write('u8', dbCharacter.class);            // Class
+                msg.write('u8', dbCharacter.profession || 0);  // Profession
+                msg.write('u8', dbCharacter.hair);             // Hair
+                msg.write('u8', dbCharacter.face);             // Face
+                msg.write('i32>', dbCharacter.level);          // Level
+                msg.write('u64>', dbCharacter.experience);     // Current Experience
+                msg.write('u64>', 100);                        // TODO: Max Experience
+                msg.write('i32>', dbCharacter.skillpoints);    // Skill Points
+                msg.write('i32>', dbCharacter.health);         // TODO: Current Health Points
+                msg.write('i32>', dbCharacter.health);         // Max Health Points
+                msg.write('i32>', dbCharacter.mana);           // Current Mana Points
+                msg.write('i32>', dbCharacter.mana);           // TODOMax Mana Points
+                        
+                for(var pos = 0; pos < WEAR_COUNT; pos++) {
+                    var item = wearingItems.find((i) => i.wearingPosition == pos);
+                    
+                    msg.write('i32>', item?.itemId || -1);
+                    msg.write('i32>', item?.plus || 0);
                 }
     
                 msg.write('i32>', -1);              // Remain Character Delete Time
@@ -59,7 +59,7 @@ module.exports = {
             };
 
             if(subType in subTypeHandler)
-                subTypeHandler[subType]();
+                subTypeHandler[subType](data);
         }
     }
 }

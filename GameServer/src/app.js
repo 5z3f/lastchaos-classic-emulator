@@ -1,12 +1,21 @@
-const log = require('@local/shared/logger');
-const server = require("@local/shared/server");
+const db = require('@local/shared/db');
+const server = require('@local/shared/server');
 
-global.game = require("./game");
-global.game.initialize();
+// set our configuration as global
+global.config = require('../../servers.config.json');
 
-var srv = new server({
-    host:       '127.0.0.1',
-    port:       4190,
-    handlers:   require("./handlers"),
-    senders:    require("./senders")
+// initialize database connection pool
+db.initialize();
+
+// set game data as global for easier access
+global.game = require('./game');
+
+// initialize game
+game.initialize();
+
+global.server = new server({
+    host:       config.gameserver.host,
+    port:       config.gameserver.port,
+    handlers:   require('./handlers'),
+    senders:    require('./senders')
 });

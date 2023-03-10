@@ -38,12 +38,12 @@ module.exports = {
                 session.write(msg.build());  
             };
 
-            const drop = ({ uid, id, count, position, objType, objUid }) => {
+            const drop = ({ uid, id, stack, position, objType, objUid }) => {
                 var msg = new Message({ type: msgId, subType: 9 });
             
                 msg.write('i32>', uid);         // item uid
                 msg.write('i32>', id);          // item id
-                msg.write('i64>', count);       // item count
+                msg.write('i64>', stack);       // item stack
                 msg.write('f<', position.x);
                 msg.write('f<', position.y);
                 msg.write('f<', position.z);
@@ -58,19 +58,19 @@ module.exports = {
                 session.write(msg.build());
             }
 
-            const add = ({ itemUid, itemId, position, wearingPosition, plus, flag, durability, count/* TODO: , options */}) => {
+            const add = ({ itemUid, item, position, wearingPosition, plus, flag, durability, stack/* TODO: , options */}) => {
                 var msg = new Message({ type: msgId, subType: 7 });
             
                 msg.write('u8', position.tab);
                 msg.write('u8', position.col);
                 msg.write('u8', position.row);
                 msg.write('i32>', itemUid);
-                msg.write('i32>', itemId);
+                msg.write('i32>', item.id);
                 msg.write('u8', wearingPosition);
                 msg.write('i32>', plus);
                 msg.write('i32>', flag);
                 msg.write('i32>', durability);
-                msg.write('i64>', count);
+                msg.write('i64>', stack);
                 msg.write('u8', 0);
 
                 session.write(msg.build());

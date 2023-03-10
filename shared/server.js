@@ -26,7 +26,7 @@ class server {
                 senders: senders
             });
 
-            this.sessions[sess.uid] = sess;
+            this.sessions.push(sess);
         });
     
         srv.listen(this.port, this.host, () => {
@@ -36,7 +36,8 @@ class server {
 
     // remove existing session
     session = { 
-        remove: (uid) => { delete server.sessions[uid]; }
+        remove: (uid) => { delete this.sessions[uid]; },
+        find: (cb) => this.sessions.find(cb)
     }
 }
 

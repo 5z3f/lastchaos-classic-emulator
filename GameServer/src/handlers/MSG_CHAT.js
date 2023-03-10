@@ -3,12 +3,13 @@ const game = global.game;
 
 const Monster = require('../gameobject/monster');
 const { InventoryRow } = require('../system/inventory');
-const { Statistic, Position } = require('../types');
-const util = require('../util');
+const { Statistic, Modifier, ModifierType } = require('../types/statistic');
+const Position = require('../types/position');
+const api = require('../api');
 
 module.exports = {
     name: 'MSG_CHAT',
-    handle: function (session, msg)
+    handle: async function (session, msg)
     {
         var data = {
             'chatType': msg.read('u8'),
@@ -23,11 +24,8 @@ module.exports = {
             var speed = parseFloat(params[1]);
 
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
-            var runSpeedBefore = character.statistics.runSpeed.total;
-
-            character.update('stats', {
-                'runSpeed': new Statistic(speed)
-            });
+            var runSpeedBefore = character.statistics.runSpeed.getCurrentValue();
+            character.statistics.runSpeed.set(speed);
 
             session.send.chat({
                 chatType: 6,
@@ -44,15 +42,17 @@ module.exports = {
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
 
             // find monster from database by id
-            var baseMonster = game.database.find('monster', (m) => m.id == npcId);
+            var baseMonster = game.content.find('monster', (m) => m.id == npcId);
 
             console.log('baseMonster', baseMonster);
 
             var monster = new Monster({
                 id: baseMonster.id,
+                flags: baseMonster.flags,
+                level: baseMonster.level,
                 zone: character.zone,
-                areaId: character.areaId,
                 position: character.position,
+                respawnTime: 0, // TODO:
                 statistics: {
                     health:         new Statistic(baseMonster.statistics.health),
                     maxHealth:      new Statistic(baseMonster.statistics.health),
@@ -104,25 +104,21 @@ module.exports = {
             var params = data.text.split(' ');
 
             var itemId = parseInt(params[1]);
-            var itemCount = parseInt(params[2]);
+            var itemStack = parseInt(params[2]);
             var itemPlus = parseInt(params[3]);
 
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
-            var dbItem = game.database.find('item', (el) => el.id == itemId);
 
-            if(!dbItem)
-                return; // raise error message
-            
-            // add item to inventory
-            var invenRow = new InventoryRow({
-                itemId: dbItem.id,
+            var itemUid = await api.item.create({
+                id: itemId,
+                owner: character,
+                stack: itemStack || 1,
                 plus: itemPlus || 0,
-                count: itemCount
+                into: 'inventory'
             });
-            
-            var success = character.inventory.add(0, invenRow);
-            
-            if(!success)
+    
+            // TODO: log and raise error message
+            if(!itemUid)
                 return;
                 
             session.send.chat({
@@ -130,53 +126,52 @@ module.exports = {
                 senderId: data.senderId,
                 senderName: data.senderName,
                 receiverName: data.receiverName,
-                text: `itemget [uid: ${ invenRow.itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
+                text: `itemget [uid: ${ itemUid }, id: ${ itemId }]`
             });            
         }
         else if(data.text.includes('.itemdrop')) {
             var params = data.text.split(' ');
 
             var itemId = parseInt(params[1]);
-            var itemCount = parseInt(params[2]);
+            var itemStack = parseInt(params[2]);
             var itemPlus = parseInt(params[3]);
 
+            if(!itemId)
+                return;
+
             var character = game.world.find('character', (ch) => ch.uid == data.senderId);
-            var dbItem = game.database.find('item', (el) => el.id == itemId);
 
-            if(!dbItem)
-                return; // raise error message
-                        
-            var itemUid = util.generateId();
+            var itemUid = await api.item.create({
+                id: itemId,
+                owner: character,
+                stack: itemStack || 1,
+                plus: itemPlus || 0
+            });
 
-            // add item to on-ground item list
-            game.world.add({ type: 'item', zoneId: character.zone.id, data: {
+            // TODO: log and raise error message
+            if(!itemUid)
+                return;
+
+            character.session.send.item('MSG_ITEM_DROP', {
                 uid: itemUid,
                 id: itemId,
-                count: itemCount || 1,
-                charUid: character.uid,
-                position: character.position.clone()
-            }});
-            
-            session.send.item('MSG_ITEM_DROP', {
-                uid: itemUid,
-                id: itemId,
-                count: itemCount || 1,
+                stack: itemStack || 1,
                 position: character.position,
                 objType: 1,
                 objUid: character.uid
             });
 
-            session.send.chat({
+            character.session.send.chat({
                 chatType: 6,
-                senderId: data.senderId,
-                senderName: data.senderName,
-                receiverName: data.receiverName,
-                text: `itemdrop [uid: ${ itemUid }, itemId: ${ dbItem.id }, name: ${ dbItem.name }]`
+                senderId: character.uid,
+                senderName: character.nickname,
+                receiverName: character.nickname,
+                text: `itemdrop [uid: ${ itemUid }, id: ${ itemId }]`
             });
         }
         else if(data.text.includes('.search item')) {
             var params = data.text.split(' ');
-            var items = game.database.filter('item', (i) => i.name.includes(params[2]))
+            var items = game.content.filter('item', (i) => i.name.toLowerCase().includes(params[2].toLowerCase()))
 
             for(var item of items) {
                 session.send.chat({
@@ -187,6 +182,27 @@ module.exports = {
                     text: `ID: ${ item.id} [${ item.name }]`
                 });  
             }
+        }
+        else if(data.text.includes('.levelup')) {
+            var newLevel = Number(data.text.split(' ')[1]);
+
+            if(newLevel) {
+                if(newLevel < 1 || newLevel > 1000)
+                    return;
+
+                session.character.progress.level = newLevel;
+            }
+            else
+                session.character.progress.level += 1;
+
+            session.character.progress.experience = 0;
+            session.character.updateStatistics();
+
+            session.send.effect(1, {
+                effectType: 0,
+                objType: session.character.objType,
+                charUid: session.character.uid
+            });
         }
         else {
             // resend

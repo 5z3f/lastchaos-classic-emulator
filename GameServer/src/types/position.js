@@ -21,6 +21,10 @@ class Position extends Vector2 {
         return new Position(this);
     }
 
+    toArray() {
+        return [this.x, this.y, this.z, this.r, this.layer]
+    }
+
     static setRandomWithinRange(originalPosition, range) {
         var randomOffset = new Vector2().random().subScalar(0.5).multiplyScalar(range);
         return new Position(originalPosition).add(randomOffset);
@@ -39,7 +43,7 @@ class Position extends Vector2 {
     }
 
     toString() {
-        return `(${this.x}, ${this.y}, ${this.z}, ${this.r}, ${this.layer})`;
+        return `${this.x}, ${this.y}, ${this.z}, ${this.r}, ${this.layer}`;
     }
 }
 

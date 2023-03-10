@@ -1,5 +1,4 @@
-const farmhash = require('farmhash');
-
+const util = require('../GameServer/src/util'); // TODO: this
 const Message = require('@local/shared/message');
 const log = require("@local/shared/logger");
 const game = require('../GameServer/src/game'); // TODO: move this
@@ -9,7 +8,14 @@ class session {
         this.server = server;
         this.socket = socket;
 
-        this.uid = parseInt(farmhash.hash32(this.socket.remoteAddress + Date.now()) / 200);
+        // unique id (do not confuse with uid (user id) from database)
+        this.uid = util.createSessionId();
+
+        // database user account id
+        this.accountId = null;
+
+        // ingame character
+        this.character = null;
 
         this.handlers = handlers;
         this.send = senders(this);
@@ -53,7 +59,9 @@ class session {
         this.server.session.remove(this.uid);
     }
 
-    toString = () => `uid: ${ this.uid }, address: ${ this.socket.remoteAddress }:${ this.socket.remotePort }`;
+    toString() {
+        return `uid: ${ this.uid }, address: ${ this.socket.remoteAddress }:${ this.socket.remotePort }`;
+    }
 }
 
 module.exports = session;

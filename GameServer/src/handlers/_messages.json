@@ -8,5 +8,8 @@
     "MSG_ITEM": 16,
     "MSG_GM": 23,
     "MSG_QUEST": 35,
-    "MSG_PULSE": 38
+    "MSG_STATPOINT": 36,
+    "MSG_PULSE": 38,
+    "MSG_FRIEND": 51,
+    "MSG_EXTEND": 55
 }

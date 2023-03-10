@@ -55,7 +55,7 @@ module.exports = {
         if(moveTypeMap[data.moveType] in subTypeHandler)
             subTypeHandler[moveTypeMap[data.moveType]]();
         
-        // update character position
-        character.update('position', newPosition);
+        // FIXME: This approach is wrong, server side movement simulation is needed
+        character.updatePosition(newPosition);
     }
 }

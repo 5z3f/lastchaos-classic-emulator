@@ -4,7 +4,7 @@ module.exports = {
     messageName: 'MSG_SYS',
     send: function (session, msgId)
     {
-        return (subType, data) =>
+        return (subType) =>
         {
             var msg = new Message({ type: msgId, subType: subType })
             session.write(msg.build());

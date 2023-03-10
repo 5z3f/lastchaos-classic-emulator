@@ -1,0 +1,42 @@
+[
+    {
+        "baseStatistics": {
+            "health": 500,
+            "healthRegen": 10.0,
+            "mana": 250,
+            "manaRegen": 10.0,
+            "strength": 30,
+            "dexterity": 0,
+            "intelligence": 0,
+            "condition": 0,
+            "attack": 100,
+            "magicAttack": 0,
+            "defense": 100,
+            "magicResist": 150,
+            "walkSpeed": 1.5,
+            "runSpeed": 6.0,
+            "attackRange": 2.3,
+            "attackSpeed": 10.0
+        }
+    },
+    {
+        "baseStatistics": {
+            "health": 400,
+            "healthRegen": 10.0,
+            "mana": 250,
+            "manaRegen": 10.0,
+            "strength": 20,
+            "dexterity": 0,
+            "intelligence": 0,
+            "condition": 0,
+            "attack": 100,
+            "magicAttack": 0,
+            "defense": 100,
+            "magicResist": 150,
+            "walkSpeed": 1.5,
+            "runSpeed": 6.0,
+            "attackRange": 2.3,
+            "attackSpeed": 10.0
+        }
+    }
+]

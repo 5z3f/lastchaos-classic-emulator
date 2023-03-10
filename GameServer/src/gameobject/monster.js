@@ -8,12 +8,13 @@ const { Vector2 } = require('three');
 
 
 class Monster extends util.extender(GameObject, Attackable) {
-
     constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime }) {
         // get all properties from GameObject class
         super(...arguments);
 
         this.type = 'monster';
+        this.objType = 1;
+
         this.level = level;
 
         this.reward = {
@@ -24,25 +25,24 @@ class Monster extends util.extender(GameObject, Attackable) {
 
         this.respawnTime = /*respawnTime ||*/ 15 * 1000;
 
-        this.testRegenInRange(250);
         this.testMoveInRange(250);
-        
+
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
     appear(character) {
-        if(this.state.dead)
+        if (this.state.dead)
             return;
-        
+
         character.session.send.appear('monster', {
-            uid: this.uid, 
+            uid: this.uid,
             firstAppearance: this.firstAppearance, // TODO:
             id: this.id,
             zoneId: this.zone.id,
             areaId: this.areaId,
             position: this.position,
-            health: this.statistics.health,
-            maxHealth: this.statistics.maxHealth
+            health: this.statistics.health.getCurrentValue(),
+            maxHealth: this.statistics.maxHealth.getCurrentValue()
         });
 
         character.addVisibleObject('monster', this.uid);
@@ -52,17 +52,17 @@ class Monster extends util.extender(GameObject, Attackable) {
         // TODO: appearedFirstTime should indicate whether the object appeared for the first time
         this.event.emit('appear', /* appearedFirstTime */);
     }
-    
+
     appearInRange(range) {
-        var characterPoints = this.zone.getObjectInArea(this.position.x, this.position.y, range)
+        var characterPoints = this.zone.getObjectsInArea(this.position.x, this.position.y, range)
             .filter(obj => obj.type === 'character');
 
-        for(var obj of characterPoints)
+        for (var obj of characterPoints)
             this.appear(obj.character);
     }
 
     disappear(character) {
-        if(this.state.dead)
+        if (this.state.dead)
             return;
 
         character.session.send.disappear({
@@ -77,22 +77,8 @@ class Monster extends util.extender(GameObject, Attackable) {
     }
 
     die() {
-        this.state.dead = true;
-
-        setTimeout(function(that) {
-            that.statistics.health.total = that.statistics.maxHealth.total;
-            that.state.dead = false;
-
-            that.respawnCount += 1;
-
-            // temporary
-            console.log('respawned', that.uid);
-            that.appearInRange(50);
-
-            that.event.emit('respawn');
-
-        }, this.respawnTime, this);
-
+        super.die();
+        setTimeout(() => this.respawn(), this.respawnTime);
         this.event.emit('die');
     }
 }

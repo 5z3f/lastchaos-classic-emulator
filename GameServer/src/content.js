@@ -2,7 +2,7 @@ const BaseItem = require('./baseobject/item');
 const BaseMonster = require('./baseobject/monster');
 const BaseNPC = require('./baseobject/npc');
 
-class Database {
+class content {
 
     items = [];
     monsters = [];
@@ -62,4 +62,4 @@ class Database {
     }
 }
 
-module.exports = Database;
+module.exports = content;

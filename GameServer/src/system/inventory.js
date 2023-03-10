@@ -1,12 +1,15 @@
+const db = require('@local/shared/db');
 const util = require('../util');
 
 class InventoryRow {
-    constructor({ itemUid, itemId, plus, count, wearingPosition, flag, durability, options }) {
-        this.itemUid = itemUid ?? util.generateId();
-        this.itemId = itemId;
+    constructor({ itemUid, item, plus, stack, wearingPosition, flag, durability, options, stackUids }) {
+        this.itemUid = itemUid;
+        this.item = item;
+
+        this.stackUids = stackUids || [];
 
         this.wearingPosition = wearingPosition ?? 255;
-        this.count = count || 1;
+        this.stack = stack || 1;
         this.plus = plus || 0;
         this.flag = flag || 0;
         this.durability = durability || -1;
@@ -63,6 +66,19 @@ class Inventory {
         }
     }
 
+    filter(tab, opts) {
+        var results = [];
+
+        for(var col = 0; col < this.MAX_COLUMNS; col++) {
+            var rows = this.items[tab][col].filter(opts);
+
+            if(rows.length)
+                results.push(...rows);
+        }
+
+        return results;
+    }
+
     findEmptyRow(tab) {
         for(var col = 0; col < this.MAX_COLUMNS; col++) {
             var row = this.items[tab][col].findIndex((i) => (typeof i === "undefined"));
@@ -77,8 +93,7 @@ class Inventory {
         }
     }
 
-    add(tab, item, sendMsg = true) {
-
+    add(tab, invenRow, sendMsg = true) {
         var result = this.findEmptyRow(tab);
 
         if(!result) {
@@ -86,7 +101,18 @@ class Inventory {
             return false;
         }
 
-        this.items[tab][result.col][result.row] = item;
+        var stmt = db.query(`
+            UPDATE items 
+            SET accountId = ?, charId = ?, place = ?, position = ?
+            WHERE id = ? OR parentId = ?`,
+            [this.owner.session.accountId, this.owner.id, 1, [tab, result.col, result.row].join(','), invenRow.itemUid, invenRow.itemUid]);
+
+        if(!stmt) {
+            // TODO: handle error
+            return false;
+        }
+
+        this.items[tab][result.col][result.row] = invenRow;
 
         var pos = {
             position: {
@@ -98,9 +124,21 @@ class Inventory {
 
         // send item to client
         if(sendMsg)
-            this.owner.session.send.item('MSG_ITEM_ADD', { ...item, ...pos });
+            this.owner.session.send.item('MSG_ITEM_ADD', { ...invenRow, ...pos });
 
         return pos;
+    }
+
+    addToPosition(position, row) {
+        if(!this.isEmptyAt(position))
+            return false;
+        
+        this.items[position.tab][position.col][position.row] = row;
+        return true;
+    }
+
+    isEmptyAt(position) {
+        return (typeof this.items[position.tab][position.col][position.row] === 'undefined')
     }
 
     swap(tab, src, dst) {
@@ -114,8 +152,27 @@ class Inventory {
         if(srcRow == undefined || (dst.uid != -1 && dstRow == undefined))
             return false;
         
+        var result = db.query(`
+            UPDATE items 
+            SET position = ?
+            WHERE id = "?" OR parentId = ?`,
+            [[tab, dst.position.col, dst.position.row].join(','), srcRow.itemUid, srcRow.itemUid]);
+
+        // TODO: handle error
+
         this.items[tab][src.position.col][src.position.row] = dstRow;
+
+        if(dstRow != undefined) {
+            result = db.query(`
+                UPDATE items 
+                SET position = ?
+                WHERE id = ? OR parentId = ?`,
+                [[tab, src.position.col, src.position.row].join(','), dstRow.itemUid, dstRow.itemUid]);
+        }
+
         this.items[tab][dst.position.col][dst.position.row] = srcRow;
+        
+        // TODO: handle error
 
         // send swap to client
         this.owner.session.send.item('MSG_ITEM_SWAP', { tab, src, dst });
@@ -128,13 +185,44 @@ class Inventory {
             Object.assign(this.items[position.tab][position.col][position.row], opts);
     }
 
-    unequip(position) {
+    remove(position) {
+        this.items[position.tab][position.col][position.row] = undefined;
+    }
+
+    async equip(position, wearingPosition) {
+        var requestedRow = this.items[position.tab][position.col][position.row];
+
+        var stmt = await db.query(
+            "UPDATE items SET wearingPosition = ? WHERE charId = ? AND id = ?",
+            [wearingPosition, this.owner.id, requestedRow.itemUid]);
+
+        if(!stmt) {
+            // TODO: error handling
+            return false;
+        }
+
+        requestedRow.wearingPosition = wearingPosition;
+        this.owner.event.emit('inventory-equip', requestedRow);
+
+        return true;
+    }
+
+    async unequip(wearingPosition) {
         var result;
 
         for(var col = 0; col < this.MAX_COLUMNS; col++) {
-            var row = this.items[this.TAB_DEFAULT][col].findIndex((i) => (i?.wearingPosition == position));
+            var row = this.items[this.TAB_DEFAULT][col].findIndex((i) => (i?.wearingPosition == wearingPosition));
 
             if(row != -1) {
+                var stmt = await db.query(
+                    "UPDATE items SET wearingPosition = NULL WHERE charId = ? AND id = ?",
+                    [this.owner.id, this.items[this.TAB_DEFAULT][col][row].itemUid]);
+
+                if(!stmt) {
+                    // TODO: error handling
+                    result = false;
+                }
+
                 this.items[this.TAB_DEFAULT][col][row].wearingPosition = 255;
 
                 result = {
@@ -145,6 +233,8 @@ class Inventory {
                     },
                     data: this.items[this.TAB_DEFAULT][col][row]
                 };
+
+                this.owner.event.emit('inventory-unequip', this.items[this.TAB_DEFAULT][col][row]);
             }
         }
 

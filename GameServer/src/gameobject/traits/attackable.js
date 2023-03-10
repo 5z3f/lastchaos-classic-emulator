@@ -1,9 +1,12 @@
+const log = require("@local/shared/logger");
 
 class Attackable {
 
     damage(attacker) {
-        this.statistics.health.total -= attacker.statistics.attack.total;
-        attacker.statistics.health.total -= this.statistics.attack.total;
+        this.statistics.health.decrease(attacker.statistics.attack.getCurrentValue());
+        attacker.statistics.health.decrease(this.statistics.attack.getCurrentValue());
+
+        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health.getCurrentValue()} | MP: ${attacker.statistics.mana.getCurrentValue()} | DMG: ${attacker.statistics.attack.getCurrentValue()}] attacked ${this.type}(${this.uid}) [HP: ${this.statistics.health.getCurrentValue()} | MP: ${this.statistics.mana.getCurrentValue()}]`);
 
         // damage attacker's target
         attacker.session.send.damage({
@@ -13,15 +16,15 @@ class Attackable {
             skillId: -1,
             targetObjType: 1,
             targetIndex: this.uid,
-            targetHp: this.statistics.health.total,
-            targetMp: this.statistics.mana.total,
-            damage: attacker.statistics.attack.total
+            targetHp: this.statistics.health.getCurrentValue(),
+            targetMp: this.statistics.mana.getCurrentValue(),
+            damage: attacker.statistics.attack.getCurrentValue()
         });
 
         this.lastAttackTime = performance.now();
 
-        if(this.statistics.health.total <= 0) {
-            this.statistics.health.total = 0;
+        if(this.statistics.health.getCurrentValue() <= 0) {
+            this.statistics.health.set(0);
 
             // kill monster
             this.die();
@@ -38,19 +41,14 @@ class Attackable {
             skillId: -1,
             targetObjType: 0,
             targetIndex: attacker.uid,
-            targetHp: attacker.statistics.health.total,
-            targetMp: attacker.statistics.mana.total,
-            damage: this.statistics.attack.total
+            targetHp: attacker.statistics.health.getCurrentValue(),
+            targetMp: attacker.statistics.mana.getCurrentValue(),
+            damage: this.statistics.attack.getCurrentValue()
         });
         
-
-        if(attacker.statistics.health.total <= 0) {
-            attacker.statistics.health.total = 0;
+        if(attacker.statistics.health.getCurrentValue() <= 0) {
+            attacker.statistics.health.set(0);
         }
-
-        console.log('damage:', attacker.uid, '->', this.uid, this.statistics.health.total);
-        console.log(`target: ${ this.statistics.health.total }:${ this.statistics.mana.total } X ${ this.statistics.attack.total }`);
-        console.log(`attacker: ${ attacker.statistics.health.total }:${ attacker.statistics.mana.total } X ${ attacker.statistics.attack.total }`);
     }
 }
 

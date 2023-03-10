@@ -6,10 +6,8 @@ module.exports = {
     {
         return ({ chatType, senderId, senderName, receiverName, text }) =>
         {
-            var msg = new Message({ type: msgId });
-            
-            msg.write('u8', chatType);
-    
+            var msg = new Message({ type: msgId, subType: chatType });
+                
             msg.write('i32>', senderId);            // senderId (Unique ID)
             msg.write('stringnt', senderName);      // senderName
             msg.write('stringnt', receiverName);    // receiverName

@@ -1,4 +1,5 @@
 const BaseObject = require('./index');
+const { Statistic, Modifier, ModifierType } = require('../types/statistic');
 
 class BaseNPC extends BaseObject {
 

@@ -6,7 +6,7 @@ module.exports = {
     {
         return (inventory) =>
         {
-            const itemMsg = (msg, itemUid, itemId, wearingPosition, plus, flag, durability, count, options) => {
+            const itemMsg = (msg, itemUid, itemId, wearingPosition, plus, flag, durability, stack, options) => {
                 if(!itemId) {
                     msg.write('i32>', -1);      // unique index
                     return;
@@ -18,7 +18,7 @@ module.exports = {
                 msg.write('i32>', plus);                                    // plus
                 msg.write('i32>', flag);                                    // flag
                 msg.write('i32>', durability);                              // durability
-                msg.write('i64>', count);                                   // count
+                msg.write('i64>', stack);                                   // count
 
                 msg.write('u8', options.length);                            // option count
 
@@ -28,36 +28,32 @@ module.exports = {
                 }
             };
 
-            const inven = (inv) => {
-                var items = inv.get();
+            var items = inventory.get();
 
-                // tabs
-                for(var i = 0; i < items.length; i++) {
-                    // columns
-                    for(var j = 0; j < items[i].length; j++) {
-                        var msg = new Message({ type: msgId });
+            // tabs
+            for(var i = 0; i < items.length; i++) {
+                // columns
+                for(var j = 0; j < items[i].length; j++) {
+                    var msg = new Message({ type: msgId });
 
-                        msg.write('u8', 0);       // resultArrange
-                        msg.write('u8', i);       // tabId
-                        msg.write('u8', j);       // colId
+                    msg.write('u8', 0);       // resultArrange
+                    msg.write('u8', i);       // tabId
+                    msg.write('u8', j);       // colId
 
-                        for(var k = 0; k < items[i][j].length; k++) {
-                            let row = items[i][j][k];
+                    for(var k = 0; k < items[i][j].length; k++) {
+                        let row = items[i][j][k];
 
-                            if(!row) {
-                                itemMsg(msg, undefined);
-                                continue;
-                            }
-
-                            itemMsg(msg, row.itemUid, row.itemId, row.wearingPosition, row.plus, row.flag, row.durability, row.count, row.options);
+                        if(!row) {
+                            itemMsg(msg, undefined);
+                            continue;
                         }
 
-                        session.write(msg.build());
+                        itemMsg(msg, row.itemUid, row.item.id, row.wearingPosition, row.plus, row.flag, row.durability, row.stack, row.options);
                     }
+
+                    session.write(msg.build());
                 }
             }
-
-            inven(inventory);
         }
     }
 }

@@ -6,6 +6,7 @@ module.exports = {
     {
         return (subType, data) =>
         {
+            // TODO:
             const appearCharacter = () => {        
                 var msg = new Message({ type: msgId });
                        
@@ -79,8 +80,8 @@ module.exports = {
                 msg.write('f<', position.z);        // H
                 msg.write('f<', position.r);        // R
                 msg.write('u8', position.layer);    // LAYER
-                msg.write('i32>', health.total);    // Health
-                msg.write('i32>', maxHealth.total); // Max Health
+                msg.write('i32>', health);    // Health
+                msg.write('i32>', maxHealth); // Max Health
                 msg.write('i32>', 0);               // Assist State
                 msg.write('u8', 0);                 // Assist Count
                 msg.write('u8', 0);                 // Attribute Position

@@ -10,6 +10,8 @@ class NPC extends util.extender(GameObject, Attackable) {
         super(...arguments);
 
         this.type = 'npc';
+        this.objType = 1;
+
         this.level = level;
 
         this.reward = {
@@ -29,8 +31,8 @@ class NPC extends util.extender(GameObject, Attackable) {
             zoneId: this.zone.id,
             areaId: this.areaId,
             position: this.position,
-            health: this.statistics.health.total,
-            maxHealth: this.statistics.maxHealth.total
+            health: this.statistics.health.getCurrentValue(),
+            maxHealth: this.statistics.maxHealth.getCurrentValue()
         });
 
         // TODO: appearedFirstTime should indicate whether the object appeared for the first time

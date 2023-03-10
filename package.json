@@ -1,18 +1,25 @@
 {
   "name": "lastchaos-classic-emulator",
-  "version": "1.6.2",
+  "version": "1.6.3",
   "description": "Last Chaos Classic Emulator",
   "scripts": {
     "loginserver": "node LoginServer/src/app.js",
-    "gameserver": "node GameServer/src/app.js"
+    "gameserver": "node GameServer/src/app.js",
+    "test": "mocha"
   },
   "author": "agsvn",
   "dependencies": {
     "@local/shared": "file:./shared/",
+    "bcrypt": "^5.1.0",
+    "chai": "^4.3.7",
     "chalk": "^4.1.0",
-    "farmhash": "^3.2.2",
+    "dotenv": "^16.0.3",
+    "farmhash": "^3.3.0",
     "js-quadtree": "^3.3.6",
+    "mocha": "^10.2.0",
+    "mysql2": "^3.2.0",
     "smart-buffer": "^4.2.0",
-    "three": "^0.144.0"
+    "three": "^0.144.0",
+    "xxhash-addon": "^2.0.1"
   }
 }

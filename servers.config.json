@@ -1,0 +1,10 @@
+{
+    "loginserver": {
+        "host": "127.0.0.1",
+        "port": 4191
+    },
+    "gameserver": {
+        "host": "127.0.0.1",
+        "port": 4190
+    }
+}
