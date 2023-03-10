@@ -6,7 +6,7 @@ https://user-images.githubusercontent.com/39301116/187806343-64885c75-1463-4ced-
 
 # setup
 ```
-Import lastchaos.sql to into your database and set connection details in the .env file
+Import lastchaos.sql into your database and set connection details in the .env file
 
 > npm install
 
