@@ -1,13 +1,7 @@
 # lastchaos-classic-emulator
 ![Nksp_XuX5KlFjEQ](https://user-images.githubusercontent.com/39301116/224224116-f1b8efe9-82a4-4859-a0e5-76748a43fd5a.png)
 
-https://user-images.githubusercontent.com/39301116/189734343-e78c3384-60a9-489f-8290-07c64b467dbc.mp4
-
-https://user-images.githubusercontent.com/39301116/189734146-392b9c5d-d982-40e5-93ac-f38c5258749f.mp4
-
 https://user-images.githubusercontent.com/39301116/187806343-64885c75-1463-4ced-ba07-f3c042920a7b.mp4
-
-https://user-images.githubusercontent.com/39301116/187806405-9f6ee374-fb6b-48f0-9f19-84056b7196e0.mp4
 
 
 # setup
