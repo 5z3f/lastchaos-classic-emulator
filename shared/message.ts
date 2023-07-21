@@ -1,0 +1,141 @@
+
+import { SmartBuffer } from 'smart-buffer';
+import lccrypt from '@local/shared/lccrypt';
+//import game from '../GameServer/src/game'; // TODO: move this
+
+const game = {
+    packDefault: true,
+    encryption: false,
+};
+
+type dataTypes = 'i8' | 'u8' | 'i16<' | 'i16>' | 'u16<' | 'u16>' | 'i32<' | 'i32>' | 'u32<' | 'u32>' | 'i64<' | 'i64>' | 'u64<' | 'u64>' | 'f<' | 'f>' | 'stringnt';
+
+type MessageOptions = {
+    buffer?: Buffer, // initialize from given `Buffer` object
+    type?: number, // write message type
+    subType?: number, // write message subtype
+    header?: boolean, // read lc packet header?
+    encrypted?: boolean, // is packet encrypted?
+};
+
+class Message {
+    _sb;
+    header;
+    encrypted;
+
+    constructor({ buffer, type, subType, header = true, encrypted = true }: MessageOptions) {
+        if (buffer && type)
+            buffer.writeUInt8(buffer.readUInt8(0) | 0x80, 0);
+
+        this._sb = buffer
+            ? SmartBuffer.fromBuffer(buffer)
+            : new SmartBuffer();
+
+        this.encrypted = encrypted;
+
+        this.header = (header !== false && this._sb.length > 12) ? {    // 12 - header length
+            reliable: this.read('u16>'),                              // ntohs
+            sequence: this.read('u32>'),                              // ntohl
+            packetId: this.read('u16>'),
+            packetSize: this.read('u32>'),
+        } : null;
+
+        if (buffer && this.encrypted && game.encryption) {
+            let decrypted = Message.decrypt(buffer.slice(12));          // TODO: implement error handler
+            this._sb = SmartBuffer.fromBuffer(decrypted);
+        }
+
+        if (type || type === 0) this.write('u8', game.packDefault ? type | 0x80 : type);
+        if (subType || subType === 0) this.write('u8', subType);
+    }
+
+    /**
+     * Decrypt buffer using LCCrypt library
+     */
+    static decrypt = (buffer: Buffer): Buffer => lccrypt.decrypt(buffer);
+
+    /**
+     * Encrypt buffer using LCCrypt library
+     */
+    static encrypt = (buffer: Buffer): Buffer => lccrypt.encrypt(buffer);
+
+    /**
+     * Get Buffer object
+     */
+    buffer = (): Buffer => this._sb.toBuffer();
+
+    /**
+     * Get string buffer
+     */
+    toString = (): string => this.buffer().toString('hex');
+
+    /**
+     * Build message and export it to `Buffer` object
+     */
+    build(header = true, encrypt = true): Buffer {
+        const makeHeader = (messageSize: number) => {
+            let writer = new SmartBuffer();
+
+            writer.writeUInt16BE((1 << 0) | (1 << 7) | (1 << 8));                       // reliable
+            writer.writeUInt32BE(0);                                                    // sequence
+            writer.writeUInt16BE(0);                                                    // packet id
+            writer.writeUInt32BE(encrypt !== false && game.encryption ? (messageSize + 5) : messageSize);  // message size + lccrypt sum  || FIXME: write it smarter
+
+            return writer;
+        };
+
+        return header === false
+            ? this._sb.toBuffer()
+            : Buffer.concat([makeHeader(this._sb.length).toBuffer(), encrypt !== false && game.encryption ? Message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer()]);
+    }
+
+    read(type: dataTypes) {
+        let val;
+
+        switch (type) {
+            case 'i8': val = this._sb.readInt8(); break;
+            case 'u8': val = this._sb.readUInt8(); break;
+            case 'stringnt': val = this._sb.readStringNT(val); break;
+            case 'i16<': val = this._sb.readInt16LE(); break;
+            case 'i16>': val = this._sb.readInt16BE(); break;
+            case 'u16<': val = this._sb.readUInt16LE(); break;
+            case 'u16>': val = this._sb.readUInt16BE(); break;
+            case 'i32<': val = this._sb.readInt32LE(); break;
+            case 'i32>': val = this._sb.readInt32BE(); break;
+            case 'u32<': val = this._sb.readUInt32LE(); break;
+            case 'u32>': val = this._sb.readUInt32BE(); break;
+            case 'i64<': val = this._sb.readBigInt64LE(); break;
+            case 'i64>': val = this._sb.readBigInt64BE(); break;
+            case 'u64<': val = this._sb.readBigUInt64LE(); break;
+            case 'u64>': val = this._sb.readBigUInt64BE(); break;
+            case 'f<': val = this._sb.readFloatLE(); break;
+            case 'f>': val = this._sb.readFloatBE(); break;
+        }
+
+        return val;
+    }
+
+    write(type: dataTypes, val: any) {
+        switch (type) {
+            case 'i8': this._sb.writeInt8(val); break;
+            case 'u8': this._sb.writeUInt8(val); break;
+            case 'stringnt': this._sb.writeStringNT(val); break;
+            case 'i16<': this._sb.writeInt16LE(val); break;
+            case 'i16>': this._sb.writeInt16BE(val); break;
+            case 'u16<': this._sb.writeUInt16LE(val); break;
+            case 'u16>': this._sb.writeUInt16BE(val); break;
+            case 'i32<': this._sb.writeInt32LE(val); break;
+            case 'i32>': this._sb.writeInt32BE(val); break;
+            case 'u32<': this._sb.writeUInt32LE(val); break;
+            case 'u32>': this._sb.writeUInt32BE(val); break;
+            case 'i64<': this._sb.writeBigInt64LE(BigInt(val)); break;
+            case 'i64>': this._sb.writeBigInt64BE(BigInt(val)); break;
+            case 'u64<': this._sb.writeBigUInt64LE(BigInt(val)); break;
+            case 'u64>': this._sb.writeBigUInt64BE(BigInt(val)); break;
+            case 'f<': this._sb.writeFloatLE(val); break;
+            case 'f>': this._sb.writeFloatBE(val); break;
+        }
+    }
+};
+
+export default Message;

@@ -1,6 +1,6 @@
 {
   "name": "lastchaos-classic-emulator",
-  "version": "1.6.3",
+  "version": "1.7.0",
   "description": "Last Chaos Classic Emulator",
   "scripts": {
     "loginserver": "node LoginServer/src/app.js",
@@ -16,10 +16,14 @@
     "dotenv": "^16.0.3",
     "farmhash": "^3.3.0",
     "js-quadtree": "^3.3.6",
+    "mariadb": "^3.2.0",
     "mocha": "^10.2.0",
-    "mysql2": "^3.2.0",
     "smart-buffer": "^4.2.0",
     "three": "^0.144.0",
     "xxhash-addon": "^2.0.1"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.0",
+    "@types/node": "^20.4.2"
   }
 }

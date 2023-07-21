@@ -1,0 +1,22 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"noEmit": true,
+		"allowJs": true,
+		"checkJs": true,
+		"strict": true,
+		//"declaration": true,
+		//"declarationDir": "types",
+		//"emitDeclarationOnly": true,
+		//"declarationMap": true,
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"resolveJsonModule": true,
+		"esModuleInterop": true
+	},
+	"include": [
+		"GameServer/src/app.ts",
+		"LoginServer/src/app.ts",
+		"**/*.d.ts",
+	]
+}
