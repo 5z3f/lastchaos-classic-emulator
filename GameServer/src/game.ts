@@ -1,5 +1,10 @@
 import Content from "./content";
+import { Position } from "./types";
 import World from "./world";
+import Zone from "./zone";
+
+import Character from "./gameobject/character";
+
 
 class game {
     static encryption = false; // TODO: move this
@@ -14,11 +19,14 @@ class game {
         return this;
     }
 
-    static sendInArea(zone, position, msgType, msgData) {
-        let characters = this.world.filter('character', (ch) => ch.zone.id == zone.id && ch.distance(position) < 250);
+    static sendInArea(zone: Zone, position: Position, msgType: any, msgData: any) {
+        let characters = this.world.filter('character', (ch: Character) => ch.zone.id == zone.id && ch.distance(position) < 250);
+
+        //@ts-ignore
         let objectPoints = zone.getObjectsInArea(position.x, position.y, 250).filter((o) => o.character);
 
         for (let obj of objectPoints) {
+            //@ts-ignore
             obj.character.session.send[msgType](msgData);
         }
 

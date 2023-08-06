@@ -1,9 +1,12 @@
 import log from '@local/shared/logger';
 import { InventoryRow, Inventory } from '../system/inventory';
-import app from '../app';
-const game = app.game;
+import GameSession from '../gamesession';
+import BaseItem from '../baseobject/item';
+import NPC from '../gameobject/npc';
+import database from '../database';
+import game from '../game';
 
-export default async function (session, msg) {
+export default async function (session: GameSession, msg) {
     session.character.spawn();
 
     let visionRange = 250;
@@ -21,6 +24,7 @@ export default async function (session, msg) {
             if (obj.state.dead)
                 continue;
 
+            //@ts-ignore
             if (session.character.isObjectVisible(apo.type, apo.uid))
                 continue;
 
@@ -35,6 +39,7 @@ export default async function (session, msg) {
 
                 // TODO: dont disappear objects that are in vision range of party members (if you are close to them - 100~150 units)
                 if (!inVisionRange) {
+                    //@ts-ignore
                     let o = game.world.find(objType, (o) => o.uid == objUid);
 
                     // TODO: this condition will likely disappear when the character will be added to the session
@@ -53,8 +58,8 @@ export default async function (session, msg) {
         }
     });
 
-    let dbInventoryItems = await app.database.characters.getInventoryItems(session.character.id)
-    let inventoryStacks = [];
+    let dbInventoryItems = await database.characters.getInventoryItems(session.character.id)
+    let inventoryStacks: any[][] = [];
 
     for (const dbInventoryItem of dbInventoryItems) {
         if (dbInventoryItem.parentId !== null) {
@@ -72,20 +77,21 @@ export default async function (session, msg) {
     }
 
     for (let invenStack in inventoryStacks) {
-        let firstStackItem = inventoryStacks[invenStack][0];
+        let inventoryStack = inventoryStacks[invenStack];
+        let firstStackItem = inventoryStack[0];
 
-        let contentItem = game.content.find('item', (el) => el.id == firstStackItem.itemId);
+        let baseItem = game.content.items.find((el) => el.id == firstStackItem.itemId);
 
-        if (!contentItem) {
-            log.debug(`Server attempted to add an item to character inventory that does not exist. ID: ${contentItem.id}`);
+        if (!baseItem) {
+            log.debug(`Server attempted to add an item to character inventory that does not exist. ID: ${firstStackItem.itemId}`);
             continue;
         }
 
-        let stackUids = inventoryStacks[invenStack].map((i) => i.id);
+        let stackUids = inventoryStack.map((i) => i.id);
 
         let invenRow = new InventoryRow({
             itemUid: firstStackItem.id,
-            item: contentItem,
+            item: baseItem,
             plus: firstStackItem.plus,
             stack: inventoryStacks[invenStack].length > 1 ? inventoryStacks[invenStack].length : 1,
             wearingPosition: firstStackItem.wearingPosition,
@@ -132,7 +138,7 @@ export default async function (session, msg) {
     //session.send.env('MSG_ENV_TAX_CHANGE');
 
     // all npcs are spawned only once per session
-    let result = game.world.filter('npc', (n) => n.zone.id == session.character.zone.id);
+    let result = game.world.filter<NPC>('npc', (n) => n.zone.id == session.character.zone.id);
 
     for (let npc of result)
         npc.appear(session.character.session);

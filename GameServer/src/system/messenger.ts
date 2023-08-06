@@ -1,9 +1,16 @@
 import log from "@local/shared/logger";
 
-class Invite {
-    static invites = [];
+type InviteRequest = {
+    requester: number,
+    receiver: number,
+    acceptedAt: Date | null,
+    createdAt: Date
+};
 
-    static create(requester, receiver) {
+class Invite {
+    static invites: InviteRequest[] = [];
+
+    static create(requester: number, receiver: number) {
         this.invites.push({
             requester,
             receiver,
@@ -14,7 +21,7 @@ class Invite {
         log.info(`A new friend request has been made. [${requester} -> ${receiver}]`);
     }
 
-    static accept(receiver) {
+    static accept(receiver): boolean | any {
         const index = this.invites.findIndex((i) => i.receiver === receiver);
 
         if (index === -1)

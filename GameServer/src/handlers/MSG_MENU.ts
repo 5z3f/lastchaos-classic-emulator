@@ -5,6 +5,8 @@ import Character from '../gameobject/character';
 import { Statistic, Modifier, ModifierType } from '../types/statistic';
 import Position from '../types/position';
 import app from '../app';
+import game from '../game';
+import database from '../database';
 
 export default function (session, msg) {
     let subType = msg.read('u8') as number;
@@ -20,6 +22,7 @@ export default function (session, msg) {
                 classId: msg.read('u8') as number,
                 hairId: msg.read('u8') as number,
                 faceId: msg.read('u8') as number,
+                jobId: 0,
             };
 
             const MAX_CLASSES = 6;
@@ -30,14 +33,14 @@ export default function (session, msg) {
             if (data.faceId >= MAX_FACESTYLES || data.hairId >= MAX_HAIRSTYLES || data.jobId >= MAX_CLASSES)
                 return;
 
-            const [exists] = await app.database.characters.exists(data.nickname);
+            const [exists] = await database.characters.exists(data.nickname);
 
             if (exists) {
                 session.send.fail(10); // MSG_FAIL_DB_ALREADY_NAME
                 return;
             }
 
-            const result = await app.database.characters.create({
+            const result = await database.characters.create({
                 accountId: session.accountId,
                 nickname: data.nickname,
                 classId: data.classId,
@@ -55,10 +58,14 @@ export default function (session, msg) {
             // TODO: add standard items here (?)
 
             // TODO: this code is duplicated, we need to import it from somewhere (origin: MSG_LOGIN)
-            const dbCharacters = await app.database.accounts.getCharacters(session.accountId);
+            const dbCharacters = await database.accounts.getCharacters(session.accountId);
+            if (!dbCharacters) {
+                session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
+                return;
+            }
 
             for (let dbCharacter of dbCharacters) {
-                const wearingItems = await app.database.characters.getWearingItems(dbCharacter.id);
+                const wearingItems = await database.characters.getWearingItems(dbCharacter.id);
 
                 if (!wearingItems) {
                     session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
@@ -73,7 +80,7 @@ export default function (session, msg) {
         MSG_MENU_START: async () => {
             let characterId = msg.read('i32>') as number; // selected character id
 
-            const dbCharacter = await app.database.characters.getById(characterId);
+            const dbCharacter = await database.characters.getById(characterId);
 
             // TODO: packet is malformed, log it
             if (!dbCharacter) {
@@ -101,6 +108,7 @@ export default function (session, msg) {
                     maxExperience: 100,                                     // FIXME: probably will be removed later (?)
                     skillpoint: dbCharacter.skillpoint
                 },
+                //@ts-ignore
                 statistics: {
                     runSpeed: new Statistic(20.0),
                     attack: new Statistic(100),                                     // TODO:

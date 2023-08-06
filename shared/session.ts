@@ -2,7 +2,7 @@ import util from '../GameServer/src/util'; // TODO: this
 import Message from '@local/shared/message';
 import log from "@local/shared/logger";
 //import game from '../GameServer/src/game'; // TODO: move this
-import server from './server';
+import Server from './server';
 import net from 'net';
 
 const game = {
@@ -10,27 +10,24 @@ const game = {
 };
 
 type sessionOptions = {
-    server: server,
+    server: Server,
     socket: net.Socket,
     handlers: any,
     senders: any,
 };
 
-class session {
-    server;
-    socket;
+class Session {
+    server: Server;
+    socket: net.Socket;
 
     // unique id (do not confuse with uid (user id) from database)
     uid;
 
     // database user account id
-    accountId: number | undefined = undefined;
+    accountId?: number = undefined;
 
-    // ingame character
-    character: any | undefined = undefined;
-
-    handlers;
-    send;
+    handlers: any;
+    send: any;
 
     constructor({ server, socket, handlers, senders }: sessionOptions) {
         this.server = server;
@@ -89,4 +86,4 @@ class session {
     }
 }
 
-export default session;
+export default Session;

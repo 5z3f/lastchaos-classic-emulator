@@ -2,6 +2,7 @@
 import session from '@local/shared/session';
 import appear from './appear';
 import attack from './attack';
+import at from './at';
 import autoattack from './autoattack';
 import chat from './chat';
 import custom from './custom';
@@ -28,6 +29,7 @@ import sys from './sys';
 export default (session: session) => {
     const send = {
         appear: appear(session),
+        at: at(session),
         attack: attack(session),
         autoattack: autoattack(session),
         chat: chat(session),

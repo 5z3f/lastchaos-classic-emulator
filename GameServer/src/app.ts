@@ -1,12 +1,13 @@
 
 import config from '../../servers.config.json';
-import db from '@local/shared/db';
-import database from './database';
 import game from './game';
+import { Pool } from 'mariadb';
 
-export default {
-    config,
-    dbc: db.initialize(),
-    database,
-    game: game.initialize(),
+class App {
+    static config = config;
+    static dbc: Pool;
+    static game: typeof game;
 };
+
+console.log('App', App);
+export default App;

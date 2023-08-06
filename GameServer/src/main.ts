@@ -1,12 +1,20 @@
 
 import server from '@local/shared/server';
-import app from './app';
+import App from './app';
 import handlers from './handlers';
 import senders from './senders';
 
+import config from '../../servers.config.json';
+import db from '@local/shared/db';
+import game from './game';
+
+App.dbc = db.initialize();
+App.game = game;
+game.initialize();
+
 let srv = new server({
-    host: app.config.gameserver.host,
-    port: app.config.gameserver.port,
+    host: config.gameserver.host,
+    port: config.gameserver.port,
     handlers,
     senders,
 });

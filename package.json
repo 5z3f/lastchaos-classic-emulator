@@ -3,8 +3,8 @@
   "version": "1.7.0",
   "description": "Last Chaos Classic Emulator",
   "scripts": {
-    "loginserver": "node LoginServer/src/app.js",
-    "gameserver": "node GameServer/src/app.js",
+    "loginserver": "ts-node LoginServer/src/main.ts",
+    "gameserver": "ts-node GameServer/src/main.ts",
     "test": "mocha"
   },
   "author": "agsvn",
@@ -24,6 +24,7 @@
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.0",
-    "@types/node": "^20.4.2"
+    "@types/node": "^20.4.2",
+    "@types/three": "^0.154.0"
   }
 }

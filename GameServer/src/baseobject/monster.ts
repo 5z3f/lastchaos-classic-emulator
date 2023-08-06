@@ -1,8 +1,72 @@
-const BaseObject = require('./index');
+import BaseObject from './index';
+
+type statistics = {
+    health: number,
+    mana: number,
+    strength: number,
+    dexterity: number,
+    intelligence: number,
+    condition: number,
+    attack: number,
+    magicAttack: number,
+    defense: number,
+    magicResist: number,
+    walkSpeed: number,
+    runSpeed: number,
+    attackRange: number,
+    attackSpeed: number,
+};
+
+type Spawn = {
+    zoneId: number,
+    position: {
+        x: number,
+        y: number,
+        z: number,
+        r: number,
+        layer: number
+    },
+    respawnTime: number
+};
+
+type MonsterOptions = {
+    id: number,
+    name: string,
+    description: string,
+    enabled: boolean,
+    flags: number,
+    level: number,
+    vision: number,
+    attackType: number,
+    spawns: Spawn[],
+    statistics: statistics,
+    skills: number[],
+    reward: {
+        experience: number,
+        skillpoint: number,
+        gold: number,
+        items: number[],
+    },
+};
 
 class BaseMonster extends BaseObject {
 
-    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward }) {
+    vision: number;
+    attackType: number;
+    spawns: Spawn[];
+    skills: number[];
+
+    reward: {
+        experience: number,
+        skillpoint: number,
+        gold: number,
+        items: number[],
+    };
+
+    statistics: statistics;
+
+    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward }: MonsterOptions) {
+        //@ts-ignores
         super(...arguments);
 
         this.level = level;

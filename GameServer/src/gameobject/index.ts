@@ -3,16 +3,82 @@ import { Statistic, Modifier, ModifierType } from '../types/statistic';
 import Position from '../types/position';
 import util from '../util';
 import log from '@local/shared/logger';
-import app from '../app';
+import App from '../app';
+import Zone from '../zone';
+import { Point } from 'js-quadtree';
+
+type GameObjectOptions = {
+    uid?: number,
+    id: number,
+    flags: string[],
+    zone: Zone,
+    position?: Position,
+    areaId: number
+};
 
 class GameObject {
-    constructor({ uid, id, flags, zone, position, areaId }) {
+
+    uid: number;
+    id: number;
+    flags: string[];
+    zone: Zone;
+    areaId: number;
+
+    position: Position;
+    previousPosition: Position;
+    originalPosition: Position;
+
+    appearCount: number;
+    resurrectionCount: number;
+
+    firstAppearance: boolean;
+
+    state: {
+        dead: boolean,
+        inCombat: () => boolean
+    };
+
+    lastAttackTime: number;
+
+    statistics: {
+        health: Statistic,
+        maxHealth: Statistic,
+        healthRegen: Statistic,
+        mana: Statistic,
+        maxMana: Statistic,
+        manaRegen: Statistic,
+        strength: Statistic,
+        dexterity: Statistic,
+        intelligence: Statistic,
+        condition: Statistic,
+        attack: Statistic,
+        magicAttack: Statistic,
+        defense: Statistic,
+        magicResist: Statistic,
+        walkSpeed: Statistic,
+        runSpeed: Statistic,
+        attackRange: Statistic,
+        attackSpeed: Statistic,
+
+        statpoints: number,
+        intelligenceAdded: number,
+        strengthAdded: number,
+        dexterityAdded: number,
+        conditionAdded: number
+    };
+
+    event: EventEmitter;
+    respawnCount: number = 0;
+    type: string = '';
+    objType: number = 0;
+
+    constructor({ uid, id, flags, zone, position, areaId }: GameObjectOptions) {
         this.uid = uid || util.createSessionId();   // unique id
         this.id = id;
 
         this.flags = flags;
 
-        this.position = new Position(position || {});
+        this.position = Position.from(position || { x: 0, y: 0 });
         this.previousPosition = this.position.clone();
         this.originalPosition = this.position.clone();
 
@@ -33,6 +99,7 @@ class GameObject {
 
         this.lastAttackTime = 0;
 
+        //@ts-ignore
         this.statistics = {
             health: new Statistic(),
             maxHealth: new Statistic(),
@@ -72,22 +139,23 @@ class GameObject {
         // temporary
         log.debug(`RESPAWNED UID: ${this.uid}`);
 
-        this.appearInRange(50);
+        //@ts-ignore
+        this?.appearInRange?.(50);
 
         this.event.emit('respawn');
 
     }
 
-    hasFlag = (flag) =>
+    hasFlag = (flag: string) =>
         this.flags.includes(flag);
 
     canMove = () =>
         !this.state.dead && !this.state.inCombat() && this.hasFlag('MOVING');
 
-    distance = (position) =>
+    distance = (position: Position) =>
         Math.sqrt(Math.pow(position.x - this.position.x, 2) + Math.pow(position.y - this.position.y, 2));
 
-    updatePosition(position, moveType = 1) {
+    updatePosition(position: Position, moveType = 1) {
         // previous position
         this.previousPosition = this.position.clone();
 
@@ -98,15 +166,16 @@ class GameObject {
         this.zone.quadTree.remove({
             x: this.previousPosition.x,
             y: this.previousPosition.y,
-            uid: this.uid
+            //@ts-ignore
+            uid: this.uid,
         });
 
         // insert updated position
-        let qtPointObj = {
+        let qtPointObj: any = {
             x: this.position.x,
             y: this.position.y,
             uid: this.uid,
-            type: this.type
+            type: this.type,
         }
 
         if (this.type === 'character')
@@ -122,7 +191,7 @@ class GameObject {
             return;
         }
 
-        app.game.sendInArea(this.zone, this.position, 'move', {
+        App.game.sendInArea(this.zone, this.position, 'move', {
             objType: this.objType,
             uid: this.uid,
             moveType: moveType,
@@ -131,6 +200,7 @@ class GameObject {
         });
     };
 
+    regenInterval?: NodeJS.Timer = undefined;
     startRegen() {
         let regenTick = 1 * 5000;
 
@@ -140,7 +210,7 @@ class GameObject {
         }, regenTick);
     }
 
-    heal(amount) {
+    heal(amount: number) {
         if (!amount || this.state.dead || this.statistics.health.getCurrentValue() == this.statistics.maxHealth.getCurrentValue())
             return;
 
@@ -159,7 +229,7 @@ class GameObject {
         // TODO: update character object in area
     }
 
-    move(range) {
+    move(range: number) {
         let randomMoveType = util.getRandomInt(0, 2);
 
         if (!this.canMove())
@@ -179,12 +249,12 @@ class GameObject {
         this.updatePosition(newPosition, randomMoveType);
     }
 
-    testMoveInRange(range) {
+    testMoveInRange(range: number) {
         // if object has MOVING flag, then it can move
         if (!this.hasFlag('MOVING'))
             return;
 
-        let range = 50;
+        range = 50;
         let randomMovementTick = util.getRandomInt(3, 15) * 1000;
 
         setInterval(function (that) { that.move(range) }, randomMovementTick, this);

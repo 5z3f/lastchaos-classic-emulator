@@ -5,15 +5,71 @@ import util from '../util';
 import GameObject from './index';
 import Attackable from './traits/attackable';
 import { Vector2 } from 'three';
+import Zone from '../zone';
+import Character from './character';
+import { Statistic } from '../types/statistic';
+
+type Reward = {
+    experience: number,
+    gold: number,
+    items: number[],
+};
+
+type Statistics = {
+    strength: Statistic,
+    dexterity: Statistic,
+    intelligence: Statistic,
+    health: Statistic,
+    maxHealth: Statistic,
+    mana: Statistic,
+    maxMana: Statistic,
+    stamina: Statistic,
+    defense: Statistic,
+    attack: Statistic,
+    magicAttack: Statistic,
+    magicResist: Statistic,
+    healthRegen: Statistic,
+    manaRegen: Statistic,
+    condition: Statistic,
+
+    walkSpeed: Statistic,
+    runSpeed: Statistic,
+    attackRange: Statistic,
+    attackSpeed: Statistic
+}
+
+type MonsterOptions = {
+    uid?: number,
+    id: number,
+    zone: Zone,
+    flags: string[],
+    level: number,
+    statistics: Statistics,
+    reward: Reward,
+    position: Position,
+    respawnTime: number,
+};
 
 
 class Monster extends GameObject {
-    attackable = new Attackable();
+    attackable;
 
-    constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime }) {
+    type: string = 'monster';
+    objType: number = 1;
+
+    level: number;
+
+    reward: Reward;
+
+    respawnTime: number;
+
+
+    constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime }: MonsterOptions) {
         // get all properties from GameObject class
+        // @ts-ignore
         super(...arguments);
 
+        this.attackable = new Attackable(this);
         this.type = 'monster';
         this.objType = 1;
 
@@ -32,7 +88,7 @@ class Monster extends GameObject {
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
-    appear(character) {
+    appear(character: Character) {
         if (this.state.dead)
             return;
 
@@ -55,15 +111,16 @@ class Monster extends GameObject {
         this.event.emit('appear', /* appearedFirstTime */);
     }
 
-    appearInRange(range) {
+    appearInRange(range: number) {
         let characterPoints = this.zone.getObjectsInArea(this.position.x, this.position.y, range)
             .filter(obj => obj.type === 'character');
 
         for (let obj of characterPoints)
-            this.appear(obj.character);
+            if (obj.character)
+                this.appear(obj.character);
     }
 
-    disappear(character) {
+    disappear(character: Character) {
         if (this.state.dead)
             return;
 

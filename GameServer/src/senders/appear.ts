@@ -4,7 +4,7 @@ import _messages from './_messages.json';
 export default function (session) {
     return (subType, data) => {
         // TODO:
-        const appearCharacter = () => {
+        const appearCharacter = ({ }) => {
             let msg = new Message({ type: _messages.MSG_APPEAR });
 
             msg.write('u8', 1);             // new

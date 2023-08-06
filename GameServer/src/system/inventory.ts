@@ -1,8 +1,34 @@
 import util from '../util';
 import app from '../app';
+import BaseItem from '../baseobject/item';
+import Character from '../gameobject/character';
+
+type InventoryRowOptions = {
+    itemUid: number,
+    item: BaseItem,
+    plus?: number,
+    stack?: number,
+    wearingPosition?: number,
+    flag?: number,
+    durability?: number,
+    options?: number[],
+    stackUids?: number[],
+};
 
 export class InventoryRow {
-    constructor({ itemUid, item, plus, stack, wearingPosition, flag, durability, options, stackUids }) {
+    itemUid: number;
+    item: BaseItem;
+
+    stackUids: number[];
+
+    wearingPosition: number;
+    stack: number;
+    plus: number;
+    flag: number;
+    durability: number;
+    options: number[];
+
+    constructor({ itemUid, item, plus, stack, wearingPosition, flag, durability, options, stackUids }: InventoryRowOptions) {
         this.itemUid = itemUid;
         this.item = item;
 
@@ -19,8 +45,8 @@ export class InventoryRow {
 
 export class Inventory {
     PLATINUM_MAX_PLUS = 127;
-    FLAG_ITEM_PLATINUM_GET = (a, b) => (b = a & PLATINUM_MAX_PLUS);
-    FLAG_ITEM_PLATINUM_SET = (a, b) => (a = ((a & ~PLATINUM_MAX_PLUS) | b));
+    FLAG_ITEM_PLATINUM_GET = (a: number, b: number) => (b = a & this.PLATINUM_MAX_PLUS);
+    FLAG_ITEM_PLATINUM_SET = (a: number, b: number) => (a = ((a & ~this.PLATINUM_MAX_PLUS) | b));
     FLAG_ITEM_OPTION_ENABLE = (1 << 7);
     FLAG_ITEM_SEALED = (1 << 8);
     FLAG_ITEM_SUPER_STONE_USED = (1 << 9);
@@ -40,7 +66,12 @@ export class Inventory {
     TAB_QUEST = 1;
     TAB_EVENT = 2;
 
-    constructor({ owner }) {
+    owner;
+    items;
+    weight;
+    maxWeight;
+
+    constructor(owner: Character) {
         this.owner = owner;
         this.items = Array.from(Array(this.MAX_TABS), () => Array.from(Array(this.MAX_COLUMNS), () => new Array(this.MAX_ROWS)));
 
@@ -49,7 +80,7 @@ export class Inventory {
         this.maxWeight = 150000;
     }
 
-    find(tab, opts) {
+    find(tab: number, opts) {
         for (let col = 0; col < this.MAX_COLUMNS; col++) {
             let row = this.items[tab][col].findIndex(opts);
 
@@ -66,7 +97,7 @@ export class Inventory {
         }
     }
 
-    filter(tab, opts) {
+    filter(tab: number, opts) {
         let results = [];
 
         for (let col = 0; col < this.MAX_COLUMNS; col++) {
@@ -79,7 +110,7 @@ export class Inventory {
         return results;
     }
 
-    findEmptyRow(tab) {
+    findEmptyRow(tab: number) {
         for (let col = 0; col < this.MAX_COLUMNS; col++) {
             let row = this.items[tab][col].findIndex((i) => (typeof i === "undefined"));
 
@@ -93,7 +124,7 @@ export class Inventory {
         }
     }
 
-    add(tab, invenRow, sendMsg = true) {
+    add(tab: number, invenRow, sendMsg = true) {
         let result = this.findEmptyRow(tab);
 
         if (!result) {
@@ -141,7 +172,7 @@ export class Inventory {
         return (typeof this.items[position.tab][position.col][position.row] === 'undefined')
     }
 
-    swap(tab, src, dst) {
+    swap(tab: number, src, dst) {
         let srcRow = this.items[tab][src.position.col][src.position.row];
         let dstRow = this.items[tab][dst.position.col][dst.position.row];
 
@@ -155,7 +186,7 @@ export class Inventory {
         let result = app.dbc.query(`
             UPDATE items 
             SET position = ?
-            WHERE id = "?" OR parentId = ?`,
+            WHERE id = ? OR parentId = ?`,
             [[tab, dst.position.col, dst.position.row].join(','), srcRow.itemUid, srcRow.itemUid]);
 
         // TODO: handle error

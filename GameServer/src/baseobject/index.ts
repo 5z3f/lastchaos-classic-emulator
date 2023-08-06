@@ -51,9 +51,29 @@ const ItemFlags = {
     RARE: (1 << 15)
 };
 
+type BaseObjectOptions = {
+    id: number;
+    enabled: boolean;
+
+    name: string;
+    description: string;
+
+    level: number;
+    flags: string[];
+};
+
 class BaseObject {
 
-    constructor({ id, enabled, name, description, level, flags }) {
+    id: number;
+    enabled: boolean;
+
+    name: string;
+    description: string;
+
+    level: number;
+    flags: string[];
+
+    constructor({ id, enabled, name, description, level, flags }: BaseObjectOptions) {
         this.id = id;
         this.enabled = !!enabled;
 

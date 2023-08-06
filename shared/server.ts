@@ -1,6 +1,6 @@
 import net from 'net';
 import log from '@local/shared/logger';
-import session from '@local/shared/session';
+import Session from '@local/shared/session';
 
 type serverOptions = {
     host?: string,
@@ -10,10 +10,10 @@ type serverOptions = {
     world?: any
 };
 
-class server {
-    host;
-    port;
-    sessions: session[];
+class Server {
+    host: string;
+    port: number;
+    sessions: Session[];
 
     //static World = null;
     constructor({ host, port, handlers, senders, world = undefined }: serverOptions) {
@@ -31,14 +31,14 @@ class server {
         const srv = net.createServer();
 
         srv.on('connection', (socket) => {
-            let sess = new session({
+            let session = new Session({
                 server: that,
                 socket: socket,
                 handlers: handlers,
                 senders: senders
             });
 
-            this.sessions.push(sess);
+            this.sessions.push(session);
         });
 
         srv.listen(this.port, this.host, () => {
@@ -53,4 +53,4 @@ class server {
     }
 }
 
-export default server;
+export default Server;

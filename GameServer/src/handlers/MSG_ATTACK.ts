@@ -2,7 +2,7 @@ import log from '@local/shared/logger';
 import app from '../app';
 import Monster from '../gameobject/monster';
 import Character from '../gameobject/character';
-const game = app.game;
+import game from '../game';
 
 export default function (session, msg) {
     let data = {

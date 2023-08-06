@@ -1,64 +1,61 @@
-const ModifierType = {
-    ADDITIVE: 0,
-    PERCENTUAL: 1,
-    MULTIPLICATOR: 2,
-    DIVISOR: 3,
-    NEGATIVE: 4
+enum ModifierType {
+    ADDITIVE = 0,
+    PERCENTUAL = 1,
+    MULTIPLICATOR = 2,
+    DIVISOR = 3,
+    NEGATIVE = 4
 };
 
-const ModifierOrigin = {
-    STAT: 0,
-    ITEM: 1,
-    BUFF: 2,
-    SKILL: 3
+enum ModifierOrigin {
+    STAT = 0,
+    ITEM = 1,
+    BUFF = 2,
+    SKILL = 3
 };
 
 /**
  * A class representing a statistic in game, such as health or strength.
  */
 class Statistic {
-    /**
-     * @param {number} baseValue - Starting value.
-     * @param {number} minValue
-     * @param {number} maxValue
-     */
-    constructor(baseValue = 0, minValue = 0, maxValue = 1000000) {
-        /**
-         * The base value of the statistic.
-         * @type {number}
-         */
-        this.baseValue = baseValue;
 
-        /**
-         * The current value of the statistic.
-         * @type {number}
-         */
+    /**
+     * The base value of the statistic.
+     */
+    baseValue: number = 0;
+
+    /**
+     * The current value of the statistic.
+     */
+    currentValue: number = 0;
+
+    /**
+     * The minimum value of the statistic.
+    */
+    minValue: number = 0;
+
+    /**
+     * The maximum value of the statistic.
+     */
+    maxValue: number = 0;
+
+    /**
+     * An array of modifiers applied to the statistic.
+     */
+    modifiers: Modifier[] = [];
+
+    constructor(baseValue = 0, minValue = 0, maxValue = 1000000) {
+        this.baseValue = baseValue;
         this.currentValue = baseValue;
 
-        /**
-         * The minimum value of the statistic.
-         * @type {number}
-         */
         this.minValue = minValue;
-
-        /**
-         * The maximum value of the statistic.
-         * @type {number}
-         */
         this.maxValue = maxValue;
-
-        /**
-         * An array of modifiers applied to the statistic.
-         * @type {Modifier[]}
-         */
-        this.modifiers = [];
     }
 
     /**
      * Increases the current value of the statistic by the specified value, capped at the maximum value.
      * @param {number} value - The value to increase the statistic by.
      */
-    increase(value) {
+    increase(value: number) {
         this.currentValue = Math.min(this.currentValue + value, this.maxValue);
     }
 
@@ -66,7 +63,7 @@ class Statistic {
      * Decreases the current value of the statistic by the specified value, capped at the minimum value.
      * @param {number} value - The value to decrease the statistic by.
      */
-    decrease(value) {
+    decrease(value: number) {
         this.currentValue = Math.max(this.currentValue - value, this.minValue);
     }
 
@@ -74,7 +71,7 @@ class Statistic {
      * Sets the current value of the statistic to the specified value, clamped between the minimum and maximum values.
      * @param {number} value - The value to set the statistic to.
      */
-    set(value) {
+    set(value: number) {
         this.currentValue = Math.min(Math.max(value, this.minValue), this.maxValue);
     }
 
@@ -90,7 +87,7 @@ class Statistic {
      * Adds a modifier or an array of modifiers to the statistic.
      * @param {Modifier | Modifier[]} modifier - The modifier(s) to add.
      */
-    addModifier(modifier) {
+    addModifier(modifier: Modifier | Modifier[]) {
         if (Array.isArray(modifier))
             this.modifiers.push(...modifier);
         else
@@ -104,7 +101,7 @@ class Statistic {
      * @param {number} originType - Type of the origin.
      * @param {number} originId - Origin ID.
      */
-    removeModifier(originType, originId) {
+    removeModifier(originType: number, originId: number) {
         const index = this.modifiers.findIndex(modifier => modifier.packIdentifier(originType, originId) === modifier.uid);
 
         if (index !== -1)
@@ -174,6 +171,31 @@ class Statistic {
  * @class
  */
 class Modifier {
+
+    type: ModifierType;
+    value: number;
+    duration: number | null;
+    startTime: number;
+
+    uid: number;
+
+    /**
+     * The pack method for the identifier.
+     */
+    packIdentifier(type: number, id: number) {
+        return (type << 28) | (id & 0xfffffff);
+    }
+
+    /**
+     * The unpack method for the identifier.
+     */
+    unpackIdentifier(value: number) {
+        return {
+            type: value >>> 28,
+            id: value & 0xfffffff
+        };
+    }
+
     /**
      * Creates a new modifier with the given value, duration, and type.
      *
@@ -181,27 +203,7 @@ class Modifier {
      * @param {string} type - The type of the modifier. Can be 0 - ADDITIVE, 1 - PERCENTUAL, 2 - MULTIPLICATOR, 3 - DIVISOR or 4 - NEGATIVE.
      * @param {number} [duration=null] - The duration of the modifier in milliseconds.
      */
-    constructor(type, value, originType = -1, originId = -1, duration = null) {
-
-        /**
-         * The pack method for the identifier.
-         * @type {function}
-         */
-        this.packIdentifier = function (type, id) {
-            return (type << 28) | (id & 0xfffffff);
-        };
-
-        /**
-         * The unpack method for the identifier.
-         * @type {function}
-         */
-        this.unpackIdentifier = function (value) {
-            return {
-                type: value >>> 28,
-                id: value & 0xfffffff
-            };
-        };
-
+    constructor(type: ModifierType, value: number, originType = -1, originId = -1, duration = null) {
         /**
          * The unique identifier of the modifier.
          * @type {number}
@@ -239,7 +241,7 @@ class Modifier {
      * @param {number} statisticValue - The value of the statistic to modify.
      * @returns {number} - The modified value.
      */
-    apply(statisticValue) {
+    apply(statisticValue: number) {
         switch (this.type) {
             case ModifierType.ADDITIVE:
                 return statisticValue + this.value;

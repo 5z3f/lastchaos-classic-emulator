@@ -1,12 +1,21 @@
 import log from "@local/shared/logger";
+import Monster from "../monster";
+import Character from "../character";
+import NPC from "../npc";
 
 class Attackable {
+    owner;
 
-    damage(attacker) {
-        this.statistics.health.decrease(attacker.statistics.attack.getCurrentValue());
-        attacker.statistics.health.decrease(this.statistics.attack.getCurrentValue());
+    constructor(owner: Character | Monster | NPC) {
+        this.owner = owner;
+    }
 
-        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health.getCurrentValue()} | MP: ${attacker.statistics.mana.getCurrentValue()} | DMG: ${attacker.statistics.attack.getCurrentValue()}] attacked ${this.type}(${this.uid}) [HP: ${this.statistics.health.getCurrentValue()} | MP: ${this.statistics.mana.getCurrentValue()}]`);
+    damage(attacker: Character) {
+        let owner = this.owner;
+        owner.statistics.health.decrease(attacker.statistics.attack.getCurrentValue());
+        attacker.statistics.health.decrease(owner.statistics.attack.getCurrentValue());
+
+        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health.getCurrentValue()} | MP: ${attacker.statistics.mana.getCurrentValue()} | DMG: ${attacker.statistics.attack.getCurrentValue()}] attacked ${owner.type}(${owner.uid}) [HP: ${owner.statistics.health.getCurrentValue()} | MP: ${owner.statistics.mana.getCurrentValue()}]`);
 
         // damage attacker's target
         attacker.session.send.damage({
@@ -15,35 +24,36 @@ class Attackable {
             damageType: 3,
             skillId: -1,
             targetObjType: 1,
-            targetIndex: this.uid,
-            targetHp: this.statistics.health.getCurrentValue(),
-            targetMp: this.statistics.mana.getCurrentValue(),
+            targetIndex: owner.uid,
+            targetHp: owner.statistics.health.getCurrentValue(),
+            targetMp: owner.statistics.mana.getCurrentValue(),
             damage: attacker.statistics.attack.getCurrentValue(),
         });
 
-        this.lastAttackTime = performance.now();
+        owner.lastAttackTime = performance.now();
 
-        if (this.statistics.health.getCurrentValue() <= 0) {
-            this.statistics.health.set(0);
+        if (owner.statistics.health.getCurrentValue() <= 0) {
+            owner.statistics.health.set(0);
 
             // kill monster
-            this.die();
+            owner.die();
 
             // remove object from attacker's visible list
-            attacker.removeVisibleObject(this.type, this.uid);
+            //@ts-ignore
+            attacker.removeVisibleObject(owner.type, owner.uid);
         }
 
         // damage attacker
         attacker.session.send.damage({
             attackerObjType: 1,
-            attackerIndex: this.uid,
+            attackerIndex: owner.uid,
             damageType: 0,
             skillId: -1,
             targetObjType: 0,
             targetIndex: attacker.uid,
             targetHp: attacker.statistics.health.getCurrentValue(),
             targetMp: attacker.statistics.mana.getCurrentValue(),
-            damage: this.statistics.attack.getCurrentValue(),
+            damage: owner.statistics.attack.getCurrentValue(),
         });
 
         if (attacker.statistics.health.getCurrentValue() <= 0) {

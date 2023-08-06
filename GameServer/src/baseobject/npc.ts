@@ -1,9 +1,72 @@
-const BaseObject = require('./index');
-const { Statistic, Modifier, ModifierType } = require('../types/statistic');
+import BaseObject from './index';
+import { Statistic, Modifier, ModifierType } from '../types/statistic';
+
+type NPCOptions = {
+    id: number,
+    name: string,
+    description: string,
+    enabled: boolean,
+    flags: number,
+    level: number,
+    vision: number,
+    attackType: number,
+    spawns: Spawn[],
+    statistics: number[],
+    skills: number[],
+    reward: {
+        experience: number,
+        skillpoint: number,
+        gold: number,
+        items: number[],
+    },
+};
+
+type Spawn = {
+    zoneId: number,
+    position: {
+        x: number,
+        y: number,
+        z: number,
+        r: number,
+        layer: number
+    },
+    respawnTime: number
+};
 
 class BaseNPC extends BaseObject {
 
-    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward }) {
+    vision: number;
+    attackType: number;
+    spawns: Spawn[];
+    statistics: {
+        health: number,
+        mana: number,
+        strength: number,
+        dexterity: number,
+        intelligence: number,
+        condition: number,
+        attack: number,
+        magicAttack: number,
+        defense: number,
+        magicResist: number,
+        walkSpeed: number,
+        runSpeed: number,
+        attackRange: number,
+        attackSpeed: number,
+    };
+
+    skills: number[];
+
+    reward: {
+        experience: number,
+        skillpoint: number,
+        gold: number,
+        items: number[],
+    };
+
+    constructor({ id, name, description, enabled, flags, level, vision, attackType, spawns, statistics, skills, reward }: NPCOptions) {
+
+        // @ts-ignore
         super(...arguments)
 
         this.level = level;

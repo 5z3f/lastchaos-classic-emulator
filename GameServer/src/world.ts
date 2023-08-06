@@ -10,25 +10,29 @@ class World {
         this.zones.push(new Zone(0, 1536, 1536));
     }
 
-    add({ type, zoneId, data }) {
+    add({ type, zoneId, data }: { type: 'character' | 'npc' | 'monster' | 'item' | 'zone', zoneId?: number, data: any }) {
         if (type == 'zone') {
             this.zones.push(data);
         }
         else if (['character', 'monster', 'npc', 'item'].includes(type)) {
+            if (!zoneId)
+                return;
+
             let zone = this.get('zone', zoneId);
-            zone.add(type, data);
+            if (zone)
+                zone.add(type, data);
         }
     }
 
-    get(type, id) {
+    get(type: 'character' | 'npc' | 'monster' | 'item' | 'zone', id: number) {
         if (type == 'zone')
             for (let zone of this.zones)
                 if (zone.id == id)
                     return zone;
     }
 
-    filter(type, opts) {
-        let results = [];
+    filter<T>(type: 'character' | 'npc' | 'monster' | 'item', opts: Function) {
+        let results: T[] = [];
 
         for (let zone of this.zones)
             results = [...results, ...zone.filter(type, opts)]
@@ -36,7 +40,7 @@ class World {
         return results;
     }
 
-    find(type, opts) {
+    find(type: 'character' | 'npc' | 'monster' | 'item', opts: Function) {
         let result;
 
         for (let zone of this.zones) {
@@ -48,7 +52,7 @@ class World {
         return result;
     }
 
-    remove({ type, zoneId }, opts) {
+    remove({ type, zoneId }: { type: 'character' | 'npc' | 'monster' | 'item', zoneId: number }, opts: Function) {
         for (let zone of this.zones) {
             if (zone.id == zoneId)
                 zone.remove(type, opts);

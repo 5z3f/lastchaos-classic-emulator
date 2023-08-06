@@ -1,6 +1,8 @@
 import log from '@local/shared/logger';
 import messenger from '../system/messenger';
 import app from '../app';
+import game from '../game';
+import database from '../database';
 
 export default function (session, msg) {
     let subType = msg.read('u8') as number;
@@ -77,7 +79,7 @@ export default function (session, msg) {
                 return;
             }
 
-            const result = await app.database.messenger.createFriend(acceptedInvite);
+            const result = await database.messenger.createFriend(acceptedInvite);
 
             if (!result) {
                 session.send.fail(14); // MSG_FAIL_DB_UNKNOWN

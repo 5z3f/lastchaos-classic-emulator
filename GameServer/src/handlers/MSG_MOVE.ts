@@ -23,7 +23,15 @@ export default function (session, msg) {
         3: 'MSG_MOVE_STOP',
     };
 
-    let character = game.world.find('character', (ch) => ch.uid == data.uid);
+    let character = session.character;
+    if (!character)
+        return;
+
+    if (character.uid != data.uid) {
+        // TODO: sorcerer summoners
+        // else cheating ?
+        return;
+    }
 
     let newPosition = new Position(
         parseFloat(data.x.toFixed(1)),

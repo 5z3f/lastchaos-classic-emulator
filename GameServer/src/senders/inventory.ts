@@ -3,7 +3,17 @@ import _messages from './_messages.json';
 
 export default function (session) {
     return (inventory) => {
-        const itemMsg = (msg, itemUid, itemId, wearingPosition, plus, flag, durability, stack, options) => {
+        const itemMsg = (
+            msg: Message,
+            itemUid = 0,
+            itemId = 0,
+            wearingPosition = 0,
+            plus = 0,
+            flag = 0,
+            durability = 0,
+            stack = 0,
+            options: { type: number, level: number }[] = []
+        ) => {
             if (!itemId) {
                 msg.write('i32>', -1);      // unique index
                 return;

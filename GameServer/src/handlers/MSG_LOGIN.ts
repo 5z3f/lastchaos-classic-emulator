@@ -1,8 +1,10 @@
 import log from '@local/shared/logger';
 import api from '../api';
 import app from '../app';
+import database from '../database';
+import Session from '@local/shared/session';
 
-export default async function (session, msg) {
+export default async function (session: Session, msg: any) {
     let data = {
         version: msg.read('u32>') as number,
         mode: msg.read('u8') as number,
@@ -13,7 +15,7 @@ export default async function (session, msg) {
 
     // TODO: check client version and if its wrong send fail message: MSG_FAIL_WRONG_VERSION
 
-    let dbAccount = await app.database.accounts.getByCredentials(data.username, data.password);
+    let dbAccount = await database.accounts.getByCredentials(data.username, data.password);
 
     if (dbAccount === false) {
         session.send.fail(3); // MSG_FAIL_WRONG_PASSWORD
@@ -30,10 +32,15 @@ export default async function (session, msg) {
 
     log.data(`[IN]  >> client login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}]`);
 
-    const dbCharacters = await app.database.accounts.getCharacters(session.accountId);
+    const dbCharacters = await database.accounts.getCharacters(session.accountId);
+
+    if (!dbCharacters) {
+        //session.send.fail( ); // TODO: 
+        return;
+    }
 
     for (let dbCharacter of dbCharacters) {
-        const wearingItems = await app.database.characters.getWearingItems(dbCharacter.id);
+        const wearingItems = await database.characters.getWearingItems(dbCharacter.id);
 
         if (!wearingItems) {
             session.send.fail(14); // MSG_FAIL_DB_UNKNOWN

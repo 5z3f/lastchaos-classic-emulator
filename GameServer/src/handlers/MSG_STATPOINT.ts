@@ -1,5 +1,6 @@
 import log from '@local/shared/logger';
 import app from '../app';
+import database from '../database';
 
 export default function (session, msg) {
     let subType = msg.read('u8') as number;
@@ -41,25 +42,25 @@ export default function (session, msg) {
                     session.character.statistics.strength.increase(1);
                     session.character.statistics.strengthAdded += 1;
 
-                    result = await app.database.characters.increaseStatistic(session.character.id, 'strength');
+                    result = await database.characters.increaseStatistic(session.character.id, 'strength');
                     break;
                 case 1: // Dexterity
                     session.character.statistics.dexterity.increase(1)
                     session.character.statistics.dexterityAdded += 1;
 
-                    result = await app.database.characters.increaseStatistic(session.character.id, 'dexterity');
+                    result = await database.characters.increaseStatistic(session.character.id, 'dexterity');
                     break;
                 case 2: // Intelligence
                     session.character.statistics.intelligence.increase(1);
                     session.character.statistics.intelligenceAdded += 1;
 
-                    result = await app.database.characters.increaseStatistic(session.character.id, 'intelligence');
+                    result = await database.characters.increaseStatistic(session.character.id, 'intelligence');
                     break;
                 case 3: // Condition
                     session.character.statistics.condition.increase(1);
                     session.character.statistics.conditionAdded += 1;
 
-                    result = await app.database.characters.increaseStatistic(session.character.id, 'condition');
+                    result = await database.characters.increaseStatistic(session.character.id, 'condition');
                     break;
             }
 

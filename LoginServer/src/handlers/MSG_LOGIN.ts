@@ -2,6 +2,7 @@ import log from '@local/shared/logger';
 import Message from '@local/shared/message';
 import session from '@local/shared/session';
 import app from '../app';
+import database from '../database';
 
 
 export default async function (session: session, msg: Message) {
@@ -15,7 +16,7 @@ export default async function (session: session, msg: Message) {
 
     // TODO: check client version and if its wrong send fail message: MSG_FAIL_WRONG_VERSION
 
-    let dbAccount = await app.database.accounts.getByCredentials(data.username, data.password);
+    let dbAccount = await database.accounts.getByCredentials(data.username, data.password);
 
     if (dbAccount === false) {
         session.send.fail(3); // MSG_FAIL_WRONG_PASSWORD

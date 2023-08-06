@@ -3,8 +3,7 @@ import identifier from '@local/shared/identifier';
 
 import { InventoryRow } from '../system/inventory';
 import api from '../api';
-import app from '../app';
-const game = app.game;
+import game from '../game';
 
 export default function (session, msg) {
     let subType = msg.read('u8') as number;
@@ -23,7 +22,7 @@ export default function (session, msg) {
         14: 'MSG_ITEM_UPGRADE_REQ',
         16: 'MSG_ITEM_REFINE_REQ',
         18: 'MSG_ITEM_OPTION_ADD_REQ',
-        18: 'MSG_ITEM_OPTION_DEL_REQ',
+        20: 'MSG_ITEM_OPTION_DEL_REQ',
         22: 'MSG_ITEM_PROCESS_REQ',
         24: 'MSG_ITEM_MAKE_REQ',
         26: 'MSG_ITEM_MIX_REQ',

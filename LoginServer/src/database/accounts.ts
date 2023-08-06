@@ -1,4 +1,4 @@
-//import bcrypt from 'bcrypt';
+import bcrypt from 'bcrypt';
 import crypto from 'crypto';
 import log from '@local/shared/logger';
 import app from '../app';
@@ -25,11 +25,11 @@ class accounts {
         try {
             const [dbAccount]: account[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
 
-            //if (!(await bcrypt.compare(password, dbAccount.hash)))
-            //    return false;
-            let hashed = crypto.createHash('sha256').update(password + this.#salt).digest('hex');
-            if (hashed != dbAccount.hash)
+            if (!(await bcrypt.compare(password, dbAccount.hash)))
                 return false;
+            //let hashed = crypto.createHash('sha256').update(password + this.#salt).digest('hex');
+            //if (hashed != dbAccount.hash)
+            //    return false;
 
             return dbAccount;
         }

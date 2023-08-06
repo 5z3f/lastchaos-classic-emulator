@@ -3,18 +3,140 @@ import log from '@local/shared/logger';
 import util from '../util';
 
 import { Statistic, Modifier, ModifierType, ModifierOrigin } from '../types/statistic';
-import { Inventory } from '../system/inventory';
+import { Inventory, InventoryRow } from '../system/inventory';
 
 import GameObject from './index';
 import Attackable from './traits/attackable';
+import Session from '@local/shared/session';
+
+type Reward = {
+    experience: number,
+    skillpoint: number,
+    gold: number,
+    items: number[],
+};
+
+type Statistics = {
+    strength: Statistic,
+    dexterity: Statistic,
+    intelligence: Statistic,
+    condition: Statistic,
+    health: Statistic,
+    mana: Statistic,
+    stamina: Statistic,
+    defense: Statistic,
+    attack: Statistic,
+    magicAttack: Statistic,
+    healthRegen: Statistic,
+    manaRegen: Statistic,
+    conditionRegen: Statistic,
+    magicSpeed: Statistic,
+    skillSpeed: Statistic,
+    statpoints: number,
+    strengthAdded: number,
+    dexterityAdded: number,
+    intelligenceAdded: number,
+    conditionAdded: number,
+    healthAdded: number,
+    manaAdded: number,
+    staminaAdded: number,
+    defenseAdded: number,
+    attackAdded: number,
+    magicAttackAdded: number,
+    healthRegenAdded: number,
+    manaRegenAdded: number,
+    conditionRegenAdded: number,
+    magicSpeedAdded: number,
+    skillSpeedAdded: number,
+    runSpeed: Statistic,
+    magicResist: Statistic,
+    walkSpeed: Statistic,
+    attackRange: Statistic,
+    attackSpeed: Statistic,
+};
+
+type CharacterOptions = {
+    session: any,
+    uid?: number,
+    id: number,
+    classType: number,
+    jobType: number,
+    nickname: string,
+    appearance: {
+        hairType: number,
+        faceType: number
+    },
+    progress: {
+        level: number,
+        experience: number,
+        maxExperience: number,
+        skillpoint: number
+    },
+    reward: Reward,
+    reputation: number,
+    statistics: Statistics,
+    role: string,
+};
+
 
 class Character extends GameObject {
-    attackable = new Attackable();
+    attackable;
 
-    constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics, role = 'user' }) {
+    type: string = 'character';
+    objType: number = 0;
+
+    session: Session;
+
+    role: string;
+
+    nickname: string;
+
+    classType: number;
+    jobType: number;
+
+    appearance: {
+        hairType: number,
+        faceType: number
+    };
+
+    inventory: Inventory;
+
+    progress: {
+        level: number,
+        experience: number,
+        maxExperience: number,
+        skillpoint: number
+    };
+
+    reward: Reward;
+
+    reputation: number;
+
+    pk: {
+        name: number,
+        penalty: number,
+        count: number,
+    };
+
+    meracJoinFlag: number;
+
+    mapAttr: number;
+
+    visibleObjectUids: {
+        character: any[],
+        npc: any[],
+        monster: any[],
+        item: any[]
+    };
+
+    buffs: any[];
+
+    constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics, role = 'user' }: CharacterOptions) {
         // get all properties from GameObject class
+        //@ts-ignore
         super(...arguments);
 
+        this.attackable = new Attackable(this);
         this.type = 'character';
         this.objType = 0;
 
@@ -36,6 +158,7 @@ class Character extends GameObject {
         this.statistics = {
             ...this.statistics,
 
+            //@ts-ignore
             magicSpeed: new Statistic(1),
             skillSpeed: new Statistic(1),
 
@@ -47,7 +170,7 @@ class Character extends GameObject {
             conditionAdded: 0,
         }
 
-        this.inventory = new Inventory({ owner: this });
+        this.inventory = new Inventory(this);
 
         this.progress = {
             level: progress?.level || 1,
@@ -126,22 +249,23 @@ class Character extends GameObject {
         })
     }
 
-    addVisibleObject(type, uid) {
-        if (!this.visibleObjectUids[type].includes(uid))
-            this.visibleObjectUids[type].push(uid);
+    addVisibleObject(type: keyof Character["visibleObjectUids"], uid: number) {
+        let visibleObjectUids = this.visibleObjectUids[type];
+        if (!visibleObjectUids.includes(uid))
+            visibleObjectUids.push(uid);
     }
 
-    removeVisibleObject(type, uid) {
+    removeVisibleObject(type: keyof Character["visibleObjectUids"], uid: number) {
         let objArray = this.visibleObjectUids[type];
         if (objArray.includes(uid))
             objArray.splice(objArray.indexOf(uid), 1);
     }
 
-    getVisibleObjects(type) {
+    getVisibleObjects(type: keyof Character["visibleObjectUids"]) {
         return this.visibleObjectUids[type];
     }
 
-    isObjectVisible(type, uid) {
+    isObjectVisible(type: keyof Character["visibleObjectUids"], uid: number) {
         return this.visibleObjectUids[type].includes(uid);
     }
 
@@ -162,7 +286,7 @@ class Character extends GameObject {
         }
 
         // TODO: Will also need to take into account the current total of given statistic
-        function calculateBonusHealth(classType, level, str, dex, int, con, multiplier) {
+        function calculateBonusHealth(classType: number, level: number, str: number, dex: number, int: number, con: number, multiplier: number) {
             switch (classType) {
                 case ClassType.Titan:
                     multiplier = 1.1;
@@ -183,7 +307,7 @@ class Character extends GameObject {
             return Math.floor((con + (str * 0.5) + (dex * 0.2) + (int * 0.1) + (con * 0.7) + (level * 0.9)) * multiplier);
         }
 
-        function calculateBonusMana(classType, level, str, dex, int, con, multiplier) {
+        function calculateBonusMana(classType: number, level: number, str: number, dex: number, int: number, con: number, multiplier: number) {
             switch (classType) {
                 case ClassType.Titan:
                     multiplier = 0.4;
@@ -206,7 +330,7 @@ class Character extends GameObject {
             return Math.floor((int + (str * 0.1) + (dex * 0.2) + (int * 0.9) + (con * 0.2) + (level * 1.2)) * multiplier);
         }
 
-        function calculateBonusAttack(classType, level, str, dex, int, con) {
+        function calculateBonusAttack(classType: number, level: number, str: number, dex: number, int: number, con: number) {
             let bonus = 0;
 
             switch (classType) {
@@ -277,7 +401,7 @@ class Character extends GameObject {
 
     calculateWearingItems() {
         // value * pow(plusFactor, plus)
-        const plusFormula = (staticValue, plus) =>
+        const plusFormula = (staticValue: number, plus: number) =>
             staticValue * Math.pow((plus >= 11) ? 1.07 : 1.06, plus);
 
         const WearingPosition = {
@@ -297,7 +421,7 @@ class Character extends GameObject {
 
         // TODO: bloodseal system
 
-        let wearingRows = this.inventory.filter(0, (r) => r?.wearingPosition != 255 && r?.wearingPosition != undefined)
+        let wearingRows = this.inventory.filter(0, (r: InventoryRow) => r?.wearingPosition != 255 && r?.wearingPosition != undefined)
 
         for (let row of wearingRows) {
             switch (row.item.wearingPosition) {
@@ -322,9 +446,9 @@ class Character extends GameObject {
 
                     this.statistics.magicResist.addModifier(
                         new Modifier(ModifierType.ADDITIVE,
-                                    /* standard formula */ plusFormula(itemMagicResist, row.plus) +
-                                    /* 10 additional magic resist */ (row.plus >= 10 ? 10 : 0) +
-                                    /* max plus bonus */ (row.plus >= 15 ? 100 : 0),
+                            /* standard formula */ plusFormula(itemMagicResist, row.plus) +
+                            /* 10 additional magic resist */ (row.plus >= 10 ? 10 : 0) +
+                            /* max plus bonus */ (row.plus >= 15 ? 100 : 0),
                             ModifierOrigin.ITEM,
                             row.item.id
                         )
@@ -357,9 +481,12 @@ class Character extends GameObject {
 
     calculateStatus() {
         // reset all statistics to its base state, except current health and mana
-        for (let key in this.statistics)
-            if (this.statistics.hasOwnProperty(key) && this.statistics[key] instanceof Statistic && (key != 'health' && key != 'mana'))
-                this.statistics[key].reset();
+        let key: keyof Character["statistics"];
+        for (key in this.statistics) {
+            let statistic = this.statistics[key];
+            if (statistic && statistic instanceof Statistic && (key != 'health' && key != 'mana'))
+                statistic.reset();
+        }
 
         // TODO: statistics
         // TODO: wearing items
@@ -370,7 +497,7 @@ class Character extends GameObject {
         this.calculateWearingItems();
     }
 
-    updateStatistics(data) {
+    updateStatistics(data = {}) {
         Object.assign(this.statistics, data);
 
         this.calculateStatus();

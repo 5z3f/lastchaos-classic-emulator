@@ -2,36 +2,41 @@ import app from "../app";
 
 import log from '@local/shared/logger';
 
+
+type item = {
+    itemId: number; // ID of the item to be inserted.
+    accountId: number; // ID of the account to which the item belongs.
+    charId: number; // ID of the character who owns the item.
+    place: number; // The location where the item is placed.
+    position: number; // The position of the item in the location.
+    plus: number; // The plus value of the item.
+    seals?: {// seals of the item to be created.
+        [key: string]: number
+    };
+    parentId?: number; // The ID of the parent item, if any.
+}
+
 class items {
 
     /**
         Inserts a new virtual item into the database.
-        @param {Object} options - The options object.
-        @param {number} options.itemId - The ID of the item to be inserted.
-        @param {number} options.accountId - The ID of the account to which the item belongs.
-        @param {number} options.charId - The ID of the character who owns the item.
-        @param {string} options.place - The location where the item is placed.
-        @param {number} options.position - The position of the item in the location.
-        @param {number} [options.plus=0] - The plus value of the item.
-        @param {number} [options.seals=null] - The number of seals on the item.
-        @param {number} [options.parentId=null] - The ID of the parent item, if any.
-        @returns {number|null} The ID of the newly inserted item, or null if there was an error.
+        @returns The ID of the newly inserted item, or null if there was an error.
     */
-    static async insert({ itemId, accountId, charId, place, position, plus = 0, seals = null, parentId = null }) {
+    static async insert(item: item) {
         const newItemQuery = `
             INSERT INTO items (itemId, accountId, charId, place, position, plus, seals, parentId) 
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
         try {
             const result = await app.dbc.execute(newItemQuery, [
-                itemId,
-                accountId,
-                charId,
-                place,
-                position,
-                plus,
-                seals,
-                parentId
+                item.itemId,
+                item.accountId,
+                item.charId,
+                item.place,
+                item.position,
+                item.plus,
+                item.seals,
+                item.parentId
             ]);
 
             return result.insertId;
@@ -42,16 +47,16 @@ class items {
         }
     }
 
-    static async insertStack({ itemId, accountId, charId, place, position, plus, seals, parentId }, stack) {
+    static async insertStack(item: item, stack: number) {
         const values = [
-            itemId,
-            accountId,
-            charId,
-            place,
-            `"${position}"`,
-            plus ?? 'NULL',
-            seals ?? 'NULL',
-            parentId ?? 'NULL'
+            item.itemId,
+            item.accountId,
+            item.charId,
+            item.place,
+            `"${item.position}"`,
+            item.plus ?? 'NULL',
+            item.seals ?? 'NULL',
+            item.parentId ?? 'NULL'
         ];
 
         let queryArray: string[] = [];
@@ -69,7 +74,7 @@ class items {
         }
     }
 
-    static async update({ where, data }) {
+    static async update({ where, data }: any) {
         let k = Object.keys(data);
         let v = Object.values(data);
 

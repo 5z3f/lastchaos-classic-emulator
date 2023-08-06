@@ -9,7 +9,7 @@ class util {
         //let inthash = farmhash.hash32(randomstr + Date.now())
         //let uid = inthash / 200;
 
-        return Math.random();
+        return Math.random() * 1000000000;
     };
 
     static getRandomInt(min: number, max: number) {

@@ -5,8 +5,9 @@ import { InventoryRow } from '../system/inventory';
 import { Statistic, Modifier, ModifierType } from '../types/statistic';
 import Position from '../types/position';
 import api from '../api';
-import app from '../app';
-const game = app.game;
+import BaseMonster from '../baseobject/monster';
+import Character from '../gameobject/character';
+import game from '../game';
 
 export default async function (session, msg) {
     let data = {
@@ -37,12 +38,14 @@ export default async function (session, msg) {
         let params = data.text.split(' ');
         let npcId = parseInt(params[1]);
 
-        let character = game.world.find('character', (ch) => ch.uid == data.senderId);
+        let character = game.world.find('character', (ch: Character) => ch.uid == data.senderId);
 
         // find monster from database by id
-        let baseMonster = game.content.find('monster', (m) => m.id == npcId);
+        let baseMonster = game.content.monsters.find((m) => m.id == npcId);
 
         console.log('baseMonster', baseMonster);
+        if (!baseMonster)
+            return;
 
         let monster = new Monster({
             id: baseMonster.id,
@@ -51,6 +54,7 @@ export default async function (session, msg) {
             zone: character.zone,
             position: character.position,
             respawnTime: 0, // TODO:
+            //@ts-ignore
             statistics: {
                 health: new Statistic(baseMonster.statistics.health),
                 maxHealth: new Statistic(baseMonster.statistics.health),

@@ -14,7 +14,7 @@ class content {
         this.load('npcs', '../data/npcs.json');
     }
 
-    load(type, fp) {
+    load(type: 'items' | 'monsters' | 'npcs', fp: string) {
         const objs = require(fp);
 
         for (let o of objs) {
@@ -39,25 +39,33 @@ class content {
 
     }
 
-    find(type, opts) {
+    /**
+     * 
+     * @depracated
+     */
+    find(type: 'item' | 'monster' | 'npc', opts: any) {
         switch (type) {
-            case 'npc':
-                return this.npcs.find(opts);
-            case 'monster':
-                return this.monsters.find(opts);
             case 'item':
                 return this.items.find(opts);
+            case 'monster':
+                return this.monsters.find(opts);
+            case 'npc':
+                return this.npcs.find(opts);
         }
     }
 
-    filter(type, opts) {
+    /**
+     * 
+     * @depracated
+     */
+    filter(type: 'item' | 'monster' | 'npc', opts: any) {
         switch (type) {
-            case 'npc':
-                return this.npcs.filter(opts);
-            case 'monster':
-                return this.monsters.filter(opts);
             case 'item':
                 return this.items.filter(opts);
+            case 'monster':
+                return this.monsters.filter(opts);
+            case 'npc':
+                return this.npcs.filter(opts);
         }
     }
 }

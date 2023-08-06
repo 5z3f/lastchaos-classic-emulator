@@ -4,7 +4,7 @@
 		"noEmit": true,
 		"allowJs": true,
 		"checkJs": true,
-		"strict": true,
+		//"strict": true,
 		//"declaration": true,
 		//"declarationDir": "types",
 		//"emitDeclarationOnly": true,

@@ -1,25 +1,29 @@
 import { InventoryRow } from '../system/inventory';
-import app from '../app';
+import database from '../database';
+import game from '../game';
 
 const MAX_STACK = 9999;
 const GOLD_ID = 19;
+
+type ItemOptions = {
+    id: number,// id of the item to be created.
+    owner: any,// owner of the item to be created.
+    stack?: number,// number of items to be created.
+    plus?: number,// plus value of the item to be created.
+    seals?: {// seals of the item to be created.
+        [key: string]: number
+    },
+    into?: string// destination for the created item.
+};
 
 class item {
     /**
         Creates a new item with the given id and properties.
         
-        @param {Object} options - The options for creating the item.
-        @param {string} options.id - The id of the item to be created.
-        @param {Object} options.owner - The owner of the item to be created.
-        @param {number} [options.stack=1] - The number of items to be created.
-        @param {number} [options.plus=0] - The plus value of the item to be created.
-        @param {Object|null} [options.seals=null] - The seals of the item to be created.
-        @param {string} [options.into='ground'] - The destination for the created item.
-
         @returns {number|boolean} - The uid of the created item or false if creation failed.
     */
-    static async create({ id, owner, stack = 1, plus = 0, seals = null, into = 'ground' }) {
-        let contentItem = app.game.content.find('item', (el) => el.id == id);
+    static async create({ id, owner, stack = 1, plus = 0, seals = undefined, into = 'ground' }: ItemOptions) {
+        let contentItem = game.content.items.find((el) => el.id == id);
 
         if (!contentItem) {
             // TODO: item creation failed due to unknown base item id, send message to client
@@ -61,7 +65,7 @@ class item {
 
         let ownerPositionString = owner.position.clone().toArray().slice(0, 2).join(',');
 
-        let itemUid = await app.database.items.insert({
+        let itemUid = await database.items.insert({
             itemId: contentItem.id,
             accountId: owner.session.accountId,
             charId: owner.id,
@@ -77,7 +81,7 @@ class item {
         }
 
         if (stack > 1) {
-            const success = app.database.items.insertStack({
+            const success = database.items.insertStack({
                 parentId: itemUid,
                 itemId: contentItem.id,
                 accountId: owner.session.accountId,
@@ -96,7 +100,7 @@ class item {
 
         if (into == 'ground') {
             // add item to on-ground item list
-            app.game.world.add({
+            game.world.add({
                 type: 'item', zoneId: owner.zone.id, data: {
                     uid: itemUid,
                     item: contentItem,
