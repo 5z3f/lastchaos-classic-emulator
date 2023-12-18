@@ -5,7 +5,6 @@ import Zone from "./zone";
 
 import Character from "./gameobject/character";
 
-
 class game {
     static encryption = false; // TODO: move this
     static packDefault = true; // TODO: move this

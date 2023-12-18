@@ -1,17 +1,19 @@
 import log from '@local/shared/logger';
 import { InventoryRow, Inventory } from '../system/inventory';
-import GameSession from '../gamesession';
 import BaseItem from '../baseobject/item';
 import NPC from '../gameobject/npc';
 import database from '../database';
 import game from '../game';
+import { GameObjectEvents } from '../gameobject';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
 
-export default async function (session: GameSession, msg) {
+export default async function (session: Session, msg: Message) {
     session.character.spawn();
 
     let visionRange = 250;
 
-    session.character.event.on('move', (pos) => {
+    session.character.on(GameObjectEvents.Move, (pos) => {
         let objectPoints = session.character.zone.getObjectsInArea(pos.x, pos.y, visionRange);
 
         for (let apo of objectPoints) {

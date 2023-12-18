@@ -1,7 +1,9 @@
 import log from '@local/shared/logger';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
 
-export default function (session, msg) {
-    let subType = msg.read('u8') as number;
+export default function (session: Session, msg: Message) {
+    let subType = msg.read('u8');
 
     let subTypeMap = {
         0: 'MSG_GM_WHOAMI',

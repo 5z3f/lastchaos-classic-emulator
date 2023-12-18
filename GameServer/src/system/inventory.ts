@@ -2,6 +2,7 @@ import util from '../util';
 import app from '../app';
 import BaseItem from '../baseobject/item';
 import Character from '../gameobject/character';
+import { CharacterEvents } from '../gameobject';
 
 type InventoryRowOptions = {
     itemUid: number,
@@ -66,7 +67,7 @@ export class Inventory {
     TAB_QUEST = 1;
     TAB_EVENT = 2;
 
-    owner;
+    owner: Character;
     items;
     weight;
     maxWeight;
@@ -233,7 +234,7 @@ export class Inventory {
         }
 
         requestedRow.wearingPosition = wearingPosition;
-        this.owner.event.emit('inventory-equip', requestedRow);
+        this.owner.emit(CharacterEvents.InventoryEquip, requestedRow);
 
         return true;
     }
@@ -265,7 +266,7 @@ export class Inventory {
                     data: this.items[this.TAB_DEFAULT][col][row]
                 };
 
-                this.owner.event.emit('inventory-unequip', this.items[this.TAB_DEFAULT][col][row]);
+                this.owner.emit(CharacterEvents.InventoryUnequip, this.items[this.TAB_DEFAULT][col][row]);
             }
         }
 

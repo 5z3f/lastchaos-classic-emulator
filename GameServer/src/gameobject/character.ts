@@ -1,13 +1,22 @@
 import log from '@local/shared/logger';
 
-import util from '../util';
-
 import { Statistic, Modifier, ModifierType, ModifierOrigin } from '../types/statistic';
 import { Inventory, InventoryRow } from '../system/inventory';
+import { Statpoints, StatpointType } from '../system/statpoints';
 
-import GameObject from './index';
+import GameObject, { PacketObjectType } from './index';
 import Attackable from './traits/attackable';
 import Session from '@local/shared/session';
+
+import { GameObjectEvents, CharacterEvents, GameObjectType } from './index';
+import type { Statistics } from './index';
+
+enum Role {
+    None,
+    GameSage,
+    GameMaster,
+    Administrator
+};
 
 type Reward = {
     experience: number,
@@ -16,47 +25,8 @@ type Reward = {
     items: number[],
 };
 
-type Statistics = {
-    strength: Statistic,
-    dexterity: Statistic,
-    intelligence: Statistic,
-    condition: Statistic,
-    health: Statistic,
-    mana: Statistic,
-    stamina: Statistic,
-    defense: Statistic,
-    attack: Statistic,
-    magicAttack: Statistic,
-    healthRegen: Statistic,
-    manaRegen: Statistic,
-    conditionRegen: Statistic,
-    magicSpeed: Statistic,
-    skillSpeed: Statistic,
-    statpoints: number,
-    strengthAdded: number,
-    dexterityAdded: number,
-    intelligenceAdded: number,
-    conditionAdded: number,
-    healthAdded: number,
-    manaAdded: number,
-    staminaAdded: number,
-    defenseAdded: number,
-    attackAdded: number,
-    magicAttackAdded: number,
-    healthRegenAdded: number,
-    manaRegenAdded: number,
-    conditionRegenAdded: number,
-    magicSpeedAdded: number,
-    skillSpeedAdded: number,
-    runSpeed: Statistic,
-    magicResist: Statistic,
-    walkSpeed: Statistic,
-    attackRange: Statistic,
-    attackSpeed: Statistic,
-};
-
 type CharacterOptions = {
-    session: any,
+    session: Session,
     uid?: number,
     id: number,
     classType: number,
@@ -75,70 +45,65 @@ type CharacterOptions = {
     reward: Reward,
     reputation: number,
     statistics: Statistics,
-    role: string,
+    statpoints: {
+        availablePoints: number,
+        strength: number,
+        dexterity: number,
+        intelligence: number,
+        condition: number
+    },
+    availableStatpoints: number,
+    role: Role
 };
 
-
-class Character extends GameObject {
-    attackable;
-
-    type: string = 'character';
-    objType: number = 0;
-
+class Character extends GameObject<GameObjectType.Character> {
     session: Session;
-
-    role: string;
-
+    role: Role;
     nickname: string;
-
     classType: number;
     jobType: number;
-
     appearance: {
         hairType: number,
         faceType: number
     };
-
-    inventory: Inventory;
-
     progress: {
         level: number,
         experience: number,
         maxExperience: number,
         skillpoint: number
     };
-
     reward: Reward;
-
     reputation: number;
-
     pk: {
         name: number,
         penalty: number,
         count: number,
     };
-
     meracJoinFlag: number;
-
     mapAttr: number;
-
     visibleObjectUids: {
         character: any[],
         npc: any[],
         monster: any[],
         item: any[]
     };
-
     buffs: any[];
+    availableStatpoints: number;
 
-    constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics, role = 'user' }: CharacterOptions) {
+    // traits
+    attackable: Attackable;
+
+    // systems
+    inventory: Inventory;
+    statpoints: Statpoints;
+
+    constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics, statpoints, role }: CharacterOptions) {
         // get all properties from GameObject class
         //@ts-ignore
         super(...arguments);
 
-        this.attackable = new Attackable(this);
-        this.type = 'character';
-        this.objType = 0;
+        this.type = GameObjectType.Character;
+        this.objType = PacketObjectType.Character;
 
         this.session = session;
 
@@ -161,16 +126,7 @@ class Character extends GameObject {
             //@ts-ignore
             magicSpeed: new Statistic(1),
             skillSpeed: new Statistic(1),
-
-            // FIXME: not sure if this can be mixed with other, proper stat classes...
-            statpoints: 0,
-            strengthAdded: 0,
-            dexterityAdded: 0,
-            intelligenceAdded: 0,
-            conditionAdded: 0,
         }
-
-        this.inventory = new Inventory(this);
 
         this.progress = {
             level: progress?.level || 1,
@@ -206,6 +162,20 @@ class Character extends GameObject {
             item: []
         }
 
+        // traits
+        this.attackable = new Attackable(this);
+
+        // systems
+        this.inventory = new Inventory(this);
+        this.statpoints = new Statpoints({
+            owner: this,
+            availablePoints: statpoints.availablePoints ?? 0,
+            strength: statpoints.strength || 0,
+            dexterity: statpoints.dexterity || 0,
+            intelligence: statpoints.intelligence || 0,
+            condition: statpoints.condition || 0
+        });
+
         // TODO: buffs / debuffs
         this.buffs = [];
 
@@ -213,17 +183,13 @@ class Character extends GameObject {
 
         const baseCharacterStatistics = require('../../data/characters.json')[this.classType].baseStatistics;
 
+        // TODO: this all is temporary, we need to load base statistics from the database
         this.statistics.health = new Statistic(baseCharacterStatistics.health);
         this.statistics.maxHealth = new Statistic(baseCharacterStatistics.health);
         this.statistics.healthRegen = new Statistic(baseCharacterStatistics.healthRegen);
         this.statistics.mana = new Statistic(baseCharacterStatistics.mana);
         this.statistics.maxMana = new Statistic(baseCharacterStatistics.mana);
         this.statistics.manaRegen = new Statistic(baseCharacterStatistics.manaRegen);
-        this.statistics.strength = new Statistic(baseCharacterStatistics.strength);
-        this.statistics.strength = new Statistic(baseCharacterStatistics.strength);
-        this.statistics.dexterity = new Statistic(baseCharacterStatistics.dexterity);
-        this.statistics.intelligence = new Statistic(baseCharacterStatistics.intelligence);
-        this.statistics.condition = new Statistic(baseCharacterStatistics.condition);
         this.statistics.attack = new Statistic(baseCharacterStatistics.attack);
         this.statistics.magicAttack = new Statistic(baseCharacterStatistics.magicAttack);
         this.statistics.defense = new Statistic(baseCharacterStatistics.defense);
@@ -232,21 +198,21 @@ class Character extends GameObject {
         this.statistics.attackRange = new Statistic(baseCharacterStatistics.attackRange);
         this.statistics.attackSpeed = new Statistic(baseCharacterStatistics.attackSpeed);
 
-        this.tmpEventHandler();
+        this.baseEvents();
     }
 
-    tmpEventHandler() {
-        this.event.on('inventory-equip', (row) => {
+    baseEvents() {
+        this.on(CharacterEvents.InventoryEquip, (row) => {
             this.updateStatistics();
         });
 
-        this.event.on('inventory-unequip', (row) => {
+        this.on(CharacterEvents.InventoryUnequip, (row) => {
             this.updateStatistics();
         });
 
-        this.event.on('heal', (data) => {
+        this.on(GameObjectEvents.Heal, (amount) => {
             this.updateStatistics();
-        })
+        });
     }
 
     addVisibleObject(type: keyof Character["visibleObjectUids"], uid: number) {
@@ -271,11 +237,6 @@ class Character extends GameObject {
 
 
     calculateStatpoints() {
-        this.statistics.strength.increase(this.statistics.strengthAdded);
-        this.statistics.dexterity.increase(this.statistics.dexterityAdded);
-        this.statistics.intelligence.increase(this.statistics.intelligenceAdded);
-        this.statistics.condition.increase(this.statistics.conditionAdded);
-
         const ClassType = {
             Titan: 0,
             Knight: 1,
@@ -360,30 +321,30 @@ class Character extends GameObject {
         let bonusHealth = calculateBonusHealth(
             this.classType,
             this.progress.level,
-            this.statistics.strength.getCurrentValue(),
-            this.statistics.dexterity.getCurrentValue(),
-            this.statistics.intelligence.getCurrentValue(),
-            this.statistics.condition.getCurrentValue(),
+            this.statpoints.strength.getTotalValue(),
+            this.statpoints.dexterity.getTotalValue(),
+            this.statpoints.intelligence.getTotalValue(),
+            this.statpoints.condition.getTotalValue(),
             1 // multiplier
         );
 
         let bonusMana = calculateBonusMana(
             this.classType,
             this.progress.level,
-            this.statistics.strength.getCurrentValue(),
-            this.statistics.dexterity.getCurrentValue(),
-            this.statistics.intelligence.getCurrentValue(),
-            this.statistics.condition.getCurrentValue(),
+            this.statpoints.strength.getTotalValue(),
+            this.statpoints.dexterity.getTotalValue(),
+            this.statpoints.intelligence.getTotalValue(),
+            this.statpoints.condition.getTotalValue(),
             1 // multiplier
         );
 
         let bonusAttack = calculateBonusAttack(
             this.classType,
             this.progress.level,
-            this.statistics.strength.getCurrentValue(),
-            this.statistics.dexterity.getCurrentValue(),
-            this.statistics.intelligence.getCurrentValue(),
-            this.statistics.condition.getCurrentValue()
+            this.statpoints.strength.getTotalValue(),
+            this.statpoints.dexterity.getTotalValue(),
+            this.statpoints.intelligence.getTotalValue(),
+            this.statpoints.condition.getTotalValue()
         );
 
         this.statistics.maxHealth.addModifier(
@@ -481,10 +442,9 @@ class Character extends GameObject {
 
     calculateStatus() {
         // reset all statistics to its base state, except current health and mana
-        let key: keyof Character["statistics"];
-        for (key in this.statistics) {
-            let statistic = this.statistics[key];
-            if (statistic && statistic instanceof Statistic && (key != 'health' && key != 'mana'))
+        for (let key in this.statistics) {
+            let statistic = this.statistics[key as keyof Character["statistics"]];
+            if (statistic && statistic instanceof Statistic && (key !== 'health' && key !== 'mana'))
                 statistic.reset();
         }
 
@@ -497,15 +457,14 @@ class Character extends GameObject {
         this.calculateWearingItems();
     }
 
-    updateStatistics(data = {}) {
-        Object.assign(this.statistics, data);
-
+    updateStatistics() {
         this.calculateStatus();
 
         // TODO: All packet sending related functions should be separated from GameObject classes (I think)
         this.session.send.status({
             ...this.statistics,
             ...this.progress,
+
             pkName: this.pk.name,
             pkPenalty: this.pk.penalty,
             pkCount: this.pk.count,
@@ -513,10 +472,20 @@ class Character extends GameObject {
             meracJoinFlag: this.meracJoinFlag,
             mapAttr: this.mapAttr,
             weight: 3000,
-            maxWeight: 10000
+            maxWeight: 10000,
+
+            strength: this.statpoints.strength,
+            dexterity: this.statpoints.dexterity,
+            intelligence: this.statpoints.intelligence,
+            condition: this.statpoints.condition,
+
+            strengthAdded: this.statpoints.strength.getBaseValue(),
+            dexterityAdded: this.statpoints.dexterity.getBaseValue(),
+            intelligenceAdded: this.statpoints.intelligence.getBaseValue(),
+            conditionAdded: this.statpoints.condition.getBaseValue()
         });
 
-        this.event.emit('update-statistics', data);
+        this.emit(CharacterEvents.StatisticUpdate, this);
     }
 
     spawn() {
@@ -537,10 +506,10 @@ class Character extends GameObject {
         });
 
         // send remaining statpoints
-        this.session.send.statpoint(0, { points: this.statistics.statpoints });
+        this.session.send.statpoint(0, { points: this.statpoints.availablePoints });
 
         // TODO: spawnedFirstTime should indicate whether the object spawned for the first time
-        this.event.emit('spawn', /* spawnedFirstTime */);
+        this.emit(CharacterEvents.EnterGame, /* spawnedFirstTime */);
     }
 }
 

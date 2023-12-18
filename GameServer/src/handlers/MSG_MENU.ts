@@ -7,9 +7,11 @@ import Position from '../types/position';
 import app from '../app';
 import game from '../game';
 import database from '../database';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
 
-export default function (session, msg) {
-    let subType = msg.read('u8') as number;
+export default function (session: Session, msg: Message) {
+    let subType = msg.read('u8');
     let subTypeMap = {
         0: 'MSG_MENU_NEW',
         2: 'MSG_MENU_START',
@@ -18,10 +20,10 @@ export default function (session, msg) {
     const subTypeHandler = {
         MSG_MENU_NEW: async () => {
             let data = {
-                nickname: msg.read('stringnt') as string,
-                classId: msg.read('u8') as number,
-                hairId: msg.read('u8') as number,
-                faceId: msg.read('u8') as number,
+                nickname: msg.read('stringnt'),
+                classId: msg.read('u8'),
+                hairId: msg.read('u8'),
+                faceId: msg.read('u8'),
                 jobId: 0,
             };
 
@@ -78,7 +80,7 @@ export default function (session, msg) {
             session.send.db('MSG_DB_CHAR_END');
         },
         MSG_MENU_START: async () => {
-            let characterId = msg.read('i32>') as number; // selected character id
+            let characterId = msg.read('i32>'); // selected character id
 
             const dbCharacter = await database.characters.getById(characterId);
 
@@ -118,18 +120,20 @@ export default function (session, msg) {
                     walkSpeed: new Statistic(10.0),                                 // TODO:
                     attackRange: new Statistic(2.3),                                // TODO:
                     attackSpeed: new Statistic(10.0),                               // TODO:
-                    statpoints: dbCharacter.statpoints,
-                    strengthAdded: dbCharacter.strength,
-                    dexterityAdded: dbCharacter.dexterity,
-                    intelligenceAdded: dbCharacter.intelligence,
-                    conditionAdded: dbCharacter.condition,
+                },
+                statpoints: {
+                    availablePoints: dbCharacter.statpoints,
+                    strength: dbCharacter.strength,
+                    dexterity: dbCharacter.dexterity,
+                    intelligence: dbCharacter.intelligence,
+                    condition: dbCharacter.condition,
                 },
                 nickname: dbCharacter.nickname,
                 position: new Position(1111, 951, 160.3)                    // TODO: add default spawnpoints and radius on it
             });
 
             // pin character to our session
-            session.character = character;
+            session.pinCharacter(character);
 
             // send start game message
             session.send.db('MSG_DB_OK');

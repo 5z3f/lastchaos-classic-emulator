@@ -2,7 +2,6 @@
 import Zone from './zone';
 
 class World {
-
     zones: Zone[] = [];
 
     constructor() {
@@ -15,7 +14,7 @@ class World {
             this.zones.push(data);
         }
         else if (['character', 'monster', 'npc', 'item'].includes(type)) {
-            if (!zoneId)
+            if (zoneId == undefined)
                 return;
 
             let zone = this.get('zone', zoneId);

@@ -20,10 +20,10 @@ health.decrease(30); // decreases the health by 30, capped at the minimum value 
 health.set(150); // sets the health to 150, clamped between the minimum and maximum values of 0 and 200
 ```
 
-You can also get the current value of the statistic using the `getCurrentValue()` method:
+You can also get the current value of the statistic using the `getTotalValue()` method:
 
 ```js
-const currentHealth = health.getCurrentValue();
+const currentHealth = health.getTotalValue();
 ```
 
 ## Adding and removing modifiers

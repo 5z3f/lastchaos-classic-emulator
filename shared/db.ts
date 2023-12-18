@@ -11,7 +11,7 @@ class db {
         user: process.env.DATABASE_USERNAME,
         password: process.env.DATABASE_PASSWORD,
         database: process.env.DATABASE_NAME,
-        connectionLimit: 100,
+        connectionLimit: 50,
         multipleStatements: true
     }
 

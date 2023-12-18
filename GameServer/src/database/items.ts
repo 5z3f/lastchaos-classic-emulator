@@ -39,7 +39,7 @@ class items {
                 item.parentId
             ]);
 
-            return result.insertId;
+            return Number(result.insertId);
         }
         catch (error) {
             log.error(error);

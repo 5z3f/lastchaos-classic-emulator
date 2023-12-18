@@ -2,43 +2,57 @@ import log from '@local/shared/logger';
 
 import Monster from '../gameobject/monster';
 import { InventoryRow } from '../system/inventory';
-import { Statistic, Modifier, ModifierType } from '../types/statistic';
+import { Statistic, Modifier, ModifierType, ModifierOrigin } from '../types/statistic';
 import Position from '../types/position';
 import api from '../api';
 import BaseMonster from '../baseobject/monster';
 import Character from '../gameobject/character';
 import game from '../game';
+import { GameObjectEvents } from '../gameobject';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
+import { ContentType } from '../content';
 
-export default async function (session, msg) {
+export default async function (session: Session, msg: Message) {
     let data = {
-        chatType: msg.read('u8') as number,
-        senderId: msg.read('i32>') as number,
-        senderName: msg.read('stringnt') as string,
-        receiverName: msg.read('stringnt') as string,
-        text: msg.read('stringnt') as string,
+        chatType: msg.read('u8'),
+        senderId: msg.read('i32>'),
+        senderName: msg.read('stringnt'),
+        receiverName: msg.read('stringnt'),
+        text: msg.read('stringnt'),
     };
 
     if (data.text.includes('.speedup')) {
         let params = data.text.split(' ');
         let speed = parseFloat(params[1]);
 
-        let character = game.world.find('character', (ch) => ch.uid == data.senderId);
-        let runSpeedBefore = character.statistics.runSpeed.getCurrentValue();
-        character.statistics.runSpeed.set(speed);
+        let runSpeedBefore = session.character.statistics.runSpeed.getTotalValue();
+
+        session.character.statistics.runSpeed.addModifier(
+            new Modifier(
+                ModifierType.ADDITIVE,
+                speed,
+                ModifierOrigin.COMMAND
+            )
+        )
+
+        session.character.statistics.runSpeed.set(speed);
+        session.character.statistics.runSpeed.setMaxValue(speed);
 
         session.send.chat({
             chatType: 6,
             senderId: data.senderId,
             senderName: data.senderName,
             receiverName: data.receiverName,
-            text: `speedup [uid: ${character.uid}] (before: ${runSpeedBefore}, after: ${speed})`
+            text: `speedup [uid: ${session.character.uid}] (before: ${runSpeedBefore}, after: ${session.character.statistics.runSpeed.getTotalValue()})`
         });
+
+        // update character stats
+        session.character.updateStatistics();
     }
     else if (data.text.includes('.spawn')) {
         let params = data.text.split(' ');
         let npcId = parseInt(params[1]);
-
-        let character = game.world.find('character', (ch: Character) => ch.uid == data.senderId);
 
         // find monster from database by id
         let baseMonster = game.content.monsters.find((m) => m.id == npcId);
@@ -51,8 +65,8 @@ export default async function (session, msg) {
             id: baseMonster.id,
             flags: baseMonster.flags,
             level: baseMonster.level,
-            zone: character.zone,
-            position: character.position,
+            zone: session.character.zone,
+            position: session.character.position,
             respawnTime: 0, // TODO:
             //@ts-ignore
             statistics: {
@@ -60,10 +74,6 @@ export default async function (session, msg) {
                 maxHealth: new Statistic(baseMonster.statistics.health),
                 mana: new Statistic(baseMonster.statistics.mana),
                 maxMana: new Statistic(baseMonster.statistics.mana),
-                strength: new Statistic(baseMonster.statistics.strength),
-                dexterity: new Statistic(baseMonster.statistics.dexterity),
-                intelligence: new Statistic(baseMonster.statistics.intelligence),
-                condition: new Statistic(baseMonster.statistics.condition),
                 attack: new Statistic(baseMonster.statistics.attack),
                 magicAttack: new Statistic(baseMonster.statistics.magicAttack),
                 defense: new Statistic(baseMonster.statistics.defense),
@@ -72,24 +82,30 @@ export default async function (session, msg) {
                 runSpeed: new Statistic(baseMonster.statistics.runSpeed),
                 attackRange: new Statistic(baseMonster.statistics.attackRange),
                 attackSpeed: new Statistic(baseMonster.statistics.attackSpeed),
+            },
+            statpoints: {
+                strength: baseMonster.statistics.strength,
+                dexterity: baseMonster.statistics.dexterity,
+                intelligence: baseMonster.statistics.intelligence,
+                condition: baseMonster.statistics.condition,
             }
         });
 
         game.world.add({ type: 'monster', zoneId: 0, data: monster });
-        monster.appear(character);
+        monster.appear(session.character);
 
-        character.event.on('move', (pos) => {
+        session.character.on(GameObjectEvents.Move, (pos) => {
             session.send.move({
                 objType: 1,
                 moveType: 1,
                 uid: monster.uid,
                 speed: 5,
                 position: {
-                    x: character.position.x - 2,
-                    y: character.position.y - 2,
-                    z: character.position.z,
-                    r: character.position.r,
-                    layer: character.position.layer,
+                    x: session.character.position.x - 2,
+                    y: session.character.position.y - 2,
+                    z: session.character.position.z,
+                    r: session.character.position.r,
+                    layer: session.character.position.layer,
                 }
             })
         });
@@ -109,11 +125,9 @@ export default async function (session, msg) {
         let itemStack = parseInt(params[2]);
         let itemPlus = parseInt(params[3]);
 
-        let character = game.world.find('character', (ch) => ch.uid == data.senderId);
-
         let itemUid = await api.item.create({
             id: itemId,
-            owner: character,
+            owner: session.character,
             stack: itemStack || 1,
             plus: itemPlus || 0,
             into: 'inventory'
@@ -141,11 +155,9 @@ export default async function (session, msg) {
         if (!itemId)
             return;
 
-        let character = game.world.find('character', (ch) => ch.uid == data.senderId);
-
         let itemUid = await api.item.create({
             id: itemId,
-            owner: character,
+            owner: session.character,
             stack: itemStack || 1,
             plus: itemPlus || 0
         });
@@ -154,26 +166,26 @@ export default async function (session, msg) {
         if (!itemUid)
             return;
 
-        character.session.send.item('MSG_ITEM_DROP', {
+        session.character.session.send.item('MSG_ITEM_DROP', {
             uid: itemUid,
             id: itemId,
             stack: itemStack || 1,
-            position: character.position,
+            position: session.character.position,
             objType: 1,
-            objUid: character.uid
+            objUid: session.character.uid
         });
 
-        character.session.send.chat({
+        session.character.session.send.chat({
             chatType: 6,
-            senderId: character.uid,
-            senderName: character.nickname,
-            receiverName: character.nickname,
+            senderId: session.character.uid,
+            senderName: session.character.nickname,
+            receiverName: session.character.nickname,
             text: `itemdrop [uid: ${itemUid}, id: ${itemId}]`
         });
     }
     else if (data.text.includes('.search item')) {
         let params = data.text.split(' ');
-        let items = game.content.filter('item', (i) => i.name.toLowerCase().includes(params[2].toLowerCase()))
+        let items = game.content.filter(ContentType.ITEM, (i) => i.name.toLowerCase().includes(params[2].toLowerCase()))
 
         for (let item of items) {
             session.send.chat({

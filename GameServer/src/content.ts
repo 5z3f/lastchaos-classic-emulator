@@ -2,19 +2,24 @@ import BaseItem from './baseobject/item';
 import BaseMonster from './baseobject/monster';
 import BaseNPC from './baseobject/npc';
 
-class content {
+export enum ContentType {
+    ITEM,
+    MONSTER,
+    NPC
+}
 
+class content {
     items: BaseItem[] = [];
     monsters: BaseMonster[] = [];
     npcs: BaseNPC[] = [];
 
     constructor() {
-        this.load('items', '../data/items.json');
-        this.load('monsters', '../data/monsters.json');
-        this.load('npcs', '../data/npcs.json');
+        this.load(ContentType.ITEM, '../data/items.json');
+        this.load(ContentType.MONSTER, '../data/monsters.json');
+        this.load(ContentType.NPC, '../data/npcs.json');
     }
 
-    load(type: 'items' | 'monsters' | 'npcs', fp: string) {
+    load(type: ContentType, fp: string) {
         const objs = require(fp);
 
         for (let o of objs) {
@@ -25,13 +30,13 @@ class content {
                 continue;
 
             switch (type) {
-                case 'items':
+                case ContentType.ITEM:
                     this.items.push(new BaseItem(o));
                     break;
-                case 'monsters':
+                case ContentType.MONSTER:
                     this.monsters.push(new BaseMonster(o));
                     break;
-                case 'npcs':
+                case ContentType.NPC:
                     this.npcs.push(new BaseNPC(o));
                     break;
             }
@@ -43,13 +48,13 @@ class content {
      * 
      * @depracated
      */
-    find(type: 'item' | 'monster' | 'npc', opts: any) {
+    find(type: ContentType, opts: any) {
         switch (type) {
-            case 'item':
+            case ContentType.ITEM:
                 return this.items.find(opts);
-            case 'monster':
+            case ContentType.MONSTER:
                 return this.monsters.find(opts);
-            case 'npc':
+            case ContentType.NPC:
                 return this.npcs.find(opts);
         }
     }
@@ -58,13 +63,13 @@ class content {
      * 
      * @depracated
      */
-    filter(type: 'item' | 'monster' | 'npc', opts: any) {
+    filter(type: ContentType, opts: any) {
         switch (type) {
-            case 'item':
+            case ContentType.ITEM:
                 return this.items.filter(opts);
-            case 'monster':
+            case ContentType.MONSTER:
                 return this.monsters.filter(opts);
-            case 'npc':
+            case ContentType.NPC:
                 return this.npcs.filter(opts);
         }
     }

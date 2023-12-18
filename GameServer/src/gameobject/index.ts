@@ -1,11 +1,68 @@
-import EventEmitter from 'events';
+import EventEmitter from '../events';
 import { Statistic, Modifier, ModifierType } from '../types/statistic';
 import Position from '../types/position';
 import util from '../util';
 import log from '@local/shared/logger';
 import App from '../app';
 import Zone from '../zone';
-import { Point } from 'js-quadtree';
+
+export enum GameObjectEvents {
+    Appear = 'appear',
+    Disappear = 'disappear',
+    Move = 'move',
+    Respawn = 'respawn',
+    Heal = 'heal'
+};
+
+export enum CharacterEvents {
+    InventoryEquip = 'inventory-equip',
+    InventoryUnequip = 'inventory-unequip',
+    Heal = 'heal',
+    EnterGame = 'enter-game',
+    StatisticUpdate = 'statistic-update',
+    Die = 'die',
+};
+
+export enum PacketObjectType {
+    Character,
+    NPC
+};
+
+export enum MonsterEvents {
+    Die = 'die',
+};
+
+export enum GameObjectType {
+    Character = 'character',
+    Monster = 'monster',
+    NPC = 'npc',
+    Item = 'item' // ?
+};
+
+type Events<T> = T extends GameObjectType.Character ? CharacterEvents :
+    T extends GameObjectType.Monster ? MonsterEvents :
+    GameObjectEvents;
+
+export type Statistics = {
+    health: Statistic,
+    maxHealth: Statistic,
+    healthRegen: Statistic,
+
+    mana: Statistic,
+    maxMana: Statistic,
+    manaRegen: Statistic,
+
+    attack: Statistic,
+    magicAttack: Statistic,
+
+    defense: Statistic,
+    magicResist: Statistic,
+
+    walkSpeed: Statistic,
+    runSpeed: Statistic,
+    attackRange: Statistic,
+    attackSpeed: Statistic,
+}
 
 type GameObjectOptions = {
     uid?: number,
@@ -16,8 +73,7 @@ type GameObjectOptions = {
     areaId: number
 };
 
-class GameObject {
-
+class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | GameObjectEvents> {
     uid: number;
     id: number;
     flags: string[];
@@ -30,7 +86,6 @@ class GameObject {
 
     appearCount: number;
     resurrectionCount: number;
-
     firstAppearance: boolean;
 
     state: {
@@ -59,20 +114,15 @@ class GameObject {
         runSpeed: Statistic,
         attackRange: Statistic,
         attackSpeed: Statistic,
-
-        statpoints: number,
-        intelligenceAdded: number,
-        strengthAdded: number,
-        dexterityAdded: number,
-        conditionAdded: number
     };
 
-    event: EventEmitter;
+    type: T;
     respawnCount: number = 0;
-    type: string = '';
-    objType: number = 0;
+    objType: PacketObjectType;
 
     constructor({ uid, id, flags, zone, position, areaId }: GameObjectOptions) {
+        super();
+
         this.uid = uid || util.createSessionId();   // unique id
         this.id = id;
 
@@ -107,10 +157,6 @@ class GameObject {
             mana: new Statistic(),
             maxMana: new Statistic(),
             manaRegen: new Statistic(),
-            strength: new Statistic(),
-            dexterity: new Statistic(),
-            intelligence: new Statistic(),
-            condition: new Statistic(),
             attack: new Statistic(),
             magicAttack: new Statistic(),
             defense: new Statistic(),
@@ -120,8 +166,6 @@ class GameObject {
             attackRange: new Statistic(),
             attackSpeed: new Statistic(),
         };
-
-        this.event = new EventEmitter();
 
         this.startRegen();
     }
@@ -142,8 +186,7 @@ class GameObject {
         //@ts-ignore
         this?.appearInRange?.(50);
 
-        this.event.emit('respawn');
-
+        this.emit(GameObjectEvents.Respawn);
     }
 
     hasFlag = (flag: string) =>
@@ -183,7 +226,7 @@ class GameObject {
 
         this.zone.quadTree.insert(qtPointObj);
 
-        this.event.emit('move', this.position);
+        this.emit(GameObjectEvents.Move, this.position);
 
         // FIXME: make it suitable for character class
         if (this.type == 'character') {
@@ -195,7 +238,7 @@ class GameObject {
             objType: this.objType,
             uid: this.uid,
             moveType: moveType,
-            speed: !!moveType ? this.statistics.runSpeed.getCurrentValue() : this.statistics.walkSpeed.getCurrentValue(),
+            speed: !!moveType ? this.statistics.runSpeed.getTotalValue() : this.statistics.walkSpeed.getTotalValue(),
             position: this.position
         });
     };
@@ -205,17 +248,17 @@ class GameObject {
         let regenTick = 1 * 5000;
 
         this.regenInterval = setInterval(() => {
-            const regenAmount = this.statistics.healthRegen.getCurrentValue();
+            const regenAmount = this.statistics.healthRegen.getTotalValue();
             this.heal(regenAmount);
         }, regenTick);
     }
 
     heal(amount: number) {
-        if (!amount || this.state.dead || this.statistics.health.getCurrentValue() == this.statistics.maxHealth.getCurrentValue())
+        if (!amount || this.state.dead || this.statistics.health.getTotalValue() >= this.statistics.maxHealth.getTotalValue())
             return;
 
-        const currentHealth = this.statistics.health.getCurrentValue();
-        const maxHealth = this.statistics.maxHealth.getCurrentValue();
+        const currentHealth = this.statistics.health.getTotalValue();
+        const maxHealth = this.statistics.maxHealth.getTotalValue();
 
         const newHealth = Math.min(currentHealth + amount, maxHealth);
         const healthDiff = newHealth - currentHealth;
@@ -225,7 +268,7 @@ class GameObject {
 
         this.statistics.health.set(newHealth);
 
-        this.event.emit('heal', amount);
+        this.emit(GameObjectEvents.Heal, amount);
         // TODO: update character object in area
     }
 

@@ -1,4 +1,3 @@
-
 import config from '../../servers.config.json';
 import game from './game';
 import { Pool } from 'mariadb';

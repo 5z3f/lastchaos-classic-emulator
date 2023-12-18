@@ -4,9 +4,12 @@ import identifier from '@local/shared/identifier';
 import { InventoryRow } from '../system/inventory';
 import api from '../api';
 import game from '../game';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
+import { PacketObjectType } from '../gameobject';
 
-export default function (session, msg) {
-    let subType = msg.read('u8') as number;
+export default function (session: Session, msg: Message) {
+    let subType = msg.read('u8');
     console.log('item msg sub type', subType);
 
     let subTypeMap = {
@@ -33,13 +36,13 @@ export default function (session, msg) {
         MSG_ITEM_USE: () => { },
         MSG_ITEM_TAKE: () => {
             let msgdata = {
-                objType: msg.read('u8') as number,
-                objUid: msg.read('i32>') as number,
-                itemUid: msg.read('i32>') as number,
+                objType: msg.read('u8'),
+                objUid: msg.read('i32>'),
+                itemUid: msg.read('i32>'),
             }
 
             // TODO: only character pickup is supported for now
-            if (msgdata.objType != 0)
+            if (msgdata.objType != PacketObjectType.Character)
                 return;
 
             // TODO: packet is probably malformed, log this in future
@@ -79,24 +82,21 @@ export default function (session, msg) {
         MSG_ITEM_DELETE: () => { },
         MSG_ITEM_WEAR: async () => {
             let msgdata = {
-                wearingPosition: msg.read('u8') as number,
+                wearingPosition: msg.read('u8'),
                 item: {
                     position: {
-                        tab: msg.read('u8') as number,
-                        col: msg.read('u8') as number,
-                        row: msg.read('u8') as number,
+                        tab: msg.read('u8'),
+                        col: msg.read('u8'),
+                        row: msg.read('u8'),
                     },
-                    uid: msg.read('i32>') as number,
+                    uid: msg.read('i32>'),
                 },
             };
-
-            // find character by session id
-            let character = game.world.find('character', (ch) => ch.uid == session.uid);
 
             // if character tries to take an item off
             if (msgdata.item.uid == -1) {
                 // unequip already equipped item by its wearing position and return following data: position, row data
-                let result = await character.inventory.unequip(msgdata.wearingPosition);
+                let result = await session.character.inventory.unequip(msgdata.wearingPosition);
 
                 if (!result) {
                     session.send.sys(2); // MSG_SYS_CANNOT_WEAR
@@ -119,7 +119,7 @@ export default function (session, msg) {
             }
 
             // find inventory row by unique id and if its not equipped already
-            let requestedRow = character.inventory.find(msgdata.item.position.tab, (i) => i?.wearingPosition == 255 && i?.itemUid == msgdata.item.uid);
+            let requestedRow = session.character.inventory.find(msgdata.item.position.tab, (i) => i?.wearingPosition == 255 && i?.itemUid == msgdata.item.uid);
 
             if (!requestedRow) {
                 session.send.sys(2); // MSG_SYS_CANNOT_WEAR
@@ -133,10 +133,10 @@ export default function (session, msg) {
 
             // unequip already equipped item by its wearing position and return following data: position, row data
             // this will return null if character is trying to equip gear while being nude
-            let unequippedRow = await character.inventory.unequip(msgdata.wearingPosition);
+            let unequippedRow = await session.character.inventory.unequip(msgdata.wearingPosition);
 
             // wear requested item
-            let resp = await character.inventory.equip(requestedRow.position, msgdata.wearingPosition);
+            let resp = await session.character.inventory.equip(requestedRow.position, msgdata.wearingPosition);
 
             if (!resp) {
                 // TODO: send error message to the client
@@ -166,30 +166,27 @@ export default function (session, msg) {
         },
         MSG_ITEM_SWAP: () => {
             let msgdata = {
-                tabId: msg.read('u8') as number,
+                tabId: msg.read('u8'),
                 item: {
                     src: {
                         position: {
-                            col: msg.read('u8') as number,
-                            row: msg.read('u8') as number,
+                            col: msg.read('u8'),
+                            row: msg.read('u8'),
                         },
-                        uid: msg.read('i32>') as number,
+                        uid: msg.read('i32>'),
                     },
                     dst: {
                         position: {
-                            col: msg.read('u8') as number,
-                            row: msg.read('u8') as number,
+                            col: msg.read('u8'),
+                            row: msg.read('u8'),
                         },
-                        uid: msg.read('i32>') as number,
+                        uid: msg.read('i32>'),
                     },
                 },
             };
 
-            // find character by session id
-            let character = game.world.find('character', (ch) => ch.uid == session.uid);
-
             // swap item
-            character.inventory.swap(msgdata.tabId, msgdata.item.src, msgdata.item.dst);
+            session.character.inventory.swap(msgdata.tabId, msgdata.item.src, msgdata.item.dst);
         },
         MSG_ITEM_BUY: () => { },
         MSG_ITEM_SELL: () => { },

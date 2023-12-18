@@ -2,41 +2,19 @@ import log from '@local/shared/logger';
 import { Position } from '../types';
 import util from '../util';
 
-import GameObject from './index';
+import GameObject, { GameObjectEvents, GameObjectType, MonsterEvents, PacketObjectType } from './index';
 import Attackable from './traits/attackable';
 import { Vector2 } from 'three';
 import Zone from '../zone';
 import Character from './character';
-import { Statistic } from '../types/statistic';
+import type { Statistics } from './index';
+import { Statpoints } from '../system/statpoints';
 
 type Reward = {
     experience: number,
     gold: number,
     items: number[],
 };
-
-type Statistics = {
-    strength: Statistic,
-    dexterity: Statistic,
-    intelligence: Statistic,
-    health: Statistic,
-    maxHealth: Statistic,
-    mana: Statistic,
-    maxMana: Statistic,
-    stamina: Statistic,
-    defense: Statistic,
-    attack: Statistic,
-    magicAttack: Statistic,
-    magicResist: Statistic,
-    healthRegen: Statistic,
-    manaRegen: Statistic,
-    condition: Statistic,
-
-    walkSpeed: Statistic,
-    runSpeed: Statistic,
-    attackRange: Statistic,
-    attackSpeed: Statistic
-}
 
 type MonsterOptions = {
     uid?: number,
@@ -48,30 +26,33 @@ type MonsterOptions = {
     reward: Reward,
     position: Position,
     respawnTime: number,
+    statpoints: {
+        strength: number,
+        dexterity: number,
+        intelligence: number,
+        condition: number
+    }
 };
 
 
-class Monster extends GameObject {
-    attackable;
-
-    type: string = 'monster';
-    objType: number = 1;
-
+class Monster extends GameObject<GameObjectType.Monster> {
     level: number;
-
     reward: Reward;
-
     respawnTime: number;
 
+    // traits
+    attackable: Attackable;
 
-    constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime }: MonsterOptions) {
+    // systems
+    statpoints: Statpoints;
+
+    constructor({ uid, id, zone, flags, level, statistics, reward, position, respawnTime, statpoints }: MonsterOptions) {
         // get all properties from GameObject class
         // @ts-ignore
         super(...arguments);
 
-        this.attackable = new Attackable(this);
-        this.type = 'monster';
-        this.objType = 1;
+        this.type = GameObjectType.Monster;
+        this.objType = PacketObjectType.NPC;
 
         this.level = level;
 
@@ -80,6 +61,19 @@ class Monster extends GameObject {
             gold: reward?.gold || 0,
             items: reward?.items || [],
         };
+
+        // traits
+        this.attackable = new Attackable(this);
+
+        // systems
+        this.statpoints = new Statpoints({
+            owner: this,
+            strength: statpoints.strength || 0,
+            dexterity: statpoints.dexterity || 0,
+            intelligence: statpoints.intelligence || 0,
+            condition: statpoints.condition || 0
+        });
+
 
         this.respawnTime = /*respawnTime ||*/ 15 * 1000;
 
@@ -99,8 +93,8 @@ class Monster extends GameObject {
             zoneId: this.zone.id,
             areaId: this.areaId,
             position: this.position,
-            health: this.statistics.health.getCurrentValue(),
-            maxHealth: this.statistics.maxHealth.getCurrentValue()
+            health: this.statistics.health.getTotalValue(),
+            maxHealth: this.statistics.maxHealth.getTotalValue()
         });
 
         character.addVisibleObject('monster', this.uid);
@@ -108,7 +102,7 @@ class Monster extends GameObject {
         this.appearCount += 1;
 
         // TODO: appearedFirstTime should indicate whether the object appeared for the first time
-        this.event.emit('appear', /* appearedFirstTime */);
+        this.emit(GameObjectEvents.Appear, /* appearedFirstTime */);
     }
 
     appearInRange(range: number) {
@@ -125,20 +119,20 @@ class Monster extends GameObject {
             return;
 
         character.session.send.disappear({
-            objType: 1,
+            objType: this.objType,
             uid: this.uid
         });
 
         character.removeVisibleObject('monster', this.uid);
 
         // TODO: disappearedFirstTime should indicate whether the object disappeared for the first time
-        this.event.emit('disappear', /* disappearedFirstTime */);
+        this.emit(GameObjectEvents.Disappear, /* disappearedFirstTime */);
     }
 
     die() {
         super.die();
         setTimeout(() => this.respawn(), this.respawnTime);
-        this.event.emit('die');
+        this.emit(MonsterEvents.Die);
     }
 }
 

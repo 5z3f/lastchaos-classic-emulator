@@ -4,14 +4,13 @@ import session from '@local/shared/session';
 import app from '../app';
 import database from '../database';
 
-
 export default async function (session: session, msg: Message) {
     let data = {
-        version: msg.read('u32>') as number,
-        mode: msg.read('u8') as number,
-        username: msg.read('stringnt') as string,
-        password: msg.read('stringnt') as string,
-        nation: msg.read('u8') as number,
+        version: msg.read('u32>'),
+        mode: msg.read('u8'),
+        username: msg.read('stringnt'),
+        password: msg.read('stringnt'),
+        nation: msg.read('u8'),
     }
 
     // TODO: check client version and if its wrong send fail message: MSG_FAIL_WRONG_VERSION
@@ -28,7 +27,8 @@ export default async function (session: session, msg: Message) {
         return;
     }
 
-    session.accountId = dbAccount.id;
+    // pair session with user account
+    session.pinAccount(dbAccount.id);
 
     log.data(`[IN]  >> client login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}`);
     session.send.channelInfo();

@@ -8,6 +8,12 @@ const game = {
     encryption: false,
 };
 
+type DataTypeToReturnType<T> = 
+    T extends 'stringnt' ? string :
+    T extends 'i8' | 'u8' | 'i16<' | 'i16>' | 'u16<' | 'u16>' | 'i32<' | 'i32>' | 'u32<' | 'u32>' | 'f<' | 'f>' ? number :
+    T extends 'i64<' | 'i64>' | 'u64<' | 'u64>' ? bigint :
+    never;
+    
 type dataTypes = 'i8' | 'u8' | 'i16<' | 'i16>' | 'u16<' | 'u16>' | 'i32<' | 'i32>' | 'u32<' | 'u32>' | 'i64<' | 'i64>' | 'u64<' | 'u64>' | 'f<' | 'f>' | 'stringnt';
 
 type MessageOptions = {
@@ -89,9 +95,36 @@ class Message {
             : Buffer.concat([makeHeader(this._sb.length).toBuffer(), encrypt !== false && game.encryption ? Message.encrypt(this._sb.toBuffer()) : this._sb.toBuffer()]);
     }
 
-    read(type: dataTypes) {
+    read<T extends dataTypes>(type: T) : DataTypeToReturnType<T> {
         let val;
 
+        const isLittleEndian = type.endsWith('<');
+        const isBigEndian = type.endsWith('>');
+        const baseType = (isLittleEndian || isBigEndian) ? type.slice(0, -1) : type; // remove the last character if it's '<'
+
+
+        const typeToMethod = {
+            'i8': this._sb.readInt8,
+            'u8': this._sb.readUInt8,
+            'stringnt': this._sb.readStringNT,
+            'i16': isLittleEndian ? this._sb.readInt16LE : this._sb.readInt16BE,
+            'u16': isLittleEndian ? this._sb.readUInt16LE : this._sb.readUInt16BE,
+            'i32': isLittleEndian ? this._sb.readInt32LE : this._sb.readInt32BE,
+            'u32': isLittleEndian ? this._sb.readUInt32LE : this._sb.readUInt32BE,
+            'i64': isLittleEndian ? this._sb.readBigInt64LE : this._sb.readBigInt64BE,
+            'u64': isLittleEndian ? this._sb.readBigUInt64LE : this._sb.readBigUInt64BE,
+            'f': isLittleEndian ? this._sb.readFloatLE : this._sb.readFloatBE,
+        };
+
+        const method = typeToMethod[baseType];
+
+
+        if (!method) {
+            throw new Error(`Unsupported type: ${baseType}`);
+        }
+    
+        return method.call(this._sb);
+        
         switch (type) {
             case 'i8': val = this._sb.readInt8(); break;
             case 'u8': val = this._sb.readUInt8(); break;

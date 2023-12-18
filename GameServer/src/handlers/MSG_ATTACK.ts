@@ -3,15 +3,17 @@ import app from '../app';
 import Monster from '../gameobject/monster';
 import Character from '../gameobject/character';
 import game from '../game';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
 
-export default function (session, msg) {
+export default function (session: Session, msg: Message) {
     let data = {
-        attackerObjType: msg.read('u8') as number,
-        attackerIndex: msg.read('i32>') as number,
-        targetObjType: msg.read('u8') as number,
-        targetIndex: msg.read('i32>') as number,
-        attackType: msg.read('u8') as number,
-        multicount: msg.read('u8') as number,
+        attackerObjType: msg.read('u8'),
+        attackerIndex: msg.read('i32>'),
+        targetObjType: msg.read('u8'),
+        targetIndex: msg.read('i32>'),
+        attackType: msg.read('u8'),
+        multicount: msg.read('u8'),
     };
 
     log.debug(`[ATTACK] (uid: ${data.attackerIndex} >> uid: ${data.targetIndex})`);

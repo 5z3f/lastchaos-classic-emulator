@@ -2,18 +2,20 @@ import log from '@local/shared/logger';
 import game from '../game';
 
 import { Position } from '../types';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
 
-export default function (session, msg) {
+export default function (session: Session, msg: Message) {
     const data = {
-        objType: msg.read('u8') as number,
-        moveType: msg.read('u8') as number,
-        uid: msg.read('u32>') as number,
-        speed: msg.read('f<') as number,
-        x: msg.read('f<') as number,
-        y: msg.read('f<') as number,
-        z: msg.read('f<') as number,
-        r: msg.read('f<') as number,
-        layer: msg.read('u8') as number,
+        objType: msg.read('u8'),
+        moveType: msg.read('u8'),
+        uid: msg.read('u32>'),
+        speed: msg.read('f<'),
+        x: msg.read('f<'),
+        y: msg.read('f<'),
+        z: msg.read('f<'),
+        r: msg.read('f<'),
+        layer: msg.read('u8'),
     };
 
     let moveTypeMap = {

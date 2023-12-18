@@ -3,9 +3,11 @@ import messenger from '../system/messenger';
 import app from '../app';
 import game from '../game';
 import database from '../database';
+import Message from '@local/shared/message';
+import Session from '@local/shared/session';
 
-export default function (session, msg) {
-    let subType = msg.read('u8') as number;
+export default function (session: Session, msg: Message) {
+    let subType = msg.read('u8');
     console.log('MSG_FRIEND -> ', subType)
 
     let subTypeMap = {
@@ -24,8 +26,8 @@ export default function (session, msg) {
 
     const subTypeHandler = {
         MSG_FRIEND_REGISTER_REQUEST: async () => {
-            let requesterUid = msg.read('i32>') as number;
-            let receiverName = msg.read('stringnt') as string;
+            let requesterUid = msg.read('i32>');
+            let receiverName = msg.read('stringnt');
             console.log(requesterUid, receiverName, session.character.uid);
 
             if (receiverName.length < 2 || receiverName.length > 16) {
@@ -59,8 +61,8 @@ export default function (session, msg) {
             receiverCharacter.session.send.friend(MSG_FRIEND_REGISTER_REQUEST, { requesterUid, receiverName });
         },
         MSG_FRIEND_REGISTER_ALLOW: async () => {
-            let receiverUid = msg.read('i32>') as number;
-            let receiverName = msg.read('stringnt') as string;
+            let receiverUid = msg.read('i32>');
+            let receiverName = msg.read('stringnt');
 
             // TODO: packet is malformed, log it
             if (receiverUid != session.character.uid) {

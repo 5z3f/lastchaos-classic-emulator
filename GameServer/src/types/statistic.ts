@@ -10,7 +10,8 @@ enum ModifierOrigin {
     STAT = 0,
     ITEM = 1,
     BUFF = 2,
-    SKILL = 3
+    SKILL = 3,
+    COMMAND = 4,
 };
 
 /**
@@ -21,22 +22,22 @@ class Statistic {
     /**
      * The base value of the statistic.
      */
-    baseValue: number = 0;
+    baseValue = 0;
 
     /**
-     * The current value of the statistic.
+     * The total value of the statistic.
      */
-    currentValue: number = 0;
+    totalValue = 0;
 
     /**
      * The minimum value of the statistic.
     */
-    minValue: number = 0;
+    minValue = 0;
 
     /**
      * The maximum value of the statistic.
      */
-    maxValue: number = 0;
+    maxValue = 0;
 
     /**
      * An array of modifiers applied to the statistic.
@@ -45,41 +46,41 @@ class Statistic {
 
     constructor(baseValue = 0, minValue = 0, maxValue = 1000000) {
         this.baseValue = baseValue;
-        this.currentValue = baseValue;
+        this.totalValue = baseValue;
 
         this.minValue = minValue;
         this.maxValue = maxValue;
     }
 
     /**
-     * Increases the current value of the statistic by the specified value, capped at the maximum value.
+     * Increases the total value of the statistic by the specified value, capped at the maximum value.
      * @param {number} value - The value to increase the statistic by.
      */
     increase(value: number) {
-        this.currentValue = Math.min(this.currentValue + value, this.maxValue);
+        this.totalValue = Math.min(this.totalValue + value, this.maxValue);
     }
 
     /**
-     * Decreases the current value of the statistic by the specified value, capped at the minimum value.
+     * Decreases the total value of the statistic by the specified value, capped at the minimum value.
      * @param {number} value - The value to decrease the statistic by.
      */
     decrease(value: number) {
-        this.currentValue = Math.max(this.currentValue - value, this.minValue);
+        this.totalValue = Math.max(this.totalValue - value, this.minValue);
     }
 
     /**
-     * Sets the current value of the statistic to the specified value, clamped between the minimum and maximum values.
+     * Sets the total value of the statistic to the specified value, clamped between the minimum and maximum values.
      * @param {number} value - The value to set the statistic to.
      */
     set(value: number) {
-        this.currentValue = Math.min(Math.max(value, this.minValue), this.maxValue);
+        this.totalValue = Math.min(Math.max(value, this.minValue), this.maxValue);
     }
 
     /**
-     * Resets the current value of the statistic to the base value and clears all modifiers.
+     * Resets the total value of the statistic to the base value and clears all modifiers.
      */
     reset() {
-        this.currentValue = this.baseValue;
+        this.totalValue = this.baseValue;
         this.modifiers = [];
     }
 
@@ -93,7 +94,7 @@ class Statistic {
         else
             this.modifiers.push(modifier);
 
-        this.currentValue = this.getModifiedValue();
+        this.totalValue = this.getModifiedValue();
     }
 
     /**
@@ -107,7 +108,7 @@ class Statistic {
         if (index !== -1)
             this.modifiers.splice(index, 1);
 
-        this.currentValue = this.getModifiedValue();
+        this.totalValue = this.getModifiedValue();
     }
 
     /**
@@ -127,11 +128,12 @@ class Statistic {
     }
 
     /**
-     * Returns the current value of the statistic.
-     * @returns {number} The current value.
+     * Returns the total value of the statistic.
+     * @returns {number} The total value.
      */
-    getCurrentValue() {
-        return this.currentValue;
+    getTotalValue() {
+        this.totalValue = this.getModifiedValue();
+        return this.totalValue;
     }
 
     /**
@@ -156,12 +158,29 @@ class Statistic {
     }
 
     /**
-     * Calculates the percentage of the current value relative to the base value of the statistic.
-     * @returns {number} The percentage of the current value relative to the base value, rounded to two decimal places.
+     * Calculates the percentage of the total value relative to the base value of the statistic.
+     * @returns {number} The percentage of the total value relative to the base value, rounded to two decimal places.
      */
     getPercentage() {
-        const percentage = (this.currentValue / this.baseValue) * 100;
+        const percentage = (this.totalValue / this.baseValue) * 100;
         return Math.round(percentage * 100) / 100;
+    }
+
+    /**
+     * Sets the base value of the statistic to the specified value and recalculates the total value.
+     * @param {number} value - The value to set the base value to.
+     */
+    setBaseValue(value: number) {
+        this.baseValue = value;
+        this.totalValue = this.getModifiedValue();
+    }
+
+    /**
+     * Returns the maximum value of the statistic.
+     * @returns {number} The maximum value.
+     */
+    setMaxValue(value) {
+        this.maxValue = value;
     }
 }
 

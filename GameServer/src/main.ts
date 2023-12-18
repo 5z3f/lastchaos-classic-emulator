@@ -16,5 +16,5 @@ let srv = new server({
     host: config.gameserver.host,
     port: config.gameserver.port,
     handlers,
-    senders,
+    senders: senders,
 });

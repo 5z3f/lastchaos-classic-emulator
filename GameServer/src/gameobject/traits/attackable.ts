@@ -12,10 +12,10 @@ class Attackable {
 
     damage(attacker: Character) {
         let owner = this.owner;
-        owner.statistics.health.decrease(attacker.statistics.attack.getCurrentValue());
-        attacker.statistics.health.decrease(owner.statistics.attack.getCurrentValue());
+        owner.statistics.health.decrease(attacker.statistics.attack.getTotalValue());
+        attacker.statistics.health.decrease(owner.statistics.attack.getTotalValue());
 
-        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health.getCurrentValue()} | MP: ${attacker.statistics.mana.getCurrentValue()} | DMG: ${attacker.statistics.attack.getCurrentValue()}] attacked ${owner.type}(${owner.uid}) [HP: ${owner.statistics.health.getCurrentValue()} | MP: ${owner.statistics.mana.getCurrentValue()}]`);
+        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health.getTotalValue()} | MP: ${attacker.statistics.mana.getTotalValue()} | DMG: ${attacker.statistics.attack.getTotalValue()}] attacked ${owner.type}(${owner.uid}) [HP: ${owner.statistics.health.getTotalValue()} | MP: ${owner.statistics.mana.getTotalValue()}]`);
 
         // damage attacker's target
         attacker.session.send.damage({
@@ -25,14 +25,14 @@ class Attackable {
             skillId: -1,
             targetObjType: 1,
             targetIndex: owner.uid,
-            targetHp: owner.statistics.health.getCurrentValue(),
-            targetMp: owner.statistics.mana.getCurrentValue(),
-            damage: attacker.statistics.attack.getCurrentValue(),
+            targetHp: owner.statistics.health.getTotalValue(),
+            targetMp: owner.statistics.mana.getTotalValue(),
+            damage: attacker.statistics.attack.getTotalValue(),
         });
 
         owner.lastAttackTime = performance.now();
 
-        if (owner.statistics.health.getCurrentValue() <= 0) {
+        if (owner.statistics.health.getTotalValue() <= 0) {
             owner.statistics.health.set(0);
 
             // kill monster
@@ -51,12 +51,12 @@ class Attackable {
             skillId: -1,
             targetObjType: 0,
             targetIndex: attacker.uid,
-            targetHp: attacker.statistics.health.getCurrentValue(),
-            targetMp: attacker.statistics.mana.getCurrentValue(),
-            damage: owner.statistics.attack.getCurrentValue(),
+            targetHp: attacker.statistics.health.getTotalValue(),
+            targetMp: attacker.statistics.mana.getTotalValue(),
+            damage: owner.statistics.attack.getTotalValue(),
         });
 
-        if (attacker.statistics.health.getCurrentValue() <= 0) {
+        if (attacker.statistics.health.getTotalValue() <= 0) {
             attacker.statistics.health.set(0);
         }
     }

@@ -98,10 +98,6 @@ class Zone {
                         maxHealth: new Statistic(baseMonster.statistics.health),
                         mana: new Statistic(baseMonster.statistics.mana),
                         maxMana: new Statistic(baseMonster.statistics.mana),
-                        strength: new Statistic(baseMonster.statistics.strength),
-                        dexterity: new Statistic(baseMonster.statistics.dexterity),
-                        intelligence: new Statistic(baseMonster.statistics.intelligence),
-                        condition: new Statistic(baseMonster.statistics.condition),
                         attack: new Statistic(baseMonster.statistics.attack),
                         magicAttack: new Statistic(baseMonster.statistics.magicAttack),
                         defense: new Statistic(baseMonster.statistics.defense),
@@ -110,6 +106,12 @@ class Zone {
                         runSpeed: new Statistic(baseMonster.statistics.runSpeed),
                         attackRange: new Statistic(baseMonster.statistics.attackRange),
                         attackSpeed: new Statistic(baseMonster.statistics.attackSpeed),
+                    },
+                    statpoints: {
+                        strength: baseMonster.statistics.strength,
+                        dexterity: baseMonster.statistics.dexterity,
+                        intelligence: baseMonster.statistics.intelligence,
+                        condition: baseMonster.statistics.condition,
                     }
                 });
 
@@ -131,12 +133,10 @@ class Zone {
                         health: new Statistic(baseNPC.statistics.health),
                         //@ts-ignore
                         maxHealth: new Statistic(baseNPC.statistics.health),
+                        healthRegen: new Statistic(0), // TODO: delete this later
                         mana: new Statistic(baseNPC.statistics.mana),
                         maxMana: new Statistic(baseNPC.statistics.mana),
-                        strength: new Statistic(baseNPC.statistics.strength),
-                        dexterity: new Statistic(baseNPC.statistics.dexterity),
-                        intelligence: new Statistic(baseNPC.statistics.intelligence),
-                        condition: new Statistic(baseNPC.statistics.condition),
+                        manaRegen: new Statistic(0), // TODO: delete this later
                         attack: new Statistic(baseNPC.statistics.attack),
                         magicAttack: new Statistic(baseNPC.statistics.magicAttack),
                         defense: new Statistic(baseNPC.statistics.defense),
@@ -145,6 +145,12 @@ class Zone {
                         runSpeed: new Statistic(baseNPC.statistics.runSpeed),
                         attackRange: new Statistic(baseNPC.statistics.attackRange),
                         attackSpeed: new Statistic(baseNPC.statistics.attackSpeed),
+                    },
+                    statpoints: {
+                        strength: baseNPC.statistics.strength,
+                        dexterity: baseNPC.statistics.dexterity,
+                        intelligence: baseNPC.statistics.intelligence,
+                        condition: baseNPC.statistics.condition,
                     },
                     //@ts-ignore
                     position: spawn.position
@@ -227,7 +233,7 @@ class Zone {
                 break;
             }
             case 'monster': {
-                let found = this.npcs.findIndex((m: Monster) => m.uid == data.uid);
+                let found = this.monsters.findIndex((m: Monster) => m.uid == data.uid);
 
                 if (found != -1)
                     return;

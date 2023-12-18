@@ -1,5 +1,6 @@
 
-import session from '@local/shared/session';
+import Session from '@local/shared/session';
+
 import appear from './appear';
 import attack from './attack';
 import at from './at';
@@ -26,8 +27,8 @@ import status from './status';
 import sys from './sys';
 
 
-export default (session: session) => {
-    const send = {
+export default function (session: Session) {
+    return {
         appear: appear(session),
         at: at(session),
         attack: attack(session),
@@ -53,6 +54,4 @@ export default (session: session) => {
         status: status(session),
         sys: sys(session),
     };
-
-    return send;
 }
