@@ -1,50 +1,80 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
 
-export default function (session) {
-    return (subType, data) => {
-        let msg = new Message({ type: _messages.MSG_EFFECT, subType: subType });
+interface SkillData {
+    subType: EffectMessageType.Skill;
+    skillId: number;
+    objType: number;
+    charUid: number;
+}
 
-        let subTypeMap = {
-            0: 'MSG_EFFECT_SKILL',
-            1: 'MSG_EFFECT_ETC',
-            2: 'MSG_EFFECT_PRODUCE',
-            3: 'MSG_EFFECT_ITEM',
-            4: 'MSG_EFFECT_FIRE',
+interface EtcData {
+    subType: EffectMessageType.ETC;
+    objType: number;
+    charUid: number;
+    effectType: number;
+}
 
-        };
+interface ProduceData {
+    subType: EffectMessageType.Produce;
+    kind: number;
+    objType: number;
+    charUid: number;
+    targetObjType: number;
+    targetUid: number;
+    health: number;
+}
 
-        const subTypeHandler = {
-            MSG_EFFECT_SKILL: () => {
+interface ItemData {
+    subType: EffectMessageType.Item;
+    objType: number;
+    charUid: number;
+    itemId: number;
+}
+
+export type EffectMessageData = SkillData | EtcData | ProduceData | ItemData;
+
+export enum EffectMessageType {
+    Skill,
+    ETC,
+    Produce,
+    Item,
+    //Fire
+}
+
+export default function (session: Session<SendersType>) {
+    return (data: EffectMessageData) => {
+        let msg = new Message({ type: _messages.MSG_EFFECT, subType: data.subType });
+
+        switch (data.subType) {
+            case EffectMessageType.Skill:
                 msg.write('i32>', data.skillId);
                 msg.write('u8', data.objType);
                 msg.write('i32>', data.charUid);
-            },
-            MSG_EFFECT_ETC: () => {
+                break;
+            case EffectMessageType.ETC:
                 msg.write('u8', data.objType);
                 msg.write('i32>', data.charUid);
                 msg.write('u8', data.effectType);
-            },
-            MSG_EFFECT_PRODUCE: () => {
+                break;
+            case EffectMessageType.Produce:
                 msg.write('u8', data.kind);
                 msg.write('u8', data.objType);
                 msg.write('i32>', data.charUid);
                 msg.write('u8', data.targetObjType);
                 msg.write('i32>', data.targetUid);
                 msg.write('i32>', data.health);
-            },
-            MSG_EFFECT_ITEM: () => {
+                break;
+            case EffectMessageType.Item:
                 msg.write('u8', data.objType);
                 msg.write('i32>', data.charUid);
                 msg.write('i32>', data.itemId);
-            },
-            MSG_EFFECT_FIRE: () => {
-
-            },
-        };
-
-        if (subTypeMap[subType] in subTypeHandler)
-            subTypeHandler[subTypeMap[subType]]();
+                break;
+            //case EffectMessageType.Fire:
+            //    break;
+        }
 
         session.write(msg.build());
     }

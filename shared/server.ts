@@ -2,36 +2,33 @@ import net from 'net';
 import log from '@local/shared/logger';
 import Session from '@local/shared/session';
 
-type serverOptions = {
+type serverOptions<T> = {
     host?: string,
     port?: number,
     handlers: any,
-    senders: any,
+    senders: T,
     world?: any
 };
 
-class Server {
+class Server<T> {
     host: string;
     port: number;
-    sessions: Session[];
+    sessions: Session<T>[];
 
     //static World = null;
-    constructor({ host, port, handlers, senders, world = undefined }: serverOptions) {
+    constructor({ host, port, handlers, senders }: serverOptions<T>) {
         let that = this;
 
-        this.host = host || '127.0.0.1';
-        this.port = port || 43594;
+        this.host = host;
+        this.port = port;
 
         // hold current sessions
         this.sessions = [];
 
-        // hold game data
-        // this.World = world || null;
-
         const srv = net.createServer();
 
         srv.on('connection', (socket) => {
-            let session = new Session({
+            let session = new Session<T>({
                 server: that,
                 socket: socket,
                 handlers: handlers,

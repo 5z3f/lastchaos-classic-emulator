@@ -1,11 +1,11 @@
-import log from '@local/shared/logger';
-import app from '../app';
 import database from '../database';
 import Message from '@local/shared/message';
-import { StatpointType } from '../system/statpoints';
 import Session from '@local/shared/session';
 
-export default function (session: Session, msg: Message) {
+import { StatpointType } from '../system/core/statpoints';
+import { SendersType } from '../senders';
+
+export default function (session: Session<SendersType>, msg: Message) {
     let subType = msg.read('u8');
     let subTypeMap = {
         1: 'MSG_STATPOINT_USE',

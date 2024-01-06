@@ -1,8 +1,10 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
 
-export default function (session) {
-    return ({ objType, moveType, uid, speed, position }) => {
+export default function (session: Session<SendersType>) {
+    return ({ objType, moveType, uid, speed, position, attribute }) => {
         let msg = new Message({ type: _messages.MSG_MOVE, subType: objType })
 
         msg.write('u8', moveType);
@@ -13,7 +15,7 @@ export default function (session) {
         msg.write('f<', position.z);
         msg.write('f<', position.r);
         msg.write('u8', position.layer);
-        msg.write('u8', 0);             // TODO: attributepos
+        msg.write('u8', attribute);             // TODO: attributepos
 
         session.write(msg.build());
     }

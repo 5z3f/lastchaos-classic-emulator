@@ -1,5 +1,5 @@
 import EventEmitter from '../events';
-import { Statistic, Modifier, ModifierType } from '../types/statistic';
+import { Statistic, Modifier, ModifierType } from '../system/core/statistic';
 import Position from '../types/position';
 import util from '../util';
 import log from '@local/shared/logger';
@@ -7,20 +7,23 @@ import App from '../app';
 import Zone from '../zone';
 
 export enum GameObjectEvents {
-    Appear = 'appear',
-    Disappear = 'disappear',
-    Move = 'move',
-    Respawn = 'respawn',
-    Heal = 'heal'
+    Appear = 'gameobject:appear',
+    Disappear = 'gameobject:disappear',
+    Move = 'gameobject:move',
+    Respawn = 'gameobject:respawn',
+    Heal = 'gameobject:heal',
+    Die = 'gameobject:die'
 };
 
 export enum CharacterEvents {
-    InventoryEquip = 'inventory-equip',
-    InventoryUnequip = 'inventory-unequip',
-    Heal = 'heal',
-    EnterGame = 'enter-game',
-    StatisticUpdate = 'statistic-update',
-    Die = 'die',
+    InventoryEquip = 'inventory:equip',
+    InventoryUnequip = 'inventory:unequip',
+    InventorySwap = 'inventory:swap',
+    InventoryAdd = 'inventory:add',
+    EnterGame = 'game:enter',
+    StatisticUpdate = 'statistic:update',
+    BuffApply = 'buff:apply',
+    BuffRemove = 'buff:remove'
 };
 
 export enum PacketObjectType {
@@ -29,14 +32,15 @@ export enum PacketObjectType {
 };
 
 export enum MonsterEvents {
-    Die = 'die',
+    // dummy event for now
+    dummy = 'dummy',
 };
 
 export enum GameObjectType {
-    Character = 'character',
-    Monster = 'monster',
-    NPC = 'npc',
-    Item = 'item' // ?
+    Character = 'Character',
+    Monster = 'Monster',
+    NPC = 'NPC',
+    Item = 'Item' // ?
 };
 
 type Events<T> = T extends GameObjectType.Character ? CharacterEvents :
@@ -44,11 +48,11 @@ type Events<T> = T extends GameObjectType.Character ? CharacterEvents :
     GameObjectEvents;
 
 export type Statistics = {
-    health: Statistic,
+    health: number,
     maxHealth: Statistic,
     healthRegen: Statistic,
 
-    mana: Statistic,
+    mana: number,
     maxMana: Statistic,
     manaRegen: Statistic,
 
@@ -96,16 +100,12 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
     lastAttackTime: number;
 
     statistics: {
-        health: Statistic,
+        health: number,
         maxHealth: Statistic,
         healthRegen: Statistic,
-        mana: Statistic,
+        mana: number,
         maxMana: Statistic,
         manaRegen: Statistic,
-        strength: Statistic,
-        dexterity: Statistic,
-        intelligence: Statistic,
-        condition: Statistic,
         attack: Statistic,
         magicAttack: Statistic,
         defense: Statistic,
@@ -120,8 +120,15 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
     respawnCount: number = 0;
     objType: PacketObjectType;
 
+    // we need to store all timeouts/intervals to clear them when object is disposed
+    timeoutIds: NodeJS.Timeout[];
+    intervalIds: NodeJS.Timeout[];
+
     constructor({ uid, id, flags, zone, position, areaId }: GameObjectOptions) {
         super();
+
+        this.timeoutIds = [];
+        this.intervalIds = [];
 
         this.uid = uid || util.createSessionId();   // unique id
         this.id = id;
@@ -151,10 +158,10 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
 
         //@ts-ignore
         this.statistics = {
-            health: new Statistic(),
+            health: 0,
             maxHealth: new Statistic(),
             healthRegen: new Statistic(),
-            mana: new Statistic(),
+            mana: 0,
             maxMana: new Statistic(),
             manaRegen: new Statistic(),
             attack: new Statistic(),
@@ -170,12 +177,29 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
         this.startRegen();
     }
 
+    wait(callback: () => void, duration: number) {
+        const timeoutId = setTimeout(callback, duration);
+        this.timeoutIds.push(timeoutId);
+        return timeoutId;
+    }
+
+    interval(callback: () => void, duration: number) {
+        const intervalId = setInterval(callback, duration);
+        this.intervalIds.push(intervalId);
+        return intervalId;
+    }
+
+    dispose() {
+        this.timeoutIds.forEach((id) => clearTimeout(id));
+        this.intervalIds.forEach((id) => clearTimeout(id));
+    }
+
     die() {
         this.state.dead = true;
     }
 
     respawn() {
-        this.statistics.health.reset()
+        this.statistics.health = this.statistics.maxHealth.getTotalValue();
         this.state.dead = false;
 
         this.respawnCount += 1;
@@ -221,7 +245,7 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
             type: this.type,
         }
 
-        if (this.type === 'character')
+        if (this.type === GameObjectType.Character)
             qtPointObj.character = this;
 
         this.zone.quadTree.insert(qtPointObj);
@@ -229,7 +253,7 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
         this.emit(GameObjectEvents.Move, this.position);
 
         // FIXME: make it suitable for character class
-        if (this.type == 'character') {
+        if (this.type == GameObjectType.Character) {
             log.debug(`[MOVE] UID: ${this.uid} | (${this.previousPosition.toString()}, ${this.zone.getAttribute(this.previousPosition, true)}) --> (${this.position.toString()}, ${this.zone.getAttribute(this.position, true)})`)
             return;
         }
@@ -249,15 +273,15 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
 
         this.regenInterval = setInterval(() => {
             const regenAmount = this.statistics.healthRegen.getTotalValue();
-            this.heal(regenAmount);
+           // this.heal(regenAmount);
         }, regenTick);
     }
 
     heal(amount: number) {
-        if (!amount || this.state.dead || this.statistics.health.getTotalValue() >= this.statistics.maxHealth.getTotalValue())
+        if (!amount || this.state.dead || this.statistics.health > this.statistics.maxHealth.getTotalValue())
             return;
 
-        const currentHealth = this.statistics.health.getTotalValue();
+        const currentHealth = this.statistics.health;
         const maxHealth = this.statistics.maxHealth.getTotalValue();
 
         const newHealth = Math.min(currentHealth + amount, maxHealth);
@@ -266,10 +290,9 @@ class GameObject<T extends GameObjectType> extends EventEmitter<Events<T> | Game
         if (!healthDiff)
             return;
 
-        this.statistics.health.set(newHealth);
+        this.statistics.health = newHealth;
 
         this.emit(GameObjectEvents.Heal, amount);
-        // TODO: update character object in area
     }
 
     move(range: number) {

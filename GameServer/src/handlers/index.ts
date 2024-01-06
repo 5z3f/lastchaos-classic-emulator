@@ -14,7 +14,8 @@ import MSG_STATPOINT from './MSG_STATPOINT';
 import MSG_PULSE from './MSG_PULSE';
 import MSG_FRIEND from './MSG_FRIEND';
 import MSG_EXTEND from './MSG_EXTEND';
-
+import MSG_QUICKSLOT from './MSG_QUICKSLOT';
+import MSG_SKILL from './MSG_SKILL';
 
 let handlers = {
     [messages.MSG_LOGIN]: MSG_LOGIN,
@@ -30,6 +31,8 @@ let handlers = {
     [messages.MSG_PULSE]: MSG_PULSE,
     [messages.MSG_FRIEND]: MSG_FRIEND,
     [messages.MSG_EXTEND]: MSG_EXTEND,
+    [messages.MSG_QUICKSLOT]: MSG_QUICKSLOT,
+    [messages.MSG_SKILL]: MSG_SKILL
 };
 
 export default handlers;

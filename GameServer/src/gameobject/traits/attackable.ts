@@ -12,10 +12,10 @@ class Attackable {
 
     damage(attacker: Character) {
         let owner = this.owner;
-        owner.statistics.health.decrease(attacker.statistics.attack.getTotalValue());
-        attacker.statistics.health.decrease(owner.statistics.attack.getTotalValue());
+        owner.statistics.health -= attacker.statistics.attack.getTotalValue();
+        attacker.statistics.health -= owner.statistics.attack.getTotalValue();
 
-        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health.getTotalValue()} | MP: ${attacker.statistics.mana.getTotalValue()} | DMG: ${attacker.statistics.attack.getTotalValue()}] attacked ${owner.type}(${owner.uid}) [HP: ${owner.statistics.health.getTotalValue()} | MP: ${owner.statistics.mana.getTotalValue()}]`);
+        log.debug(`[ATTACK] ${attacker.type}(${attacker.uid}) [HP: ${attacker.statistics.health} | MP: ${attacker.statistics.mana} | DMG: ${attacker.statistics.attack.getTotalValue()}] attacked ${owner.type}(${owner.uid}) [HP: ${owner.statistics.health} | MP: ${owner.statistics.mana}]`);
 
         // damage attacker's target
         attacker.session.send.damage({
@@ -25,15 +25,15 @@ class Attackable {
             skillId: -1,
             targetObjType: 1,
             targetIndex: owner.uid,
-            targetHp: owner.statistics.health.getTotalValue(),
-            targetMp: owner.statistics.mana.getTotalValue(),
+            targetHp: owner.statistics.health,
+            targetMp: owner.statistics.mana,
             damage: attacker.statistics.attack.getTotalValue(),
         });
 
         owner.lastAttackTime = performance.now();
 
-        if (owner.statistics.health.getTotalValue() <= 0) {
-            owner.statistics.health.set(0);
+        if (owner.statistics.health <= 0) {
+            owner.statistics.health = 0
 
             // kill monster
             owner.die();
@@ -51,13 +51,13 @@ class Attackable {
             skillId: -1,
             targetObjType: 0,
             targetIndex: attacker.uid,
-            targetHp: attacker.statistics.health.getTotalValue(),
-            targetMp: attacker.statistics.mana.getTotalValue(),
+            targetHp: attacker.statistics.health,
+            targetMp: attacker.statistics.mana,
             damage: owner.statistics.attack.getTotalValue(),
         });
 
-        if (attacker.statistics.health.getTotalValue() <= 0) {
-            attacker.statistics.health.set(0);
+        if (attacker.statistics.health <= 0) {
+            attacker.statistics.health = 0;
         }
     }
 }

@@ -7,6 +7,8 @@
     "MSG_CHAT": 15,
     "MSG_ITEM": 16,
     "MSG_GM": 23,
+    "MSG_QUICKSLOT": 25,
+    "MSG_SKILL": 27,
     "MSG_QUEST": 35,
     "MSG_STATPOINT": 36,
     "MSG_PULSE": 38,

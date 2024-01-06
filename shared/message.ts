@@ -100,8 +100,7 @@ class Message {
 
         const isLittleEndian = type.endsWith('<');
         const isBigEndian = type.endsWith('>');
-        const baseType = (isLittleEndian || isBigEndian) ? type.slice(0, -1) : type; // remove the last character if it's '<'
-
+        const baseType = (isLittleEndian || isBigEndian) ? type.slice(0, -1) : type; // remove the last character if it's '<' or '>'
 
         const typeToMethod = {
             'i8': this._sb.readInt8,
@@ -118,34 +117,11 @@ class Message {
 
         const method = typeToMethod[baseType];
 
-
         if (!method) {
             throw new Error(`Unsupported type: ${baseType}`);
         }
     
         return method.call(this._sb);
-        
-        switch (type) {
-            case 'i8': val = this._sb.readInt8(); break;
-            case 'u8': val = this._sb.readUInt8(); break;
-            case 'stringnt': val = this._sb.readStringNT(val); break;
-            case 'i16<': val = this._sb.readInt16LE(); break;
-            case 'i16>': val = this._sb.readInt16BE(); break;
-            case 'u16<': val = this._sb.readUInt16LE(); break;
-            case 'u16>': val = this._sb.readUInt16BE(); break;
-            case 'i32<': val = this._sb.readInt32LE(); break;
-            case 'i32>': val = this._sb.readInt32BE(); break;
-            case 'u32<': val = this._sb.readUInt32LE(); break;
-            case 'u32>': val = this._sb.readUInt32BE(); break;
-            case 'i64<': val = this._sb.readBigInt64LE(); break;
-            case 'i64>': val = this._sb.readBigInt64BE(); break;
-            case 'u64<': val = this._sb.readBigUInt64LE(); break;
-            case 'u64>': val = this._sb.readBigUInt64BE(); break;
-            case 'f<': val = this._sb.readFloatLE(); break;
-            case 'f>': val = this._sb.readFloatBE(); break;
-        }
-
-        return val;
     }
 
     write(type: dataTypes, val: any) {

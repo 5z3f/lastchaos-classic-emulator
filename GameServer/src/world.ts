@@ -1,5 +1,10 @@
 
+import { GameObjectType } from './gameobject';
 import Zone from './zone';
+
+export enum ZoneType {
+    Juno = 0,
+}
 
 class World {
     zones: Zone[] = [];
@@ -8,42 +13,40 @@ class World {
         // add juno
         this.zones.push(new Zone(0, 1536, 1536));
     }
+    
+    getZone(zoneType: ZoneType) {
+        return this.zones.find(zone => zone.id === zoneType);
+    }
 
-    add({ type, zoneId, data }: { type: 'character' | 'npc' | 'monster' | 'item' | 'zone', zoneId?: number, data: any }) {
-        if (type == 'zone') {
+    add(type: GameObjectType | 'zone', zoneType: ZoneType, data: any) {
+        if (type === 'zone') {
             this.zones.push(data);
+            return true;
         }
-        else if (['character', 'monster', 'npc', 'item'].includes(type)) {
-            if (zoneId == undefined)
-                return;
 
-            let zone = this.get('zone', zoneId);
-            if (zone)
-                zone.add(type, data);
-        }
+        if (!(type in GameObjectType) || !(zoneType in ZoneType))
+            return false;
+
+        // add to zone
+        let zone = this.getZone(zoneType);
+        
+        if (!zone)
+            return false;
+        
+        zone.add(type, data);
+        return true;
     }
 
-    get(type: 'character' | 'npc' | 'monster' | 'item' | 'zone', id: number) {
-        if (type == 'zone')
-            for (let zone of this.zones)
-                if (zone.id == id)
-                    return zone;
+    filter(type: GameObjectType, opts: Function) {
+        return this.zones.flatMap(zone => zone.filter(type, opts));
     }
 
-    filter<T>(type: 'character' | 'npc' | 'monster' | 'item', opts: Function) {
-        let results: T[] = [];
-
-        for (let zone of this.zones)
-            results = [...results, ...zone.filter(type, opts)]
-
-        return results;
-    }
-
-    find(type: 'character' | 'npc' | 'monster' | 'item', opts: Function) {
-        let result;
+    find(type: GameObjectType, opts: Function) {
+        let result: any;
 
         for (let zone of this.zones) {
             result = zone.find(type, opts);
+            
             if (result)
                 break;
         }
@@ -51,9 +54,9 @@ class World {
         return result;
     }
 
-    remove({ type, zoneId }: { type: 'character' | 'npc' | 'monster' | 'item', zoneId: number }, opts: Function) {
+    remove(type: GameObjectType, zoneType: ZoneType, opts: Function) {
         for (let zone of this.zones) {
-            if (zone.id == zoneId)
+            if (zone.id == zoneType)
                 zone.remove(type, opts);
         }
     }

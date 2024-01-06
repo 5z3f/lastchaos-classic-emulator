@@ -1,146 +1,245 @@
 import log from '@local/shared/logger';
-import { InventoryRow, Inventory } from '../system/inventory';
-import BaseItem from '../baseobject/item';
 import NPC from '../gameobject/npc';
 import database from '../database';
 import game from '../game';
-import { GameObjectEvents } from '../gameobject';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
+import Character, { ClassType } from '../gameobject/character';
+import { InventoryItem } from '../system/core/inventory';
+import { CharacterEvents, GameObjectEvents, GameObjectType } from '../gameobject';
+import { ItemWearingPosition } from '../api/item';
+import { SendersType } from '../senders';
+import { EnvMessageType } from '../senders/env';
+import { ExtendMessageType, ExtendMessengerType } from './MSG_EXTEND';
+import { FriendMessageType, FriendStatusType } from './MSG_FRIEND';
+import { QUICKSLOT_MAXSLOT, QUICKSLOT_PAGE_NUM } from '../system/core/quickslot';
+import { QuickSlotMessageType } from './MSG_QUICKSLOT';
 
-export default async function (session: Session, msg: Message) {
-    session.character.spawn();
+function handleObjectAppearance(character: Character, objectPoints) {
+    objectPoints.forEach((apo) => {
+        if (apo.type !== GameObjectType.Monster)
+            return;
 
-    let visionRange = 250;
+        const gameObject = game.world.find(apo.type, (o) => o.uid === apo.uid);
 
-    session.character.on(GameObjectEvents.Move, (pos) => {
-        let objectPoints = session.character.zone.getObjectsInArea(pos.x, pos.y, visionRange);
+        if(gameObject.state.dead)
+            return;
 
-        for (let apo of objectPoints) {
-            // TODO: currently only monster objects are supported
-            if (apo.type != 'monster')
-                continue;
+        if (gameObject?.zone.id != character.zone.id)
+            return;
 
-            let obj = game.world.find(apo.type, (o) => o.uid == apo.uid);
+        if(character.isObjectVisible(apo.type, apo.uid))
+            return;
 
-            if (obj.state.dead)
-                continue;
+        gameObject.appear(character);
+    });
+}
 
-            //@ts-ignore
-            if (session.character.isObjectVisible(apo.type, apo.uid))
-                continue;
+function handleObjectDisappearance(character: Character, objectPoints) {
+    for (let objType of Object.keys(character.visibleObjectUids)) {
+        let objectUids = character.visibleObjectUids[objType];
 
-            obj.appear(session.character);
-        }
+        for (let objUid of objectUids) {
+            let inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
 
-        for (let objType of Object.keys(session.character.visibleObjectUids)) {
-            let objectUids = session.character.visibleObjectUids[objType];
+            // TODO: dont disappear objects that are in vision range of party members (if you are close to them - 100~150 units)
+            if (!inVisionRange) {
+                //@ts-ignore
+                const gameObject = game.world.find(objType, (o) => o.uid == objUid);
 
-            for (let objUid of objectUids) {
-                let inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
+                // TODO: this condition will likely disappear when the character will be added to the session
+                if ((objType === GameObjectType.Character && gameObject.uid === character.uid) || objType === GameObjectType.NPC)
+                    continue;
 
-                // TODO: dont disappear objects that are in vision range of party members (if you are close to them - 100~150 units)
-                if (!inVisionRange) {
-                    //@ts-ignore
-                    let o = game.world.find(objType, (o) => o.uid == objUid);
+                if (gameObject.state.dead)
+                    continue;
 
-                    // TODO: this condition will likely disappear when the character will be added to the session
-                    if ((objType == 'character' && o.uid == session.character.uid) || objType == 'npc')
-                        continue;
+                if (gameObject?.zone.id != character.zone.id)
+                    continue;
 
-                    if (o.state.dead)
-                        continue;
-
-                    if (o?.zone.id != session.character.zone.id)
-                        continue;
-
-                    o.disappear(session.character);
-                }
+                gameObject.disappear(character);
             }
         }
-    });
-
-    let dbInventoryItems = await database.characters.getInventoryItems(session.character.id)
-    let inventoryStacks: any[][] = [];
-
-    for (const dbInventoryItem of dbInventoryItems) {
-        if (dbInventoryItem.parentId !== null) {
-            if (!inventoryStacks[dbInventoryItem.parentId])
-                inventoryStacks[dbInventoryItem.parentId] = [];
-
-            inventoryStacks[dbInventoryItem.parentId].push(dbInventoryItem);
-        }
-        else {
-            if (!inventoryStacks[dbInventoryItem.id])
-                inventoryStacks[dbInventoryItem.id] = [];
-
-            inventoryStacks[dbInventoryItem.id].push(dbInventoryItem);
-        }
     }
+}
 
-    for (let invenStack in inventoryStacks) {
-        let inventoryStack = inventoryStacks[invenStack];
-        let firstStackItem = inventoryStack[0];
+// TODO: move the most of it somewhere else
+export default async function (session: Session<SendersType>, msg: Message) {
+    session.character.spawn();
 
-        let baseItem = game.content.items.find((el) => el.id == firstStackItem.itemId);
-
-        if (!baseItem) {
-            log.debug(`Server attempted to add an item to character inventory that does not exist. ID: ${firstStackItem.itemId}`);
-            continue;
-        }
-
-        let stackUids = inventoryStack.map((i) => i.id);
-
-        let invenRow = new InventoryRow({
-            itemUid: firstStackItem.id,
-            item: baseItem,
-            plus: firstStackItem.plus,
-            stack: inventoryStacks[invenStack].length > 1 ? inventoryStacks[invenStack].length : 1,
-            wearingPosition: firstStackItem.wearingPosition,
-            options: firstStackItem.seals,
-            stackUids: stackUids
+    // setup object visibility
+    {
+        const visionRange = 150;
+        session.character.on(GameObjectEvents.Move, (pos) => {
+            const objectPoints = session.character.zone.getObjectsInArea(pos.x, pos.y, visionRange);
+            handleObjectAppearance(session.character, objectPoints);
+            handleObjectDisappearance(session.character, objectPoints);
         });
-
-        let [tab, col, row] = firstStackItem.position.split(',');
-
-        session.character.inventory.addToPosition({ tab, col, row }, invenRow);
     }
 
-    session.send.inventory(session.character.inventory);
+    // setup and send inventory to client
+    {
+        let dbInventoryItems = await database.characters.getInventoryItems(session.character.id)
+        let inventoryStacks: any[][] = [];
+
+        for (const dbInventoryItem of dbInventoryItems) {
+            if (dbInventoryItem.parentId !== null) {
+                if (!inventoryStacks[dbInventoryItem.parentId])
+                    inventoryStacks[dbInventoryItem.parentId] = [];
+
+                inventoryStacks[dbInventoryItem.parentId].push(dbInventoryItem);
+            }
+            else {
+                if (!inventoryStacks[dbInventoryItem.id])
+                    inventoryStacks[dbInventoryItem.id] = [];
+
+                inventoryStacks[dbInventoryItem.id].push(dbInventoryItem);
+            }
+        }
+
+        function isArmor(wearingPosition: number) {
+            return wearingPosition == ItemWearingPosition.Helmet ||
+                wearingPosition == ItemWearingPosition.Shirt ||
+                wearingPosition == ItemWearingPosition.Pants ||
+                wearingPosition == ItemWearingPosition.Shield ||
+                wearingPosition == ItemWearingPosition.Gloves ||
+                wearingPosition == ItemWearingPosition.Boots;
+        }
+
+        function isWeapon(wearingPosition: number) {
+            return wearingPosition == ItemWearingPosition.Weapon;
+        }
+
+        for (let invenStack in inventoryStacks) {
+            let inventoryStack = inventoryStacks[invenStack];
+            let firstStackItem = inventoryStack[0];
+
+            let baseItem = game.content.items.find((el) => el.id == firstStackItem.itemId);
+
+            if (!baseItem) {
+                log.debug(`Server attempted to add an item to character inventory that does not exist. ID: ${firstStackItem.itemId}`);
+                continue;
+            }
+
+            let stackUids = inventoryStack.map((i) => i.id);
+
+            let invenRow = new InventoryItem({
+                itemUid: firstStackItem.id,
+                baseItem: baseItem,
+                stack: (inventoryStacks[invenStack].length > 1) ? inventoryStacks[invenStack].length : 1,
+                plus: firstStackItem.plus,
+                wearingPosition: firstStackItem.wearingPosition,
+                options: firstStackItem.seals,
+                stackUids: stackUids
+            });
+
+            let [tab, col, row] = firstStackItem.position.split(',');
+
+            session.character.inventory.addToPosition(invenRow, tab, col, row);
+
+            // emit equip event if item is armor or weapon at start
+            if(isArmor(firstStackItem.wearingPosition) || isWeapon(firstStackItem.wearingPosition)) {
+                session.character.emit(CharacterEvents.InventoryEquip, invenRow);
+            }
+        }
+
+        session.send.inventory(session.character.inventory);
+    }
 
     // send stats to client
     session.character.updateStatistics();
 
-    /*
-        // FIXME: messenger related packets doesn't work for some reason
+    // send test skills
+    {
+        session.send.skill(0, {
+            skillId: 230
+        });
 
-        session.send.extend(28, 8);
-        session.send.friend(9, {
-            uid: 9,
-            nickname: 'test',
-            class: 0,
-            status: 0,
-            group: 0
-        })
-    */
+        session.send.skill(0, {
+            skillId: 163
+        });
+    }
 
-    /*
-        let equipment = [
-            game.content.find('item', (el) => el.name == 'Warnin Heavy Shirt'),
-            game.content.find('item', (el) => el.name == 'Warnin Pants'),
-            game.content.find('item', (el) => el.name == 'Warnin Gauntlets'),
-            game.content.find('item', (el) => el.name == 'Warnin Boots'),
-            game.content.find('item', (el) => el.name == 'Warnin Helm'),
-            game.content.find('item', (el) => el.name == 'Siegfried Double Sword'),
-        ];
-    */
+    // load quickslot from database
+    { 
+        const dbQuickslotPages = await database.quickslot.get(session.character.id);
+
+        if (!dbQuickslotPages.length) {
+            for (let i = 0; i < QUICKSLOT_PAGE_NUM; i++)
+                await database.quickslot.createPage(session.character.id, i, session.character.quickslot.quickSlots[i])
+        }
+
+        for (const dbQuickslotPage of dbQuickslotPages) {
+            for (let i = 1; i <= QUICKSLOT_MAXSLOT; i++) {
+                const key = `slot${i}`;
+                const [slotTypeId, value1, value2] = dbQuickslotPage[key].split(',');
+                
+                session.character.quickslot.add({
+                    pageId: Number(dbQuickslotPage.page),
+                    slotId: i - 1,
+                    slotType: Number(slotTypeId),
+                    value1: Number(value1),
+                    value2: Number(value2),
+                    updateDb: false,
+                    sendPacket: false
+                });
+            }
+        }
+
+        // send quickslot pages to client
+        for(let i = 0; i < QUICKSLOT_PAGE_NUM; i++)
+            session.send.quickslot(QuickSlotMessageType.List, { pageId: i });
+    }
+
+    // messenger related stuff (TODO: it should be moved into some init/postinit function/entergame event)
+    {
+        // TODO: implement multiple groups
+        session.send.extend({
+            subType: ExtendMessageType.Messenger,
+            thirdType: ExtendMessengerType.GroupList,
+            groupCount: 1,
+            groupId: 0,
+            groupName: 'Friends'
+        });
+
+        const helperNames = {
+            [ClassType.Titan]: "Bronn, the Boundless",
+            [ClassType.Knight]: "Aldric, the Valiant",
+            [ClassType.Healer]: "Elara, Nature's Hand",
+            [ClassType.Mage]: "Thalos, Master of Mysteries",
+            [ClassType.Rogue]: "Raven, the Shadowstep",
+            [ClassType.Sorcerer]: "Xanthe, the Darkflare"
+        };
+
+        // Add our helper to friends list
+        session.send.friend({
+            subType: FriendMessageType.NotifyAdd,
+            uid: 0,
+            nickname: helperNames[session.character.classType],
+            class: session.character.classType,
+            status: FriendStatusType.Online
+        });
+
+        // send friends to client
+        for(let friend of session.character.messenger.friends)
+            friend.show();
+
+        // set my messenger status to online
+        session.character.messenger.status = FriendStatusType.Online;
+    }
 
     // send current time
-    session.send.env('MSG_ENV_TIME');
-    //session.send.env('MSG_ENV_TAX_CHANGE');
-
-    // all npcs are spawned only once per session
-    let result = game.world.filter<NPC>('npc', (n) => n.zone.id == session.character.zone.id);
+    session.send.env({
+        subType: EnvMessageType.Time,
+        year: 0,
+        month: 0,
+        day: 0,
+        hour: 3,
+        startTime: 0
+    });
+    
+    // FIXME: all npcs are spawned only once per session
+    let result = game.world.filter(GameObjectType.NPC, (n: NPC) => n.zone.id == session.character.zone.id) as NPC[];
 
     for (let npc of result)
         npc.appear(session.character.session);

@@ -130,5 +130,10 @@ dist
 .pnp.*
 
 package-lock.json
-PATCHES.md
 test.js
+
+PATCHES.md
+SYSTEMS.md
+
+tools/load-client-items.ts
+tools/packet-definition-2009.json

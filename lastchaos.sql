@@ -11,7 +11,7 @@
  Target Server Version : 101002
  File Encoding         : 65001
 
- Date: 10/03/2023 05:37:04
+ Date: 06/01/2024 06:42:20
 */
 
 SET NAMES utf8mb4;
@@ -75,34 +75,54 @@ CREATE TABLE `characters`  (
   `intelligence` int(11) NULL DEFAULT 0,
   `condition` int(11) NULL DEFAULT 0,
   `statpoints` int(11) NULL DEFAULT 0,
-  `role` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT 'user',
+  `role` tinyint(1) NULL DEFAULT 0,
   `updatedAt` datetime(0) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `createdAt` datetime(0) NULL DEFAULT current_timestamp,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 5 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of characters
 -- ----------------------------
-INSERT INTO `characters` VALUES (2, 9, 1, 1, 'test', 85, 1, NULL, 0, 0, 0, 0, 23, 6, 11, 3, 957, 'user', '2023-03-10 04:33:31', '2023-02-26 02:41:05');
+INSERT INTO `characters` VALUES (2, 9, 1, 1, 'test', 85, 1, NULL, 0, 0, 0, 0, 196, 20, 40, 0, 0, 3, '2023-12-25 04:11:31', '2023-02-26 02:41:05');
+INSERT INTO `characters` VALUES (5, 9, 1, 1, 'test2', 1, 0, NULL, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, '2023-12-25 04:11:32', '2023-03-12 07:02:51');
+
+-- ----------------------------
+-- Table structure for chatlog
+-- ----------------------------
+DROP TABLE IF EXISTS `chatlog`;
+CREATE TABLE `chatlog`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` tinyint(1) NULL DEFAULT NULL,
+  `sender` int(11) NULL DEFAULT NULL,
+  `receiver` int(11) NULL DEFAULT NULL,
+  `text` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `sent` tinyint(1) NULL DEFAULT NULL,
+  `createdAt` datetime(3) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of chatlog
+-- ----------------------------
 
 -- ----------------------------
 -- Table structure for friends
 -- ----------------------------
 DROP TABLE IF EXISTS `friends`;
 CREATE TABLE `friends`  (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `requester` int(11) NULL DEFAULT NULL,
-  `receiver` int(11) NULL DEFAULT NULL,
+  `id` int(11) NOT NULL,
+  `id2` int(11) NOT NULL,
   `group` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
-  `acceptedAt` datetime(0) NULL DEFAULT NULL,
-  `createdAt` datetime(0) NULL DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+  `updatedAt` datetime(3) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
+  `createdAt` datetime(3) NULL DEFAULT current_timestamp,
+  PRIMARY KEY (`id`, `id2`) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of friends
 -- ----------------------------
+INSERT INTO `friends` VALUES (5, 2, NULL, NULL, '2024-01-05 13:41:26.036');
 
 -- ----------------------------
 -- Table structure for goldflow
@@ -121,6 +141,26 @@ CREATE TABLE `goldflow`  (
 -- ----------------------------
 -- Records of goldflow
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for invites
+-- ----------------------------
+DROP TABLE IF EXISTS `invites`;
+CREATE TABLE `invites`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `type` tinyint(1) NULL DEFAULT NULL,
+  `requester` int(11) NULL DEFAULT NULL,
+  `receiver` int(11) NULL DEFAULT NULL,
+  `accepted` tinyint(1) NULL DEFAULT NULL,
+  `resolvedAt` datetime(3) NULL DEFAULT NULL,
+  `createdAt` datetime(3) NULL DEFAULT current_timestamp,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 36 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of invites
+-- ----------------------------
+INSERT INTO `invites` VALUES (35, 0, 5, 2, 1, '2024-01-05 13:41:26.000', '2024-01-05 13:41:23.833');
 
 -- ----------------------------
 -- Table structure for itemflow
@@ -158,7 +198,7 @@ CREATE TABLE `items`  (
   `updatedAt` datetime(3) NULL DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP,
   `createdAt` datetime(3) NOT NULL DEFAULT current_timestamp,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 27 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 30 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of items
@@ -168,7 +208,7 @@ INSERT INTO `items` VALUES (2, NULL, 803, 9, 2, 1, '0,0,1', 15, 3, NULL, 0, '202
 INSERT INTO `items` VALUES (3, NULL, 804, 9, 2, 1, '0,0,2', 15, 5, NULL, 0, '2023-03-10 04:19:42.803', '2023-03-10 04:19:41.455');
 INSERT INTO `items` VALUES (4, NULL, 805, 9, 2, 1, '0,0,3', 15, 6, NULL, 0, '2023-03-10 04:19:50.994', '2023-03-10 04:19:49.752');
 INSERT INTO `items` VALUES (5, NULL, 806, 9, 2, 1, '0,0,4', 15, 0, NULL, 0, '2023-03-10 04:19:57.227', '2023-03-10 04:19:56.135');
-INSERT INTO `items` VALUES (6, NULL, 2502, 9, 2, 1, '0,1,0', 15, 2, NULL, 0, '2023-03-10 04:33:56.832', '2023-03-10 04:20:09.350');
+INSERT INTO `items` VALUES (6, NULL, 2502, 9, 2, 1, '0,1,0', 15, 2, NULL, 0, '2024-01-06 05:28:38.478', '2023-03-10 04:20:09.350');
 INSERT INTO `items` VALUES (17, NULL, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '2023-03-10 04:24:38.147', '2023-03-10 04:23:57.860');
 INSERT INTO `items` VALUES (18, 17, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '2023-03-10 04:24:38.147', '2023-03-10 04:23:57.870');
 INSERT INTO `items` VALUES (19, 17, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '2023-03-10 04:24:38.147', '2023-03-10 04:23:57.870');
@@ -179,6 +219,9 @@ INSERT INTO `items` VALUES (23, 17, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '202
 INSERT INTO `items` VALUES (24, 17, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '2023-03-10 04:24:38.147', '2023-03-10 04:23:57.874');
 INSERT INTO `items` VALUES (25, 17, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '2023-03-10 04:24:38.147', '2023-03-10 04:23:57.875');
 INSERT INTO `items` VALUES (26, 17, 85, 9, 2, 1, '0,1,4', 0, NULL, NULL, 0, '2023-03-10 04:24:38.147', '2023-03-10 04:23:57.875');
+INSERT INTO `items` VALUES (27, NULL, 43, 9, 2, 1, '0,1,1', 0, NULL, NULL, 0, '2024-01-06 05:27:46.135', '2024-01-06 05:26:05.584');
+INSERT INTO `items` VALUES (28, NULL, 855, 9, 2, 1, '0,1,2', 0, NULL, NULL, 0, '2024-01-06 05:27:46.144', '2024-01-06 05:27:25.815');
+INSERT INTO `items` VALUES (29, NULL, 1315, 9, 2, 1, '0,1,3', 0, NULL, NULL, 0, '2024-01-06 05:31:33.840', '2024-01-06 05:31:33.830');
 
 -- ----------------------------
 -- Table structure for messages
@@ -197,5 +240,34 @@ CREATE TABLE `messages`  (
 -- ----------------------------
 -- Records of messages
 -- ----------------------------
+
+-- ----------------------------
+-- Table structure for quickslot
+-- ----------------------------
+DROP TABLE IF EXISTS `quickslot`;
+CREATE TABLE `quickslot`  (
+  `id` int(11) NULL DEFAULT NULL,
+  `page` tinyint(11) NULL DEFAULT NULL,
+  `slot1` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot2` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot3` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot4` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot5` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot6` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot7` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot8` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot9` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL,
+  `slot10` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of quickslot
+-- ----------------------------
+INSERT INTO `quickslot` VALUES (2, 0, '2,1,0', '0,163,-1', '2,1,2', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1');
+INSERT INTO `quickslot` VALUES (2, 1, '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1');
+INSERT INTO `quickslot` VALUES (2, 2, '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1');
+INSERT INTO `quickslot` VALUES (5, 0, '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1');
+INSERT INTO `quickslot` VALUES (5, 1, '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1');
+INSERT INTO `quickslot` VALUES (5, 2, '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1', '-1,-1,-1');
 
 SET FOREIGN_KEY_CHECKS = 1;

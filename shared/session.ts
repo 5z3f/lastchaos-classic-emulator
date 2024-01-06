@@ -10,8 +10,8 @@ const game = {
     packDefault: true,
 };
 
-type sessionOptions = {
-    server: Server,
+type sessionOptions<T> = {
+    server: Server<T>,
     socket: net.Socket,
     handlers: any,
     senders: any,
@@ -20,28 +20,29 @@ type sessionOptions = {
 /**
  * Represents a session between a client and the server.
  */
-class Session {
-    server: Server;
+class Session<T> {
+    server: Server<T>;
     socket: net.Socket;
 
-    // unique id (do not confuse with uid (user id) from database)
+    // unique id
     uid: number;
 
     // pinned character
     character: Character;
 
     // database user account id
-    accountId: number = undefined;
+    accountId: number;
 
     handlers: any;
-    send: any;
+    send: T;
 
-    constructor({ server, socket, handlers, senders }: sessionOptions) {
+    constructor({ server, socket, handlers, senders }: sessionOptions<T>) {
         this.server = server;
         this.socket = socket;
 
         this.uid = util.createSessionId();
 
+        // TODO: type this
         this.handlers = handlers;
         this.send = senders(this);
 
@@ -53,11 +54,13 @@ class Session {
             this.socket.on('data', (data) => {
                 let msg = new Message({ buffer: data });
                 let id = msg.read('u8');
+
                 if (game.packDefault)
                     id = id & 0x3f;
 
                 // TODO: restrict access to all packets except '0x03' if client is not logged in
                 let handler = that.handlers[id];
+
                 if (!handler) {
                     log.info(`Received unknown message: ${id}`);
                     log.info(`Buffer: ${msg.toString()}`)
@@ -68,12 +71,17 @@ class Session {
             });
 
             this.socket.on('error', (err) => {
-                console.error(that.toString(), err);
+                // TODO: handle this
+                log.error(`Session error: ${err}`);
+                this.close();
             });
 
             this.socket.on('close', () => {
                 this.unpinCharacter();
                 this.unpinAccount();
+
+                // remove session
+                this.server.session.remove(this.uid);
 
                 log.info(`Session disconnected: ${that.toString()}`);
             })
@@ -134,6 +142,10 @@ class Session {
      * Unpins the character from the session.
      */
     unpinCharacter() {
+        if(!this.character)
+            return;
+
+        this.character.dispose();
         this.character = undefined;
     }
 

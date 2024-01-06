@@ -1,6 +1,14 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
 
+// TODO: refactor this
+
+export enum MessageDamageType {
+    Melee,
+    Range,
+    Magic,
+}
+
 export default function (session) {
     return ({ attackerObjType, attackerIndex, damageType, skillId, targetObjType, targetIndex, targetHp, targetMp, damage }) => {
         let msg = new Message({ type: _messages.MSG_DAMAGE });

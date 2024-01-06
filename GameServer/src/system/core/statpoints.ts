@@ -1,7 +1,7 @@
-import Character from "../gameobject/character";
-import Monster from "../gameobject/monster";
-import NPC from "../gameobject/npc";
-import { Statistic } from "../types";
+import Character from "../../gameobject/character";
+import Monster from "../../gameobject/monster";
+import NPC from "../../gameobject/npc";
+import { Statistic } from "../../types";
 
 export enum StatpointType {
     Strength,

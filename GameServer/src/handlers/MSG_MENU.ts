@@ -1,16 +1,16 @@
-import log from '@local/shared/logger';
-import api from '../api';
-
 import Character from '../gameobject/character';
-import { Statistic, Modifier, ModifierType } from '../types/statistic';
+import { Statistic } from '../system/core/statistic';
 import Position from '../types/position';
-import app from '../app';
 import game from '../game';
 import database from '../database';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
+import { SendersType } from '../senders';
+import { DBMessageType } from '../senders/db';
+import { FailMessageType } from '../senders/fail';
+import { ZoneType } from '../world';
 
-export default function (session: Session, msg: Message) {
+export default function (session: Session<SendersType>, msg: Message) {
     let subType = msg.read('u8');
     let subTypeMap = {
         0: 'MSG_MENU_NEW',
@@ -38,7 +38,7 @@ export default function (session: Session, msg: Message) {
             const [exists] = await database.characters.exists(data.nickname);
 
             if (exists) {
-                session.send.fail(10); // MSG_FAIL_DB_ALREADY_NAME
+                session.send.fail(FailMessageType.NicknameAlreadyTaken);
                 return;
             }
 
@@ -74,10 +74,16 @@ export default function (session: Session, msg: Message) {
                     return;
                 }
 
-                session.send.db('MSG_DB_CHAR_EXIST', [dbCharacter, wearingItems]);
+                session.send.db({
+                    subType: DBMessageType.CharacterExist,
+                    // @ts-ignore
+                    dbCharacter, wearingItems
+                });
             }
 
-            session.send.db('MSG_DB_CHAR_END');
+            session.send.db({
+                subType: DBMessageType.CharacterExistEnd
+            });
         },
         MSG_MENU_START: async () => {
             let characterId = msg.read('i32>'); // selected character id
@@ -86,16 +92,17 @@ export default function (session: Session, msg: Message) {
 
             // TODO: packet is malformed, log it
             if (!dbCharacter) {
-                session.send.fail(13); // MSG_FAIL_DB_NOT_EXIST_CHAR
+                session.send.fail(FailMessageType.CharacterDoesntExist);
                 return;
             }
 
-            const startingZone = game.world.get('zone', 0);
+            const startingZone = game.world.getZone(ZoneType.Juno);
 
             let character = new Character({
                 session: session,
                 uid: session.uid,
                 id: dbCharacter.id,
+                role: dbCharacter.role,
                 classType: dbCharacter.class,
                 jobType: dbCharacter.profession,
                 zone: startingZone,
@@ -136,7 +143,9 @@ export default function (session: Session, msg: Message) {
             session.pinCharacter(character);
 
             // send start game message
-            session.send.db('MSG_DB_OK');
+            session.send.db({
+                subType: DBMessageType.OK,
+            })
         }
     };
 

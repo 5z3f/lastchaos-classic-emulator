@@ -1,8 +1,12 @@
 import log from '@local/shared/logger';
 
-import { Statistic, Modifier, ModifierType, ModifierOrigin } from '../types/statistic';
-import { Inventory, InventoryRow } from '../system/inventory';
-import { Statpoints, StatpointType } from '../system/statpoints';
+import { Statistic, Modifier, ModifierType, ModifierOrigin, StatisticEvents, ModifierEffectType } from '../system/core/statistic';
+import { Inventory, InventoryItem, InventoryRow } from '../system/core/inventory';
+import { Statpoints, StatpointType } from '../system/core/statpoints';
+import { Buffs, Buff, BuffEvents, BuffOrigin } from '../system/core/buff';
+import Chat from '../system/core/chat';
+import Messenger from '../system/core/messenger';
+import Quickslot from '../system/core/quickslot';
 
 import GameObject, { PacketObjectType } from './index';
 import Attackable from './traits/attackable';
@@ -10,12 +14,25 @@ import Session from '@local/shared/session';
 
 import { GameObjectEvents, CharacterEvents, GameObjectType } from './index';
 import type { Statistics } from './index';
+import { ItemWearingPosition } from '../api/item';
 
-enum Role {
+import senders, { SendersType } from '../senders';
+import { FriendStatusType } from '../handlers/MSG_FRIEND';
+
+export enum CharacterRole {
     None,
     GameSage,
     GameMaster,
     Administrator
+};
+
+export enum ClassType {
+    Titan,
+    Knight,
+    Healer,
+    Mage,
+    Rogue,
+    Sorcerer
 };
 
 type Reward = {
@@ -26,10 +43,10 @@ type Reward = {
 };
 
 type CharacterOptions = {
-    session: Session,
+    session: Session<SendersType>,
     uid?: number,
     id: number,
-    classType: number,
+    classType: ClassType,
     jobType: number,
     nickname: string,
     appearance: {
@@ -53,12 +70,12 @@ type CharacterOptions = {
         condition: number
     },
     availableStatpoints: number,
-    role: Role
+    role: CharacterRole
 };
 
 class Character extends GameObject<GameObjectType.Character> {
-    session: Session;
-    role: Role;
+    session: Session<SendersType>;
+    role: CharacterRole;
     nickname: string;
     classType: number;
     jobType: number;
@@ -81,14 +98,13 @@ class Character extends GameObject<GameObjectType.Character> {
     };
     meracJoinFlag: number;
     mapAttr: number;
+
     visibleObjectUids: {
-        character: any[],
-        npc: any[],
-        monster: any[],
-        item: any[]
+        [GameObjectType.Character]: any[],
+        [GameObjectType.NPC]: any[],
+        [GameObjectType.Monster]: any[],
+        [GameObjectType.Item]: any[]
     };
-    buffs: any[];
-    availableStatpoints: number;
 
     // traits
     attackable: Attackable;
@@ -96,22 +112,23 @@ class Character extends GameObject<GameObjectType.Character> {
     // systems
     inventory: Inventory;
     statpoints: Statpoints;
+    quickslot: Quickslot;
+    buffs: Buffs;
+    chat: Chat;
+    messenger: Messenger;
 
     constructor({ session, uid, id, classType, jobType, nickname, appearance, progress, reward, reputation, statistics, statpoints, role }: CharacterOptions) {
         // get all properties from GameObject class
         //@ts-ignore
         super(...arguments);
+        this.session = session;
 
         this.type = GameObjectType.Character;
         this.objType = PacketObjectType.Character;
 
-        this.session = session;
-
         // TODO: roles
         this.role = role;
-
         this.nickname = nickname || '';
-
         this.classType = classType ?? 0;
         this.jobType = jobType ?? 0;
 
@@ -124,8 +141,8 @@ class Character extends GameObject<GameObjectType.Character> {
             ...this.statistics,
 
             //@ts-ignore
-            magicSpeed: new Statistic(1),
-            skillSpeed: new Statistic(1),
+            magicSpeed: new Statistic(0),
+            skillSpeed: new Statistic(0),
         }
 
         this.progress = {
@@ -144,22 +161,22 @@ class Character extends GameObject<GameObjectType.Character> {
 
         this.reputation = reputation ?? 0;
 
-        // TODO: temporary
+        // TODO: pvp system
         this.pk = {
             name: 0,
             penalty: 0,
             count: 0
         };
 
-        // TODO: rename
+        // TODO: rename these variables
         this.meracJoinFlag = 0;
         this.mapAttr = 0;
 
         this.visibleObjectUids = {
-            character: [],
-            npc: [],
-            monster: [],
-            item: []
+            [GameObjectType.Character]: [],
+            [GameObjectType.NPC]: [],
+            [GameObjectType.Monster]: [],
+            [GameObjectType.Item]: []
         }
 
         // traits
@@ -167,6 +184,10 @@ class Character extends GameObject<GameObjectType.Character> {
 
         // systems
         this.inventory = new Inventory(this);
+        this.quickslot = new Quickslot(this);
+        this.buffs = new Buffs(this);
+        this.chat = new Chat(this);
+        this.messenger = new Messenger(this);
         this.statpoints = new Statpoints({
             owner: this,
             availablePoints: statpoints.availablePoints ?? 0,
@@ -176,76 +197,158 @@ class Character extends GameObject<GameObjectType.Character> {
             condition: statpoints.condition || 0
         });
 
-        // TODO: buffs / debuffs
-        this.buffs = [];
-
         Object.assign(this.statistics, statistics, this.statistics);
 
         const baseCharacterStatistics = require('../../data/characters.json')[this.classType].baseStatistics;
 
-        // TODO: this all is temporary, we need to load base statistics from the database
-        this.statistics.health = new Statistic(baseCharacterStatistics.health);
-        this.statistics.maxHealth = new Statistic(baseCharacterStatistics.health);
-        this.statistics.healthRegen = new Statistic(baseCharacterStatistics.healthRegen);
-        this.statistics.mana = new Statistic(baseCharacterStatistics.mana);
-        this.statistics.maxMana = new Statistic(baseCharacterStatistics.mana);
-        this.statistics.manaRegen = new Statistic(baseCharacterStatistics.manaRegen);
-        this.statistics.attack = new Statistic(baseCharacterStatistics.attack);
-        this.statistics.magicAttack = new Statistic(baseCharacterStatistics.magicAttack);
-        this.statistics.defense = new Statistic(baseCharacterStatistics.defense);
-        this.statistics.magicResist = new Statistic(baseCharacterStatistics.magicResist);
-        this.statistics.walkSpeed = new Statistic(baseCharacterStatistics.walkSpeed);
-        this.statistics.attackRange = new Statistic(baseCharacterStatistics.attackRange);
-        this.statistics.attackSpeed = new Statistic(baseCharacterStatistics.attackSpeed);
+        for (const name of Object.keys(baseCharacterStatistics) as (keyof Statistics)[]) {
+            if (name === 'health') {
+                this.statistics.health = baseCharacterStatistics.health;
+                this.statistics.maxHealth = new Statistic(baseCharacterStatistics.health);
+            } else if (name === 'mana') {
+                this.statistics.mana =  baseCharacterStatistics.mana;
+                this.statistics.maxMana = new Statistic(baseCharacterStatistics.mana);
+            } else {
+                this.statistics[name] = new Statistic(baseCharacterStatistics[name]);
+            }
+        }
 
+        for (const name of Object.keys(baseCharacterStatistics) as (keyof Statistics)[]) {
+            if (name === 'health' || name === 'mana')
+                continue;
+
+            this.statistics[name].on(StatisticEvents.Change, (statistic) => this.updateStatistics());
+        }
+
+        // initialize base stuff
         this.baseEvents();
+        this.addBaseBuffs();
+        this.wearingItemBuffs();
+    }
+
+    dispose() {
+        // set my messenger status to offline
+        this.messenger.status = FriendStatusType.Offline;
+
+        // remove from zone 
+        this.zone.remove(GameObjectType.Character, (ch: Character) => ch.uid === this.uid);
+
+        // run base dispose method
+        super.dispose();
     }
 
     baseEvents() {
-        this.on(CharacterEvents.InventoryEquip, (row) => {
-            this.updateStatistics();
-        });
-
-        this.on(CharacterEvents.InventoryUnequip, (row) => {
-            this.updateStatistics();
-        });
-
         this.on(GameObjectEvents.Heal, (amount) => {
-            this.updateStatistics();
+            //
+        });
+
+        this.on(CharacterEvents.StatisticUpdate, () => {
+            //
+        });
+
+        this.on(CharacterEvents.BuffRemove, (buff) => {
+            //
         });
     }
 
-    addVisibleObject(type: keyof Character["visibleObjectUids"], uid: number) {
-        let visibleObjectUids = this.visibleObjectUids[type];
+    // TODO: buff values here should be treated as base values
+    wearingItemBuffs() {
+        // value * pow(plusFactor, plus)
+        const plusFormula = (staticValue: number, plus: number) =>
+            staticValue * Math.pow((plus >= 11) ? 1.07 : 1.06, plus);
+
+        let isArmor = (wearingPosition: number) => {
+            return wearingPosition == ItemWearingPosition.Helmet ||
+                wearingPosition == ItemWearingPosition.Shirt ||
+                wearingPosition == ItemWearingPosition.Pants ||
+                wearingPosition == ItemWearingPosition.Shield ||
+                wearingPosition == ItemWearingPosition.Gloves ||
+                wearingPosition == ItemWearingPosition.Boots;
+        }
+
+        let isWeapon = (wearingPosition: number) => {
+            return wearingPosition == ItemWearingPosition.Weapon;
+        }
+
+        this.on(CharacterEvents.InventoryEquip, (item: InventoryItem) => {
+            if(isArmor(item.baseItem.wearingPosition)) {
+                let itemDefense = item.baseItem.values[0];
+                let itemMagicResist = item.baseItem.values[1];
+
+                const defenseModifier = new Modifier(ModifierType.Additive,
+                    /* standard formula */ plusFormula(itemDefense, item.plus) +
+                    ///* 10 additional defense */ (item.plus >= 8 ? 10 : 0) +
+                    /* max plus bonus */ (item.plus >= 15 ? 100 : 0)
+                )
+
+                const magicResistModifier = new Modifier(ModifierType.Additive,
+                    /* standard formula */ plusFormula(itemMagicResist, item.plus) +
+                    ///* 10 additional magic resist */ (item.plus >= 10 ? 10 : 0) +
+                    /* max plus bonus */ (item.plus >= 15 ? 100 : 0)
+                )
+
+                const armorBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-armor-' + item.baseItem.wearingPosition, [
+                    [this.statistics.defense, defenseModifier],
+                    [this.statistics.magicResist, magicResistModifier]
+                ]);
+
+                this.buffs.add(armorBuff);
+            }
+            else if(isWeapon(item.baseItem.wearingPosition)) {
+                let itemAttack = item.baseItem.values[0];
+                let totalItemAttack = plusFormula(itemAttack, item.plus) + (item.plus >= 15 ? 75 : 0);
+
+                let attackModifier = new Modifier(ModifierType.Additive, totalItemAttack);
+
+                if (this.progress.level < item.baseItem.level) {
+                    let levelDiff = item.baseItem.level - this.progress.level;
+
+                    if (levelDiff > 4) {
+                        let penaltyInPercent = (levelDiff > 12) ? .90 : (levelDiff > 8) ? .70 : (levelDiff > 4) ? .50 : 0;
+
+                        attackModifier = new Modifier(ModifierType.Negative, (totalItemAttack * penaltyInPercent));
+                    }
+                }
+
+                const weaponBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-weapon', [
+                    [this.statistics.attack, attackModifier]
+                ]);
+
+                this.buffs.add(weaponBuff);
+            }
+        });
+
+        this.on(CharacterEvents.InventoryUnequip, (item) => {
+            if(isArmor(item.baseItem.wearingPosition))
+                this.buffs.remove(null, BuffOrigin.Hardcoding, 'base-armor-' + item.baseItem.wearingPosition);
+            else if(isWeapon(item.baseItem.wearingPosition))
+                this.buffs.remove(null, BuffOrigin.Hardcoding, 'base-weapon');
+        });
+    }
+
+    addVisibleObject(type: GameObjectType, uid: number) {
+        const visibleObjectUids = this.visibleObjectUids[type];
+
         if (!visibleObjectUids.includes(uid))
             visibleObjectUids.push(uid);
     }
 
-    removeVisibleObject(type: keyof Character["visibleObjectUids"], uid: number) {
-        let objArray = this.visibleObjectUids[type];
-        if (objArray.includes(uid))
-            objArray.splice(objArray.indexOf(uid), 1);
+    removeVisibleObject(type: GameObjectType, uid: number) {
+        let visibleObjectUids = this.visibleObjectUids[type];
+
+        if (visibleObjectUids.includes(uid))
+            visibleObjectUids.splice(visibleObjectUids.indexOf(uid), 1);
     }
 
-    getVisibleObjects(type: keyof Character["visibleObjectUids"]) {
+    getVisibleObjects(type: GameObjectType) {
         return this.visibleObjectUids[type];
     }
 
-    isObjectVisible(type: keyof Character["visibleObjectUids"], uid: number) {
+    isObjectVisible(type: GameObjectType, uid: number) {
         return this.visibleObjectUids[type].includes(uid);
     }
 
-
-    calculateStatpoints() {
-        const ClassType = {
-            Titan: 0,
-            Knight: 1,
-            Healer: 2,
-            Mage: 3,
-            Rogue: 4,
-            Sorcerer: 5
-        }
-
+    addBaseBuffs() {
         // TODO: Will also need to take into account the current total of given statistic
         function calculateBonusHealth(classType: number, level: number, str: number, dex: number, int: number, con: number, multiplier: number) {
             switch (classType) {
@@ -347,119 +450,28 @@ class Character extends GameObject<GameObjectType.Character> {
             this.statpoints.condition.getTotalValue()
         );
 
-        this.statistics.maxHealth.addModifier(
-            new Modifier(ModifierType.ADDITIVE, bonusHealth)
-        );
+        const healthModifier = new Modifier(ModifierType.Additive, bonusHealth);
+        const manaModifier = new Modifier(ModifierType.Additive, bonusMana);
+        const attackModifier = new Modifier(ModifierType.Additive, bonusAttack);
 
-        this.statistics.maxMana.addModifier(
-            new Modifier(ModifierType.ADDITIVE, bonusMana)
-        );
+        let healthBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-health', [
+            [this.statistics.maxHealth, healthModifier]
+        ]);
 
-        this.statistics.attack.addModifier(
-            new Modifier(ModifierType.ADDITIVE, bonusAttack)
-        );
-    }
+        let manaBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-mana', [
+            [this.statistics.maxMana, manaModifier]
+        ]);
 
-    calculateWearingItems() {
-        // value * pow(plusFactor, plus)
-        const plusFormula = (staticValue: number, plus: number) =>
-            staticValue * Math.pow((plus >= 11) ? 1.07 : 1.06, plus);
-
-        const WearingPosition = {
-            NONE: 255, // TODO: change to -1 and convert it on the packet receive/send handler
-            Helmet: 0,
-            Shirt: 1,
-            Weapon: 2,
-            Pants: 3,
-            Shield: 4,
-            Gloves: 5,
-            Boots: 6,
-            Accesory1: 7,
-            Accesory2: 8,
-            Accesory3: 9,
-            Pet: 10
-        };
-
-        // TODO: bloodseal system
-
-        let wearingRows = this.inventory.filter(0, (r: InventoryRow) => r?.wearingPosition != 255 && r?.wearingPosition != undefined)
-
-        for (let row of wearingRows) {
-            switch (row.item.wearingPosition) {
-                case WearingPosition.Helmet:
-                case WearingPosition.Shirt:
-                case WearingPosition.Pants:
-                case WearingPosition.Shield:
-                case WearingPosition.Gloves:
-                case WearingPosition.Boots:
-                    let itemDefense = row.item.values[0];
-                    let itemMagicResist = row.item.values[1];
-
-                    this.statistics.defense.addModifier(
-                        new Modifier(ModifierType.ADDITIVE,
-                            /* standard formula */ plusFormula(itemDefense, row.plus) +
-                            /* 10 additional defense */ (row.plus >= 8 ? 10 : 0) +
-                            /* max plus bonus */ (row.plus >= 15 ? 100 : 0),
-                            ModifierOrigin.ITEM,
-                            row.item.id
-                        )
-                    );
-
-                    this.statistics.magicResist.addModifier(
-                        new Modifier(ModifierType.ADDITIVE,
-                            /* standard formula */ plusFormula(itemMagicResist, row.plus) +
-                            /* 10 additional magic resist */ (row.plus >= 10 ? 10 : 0) +
-                            /* max plus bonus */ (row.plus >= 15 ? 100 : 0),
-                            ModifierOrigin.ITEM,
-                            row.item.id
-                        )
-                    );
-                    break;
-                case WearingPosition.Weapon:
-                    let itemAttack = row.item.values[0];
-                    let totalItemAttack = plusFormula(itemAttack, row.plus) + (row.plus >= 15 ? 75 : 0);
-
-                    this.statistics.attack.addModifier(
-                        new Modifier(ModifierType.ADDITIVE, totalItemAttack, ModifierOrigin.ITEM, row.item.id)
-                    );
-
-                    if (this.progress.level < row.item.level) {
-                        let levelDiff = row.item.level - this.progress.level;
-
-                        if (levelDiff <= 4)
-                            break;
-
-                        let penaltyInPercent = (levelDiff > 12) ? .90 : (levelDiff > 8) ? .70 : (levelDiff > 4) ? .50 : 0;
-
-                        this.statistics.attack.addModifier(
-                            new Modifier(ModifierType.NEGATIVE, (totalItemAttack * penaltyInPercent), ModifierOrigin.ITEM, row.item.id)
-                        );
-                    }
-                    break;
-            }
-        }
-    }
-
-    calculateStatus() {
-        // reset all statistics to its base state, except current health and mana
-        for (let key in this.statistics) {
-            let statistic = this.statistics[key as keyof Character["statistics"]];
-            if (statistic && statistic instanceof Statistic && (key !== 'health' && key !== 'mana'))
-                statistic.reset();
-        }
-
-        // TODO: statistics
-        // TODO: wearing items
-        // TODO: passive skills
-        // TODO: buffs/debuffs
-
-        this.calculateStatpoints();
-        this.calculateWearingItems();
-    }
+        let attackBuff = new Buff(this, BuffOrigin.Hardcoding, 'base-attack', [
+            [this.statistics.attack, attackModifier]
+        ]);
+        
+        this.buffs.add(healthBuff);
+        this.buffs.add(manaBuff);
+        this.buffs.add(attackBuff);
+    };
 
     updateStatistics() {
-        this.calculateStatus();
-
         // TODO: All packet sending related functions should be separated from GameObject classes (I think)
         this.session.send.status({
             ...this.statistics,
@@ -485,13 +497,13 @@ class Character extends GameObject<GameObjectType.Character> {
             conditionAdded: this.statpoints.condition.getBaseValue()
         });
 
-        this.emit(CharacterEvents.StatisticUpdate, this);
+        this.emit(CharacterEvents.StatisticUpdate);
     }
 
     spawn() {
         log.data(`[INFO] Spawning Character (uid: ${this.uid}, id: ${this.id}, zone: ${this.zone.id})`);
 
-        this.zone.add('character', this);
+        this.zone.add(GameObjectType.Character, this);
 
         this.session.send.at({
             uid: this.uid,

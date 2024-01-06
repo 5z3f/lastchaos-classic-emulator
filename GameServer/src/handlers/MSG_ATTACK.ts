@@ -1,12 +1,13 @@
 import log from '@local/shared/logger';
-import app from '../app';
 import Monster from '../gameobject/monster';
 import Character from '../gameobject/character';
 import game from '../game';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
+import { SendersType } from '../senders';
+import { GameObjectType } from '../gameobject';
 
-export default function (session: Session, msg: Message) {
+export default function (session: Session<SendersType>, msg: Message) {
     let data = {
         attackerObjType: msg.read('u8'),
         attackerIndex: msg.read('i32>'),
@@ -18,8 +19,8 @@ export default function (session: Session, msg: Message) {
 
     log.debug(`[ATTACK] (uid: ${data.attackerIndex} >> uid: ${data.targetIndex})`);
 
-    let character = game.world.find('character', (ch) => ch.uid == data.attackerIndex) as Character;
-    let monster = game.world.find('monster', (m) => m.uid == data.targetIndex) as Monster;
+    const character = game.world.find(GameObjectType.Character, (ch) => ch.uid == data.attackerIndex) as Character;
+    const monster = game.world.find(GameObjectType.Monster, (m) => m.uid == data.targetIndex) as Monster;
 
     if (!monster) {
         return console.debug(`monster which doesn't exist has been attacked`);

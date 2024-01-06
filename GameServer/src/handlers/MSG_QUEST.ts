@@ -1,8 +1,9 @@
 import log from '@local/shared/logger';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
+import { SendersType } from '../senders';
 
-export default function (session: Session, msg: Message) {
+export default function (session: Session<SendersType>, msg: Message) {
     let subTypeMap = {
         1: 'MSG_QUEST_REQUEST',
         // TODO: 

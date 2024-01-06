@@ -7,11 +7,12 @@ import { SmartBuffer } from 'smart-buffer';
 import Monster from './gameobject/monster';
 import NPC from './gameobject/npc';
 
-import { Statistic, Modifier, ModifierType } from './types/statistic';
-import App from './app';
+import { Statistic } from './system/core/statistic';
 import { Position } from './types';
 import Character from './gameobject/character';
 import game from './game';
+import { GameObjectType } from './gameobject';
+import { ZoneType } from './world';
 
 class GamePoint extends Point {
     uid?: number;
@@ -19,7 +20,7 @@ class GamePoint extends Point {
     character?: Character;
 }
 
-enum AttributeFlagsEnum {
+export enum AttributeFlags {
     FIELD = 0,
     PEACEZONE = 10,
     PRODUCT_PUBLIC = 20,
@@ -32,35 +33,22 @@ enum AttributeFlagsEnum {
 };
 
 class Zone {
-    // TODO: move this?
-    AttributeFlags = {
-        0: 'FIELD',
-        10: 'PEACEZONE',
-        20: 'PRODUCT_PUBLIC',
-        30: 'PRODUCT_PRIVATE',
-        40: 'STAIR_UP',
-        50: 'STAIR_DOWN',
-        60: 'WARZONE',
-        70: 'FREEPKZONE',
-        255: 'BLOCK',
-    };
-
     npcs = [];
     monsters = [];
     characters = [];
     items = []; // on ground
 
-    id = -1;
-    width = 0;
-    height = 0;
+    id: ZoneType;
+    width: number;
+    height: number;
 
     attributeMap: number[][] = [];
     heightMap: number[][] = [];
 
     quadTree: QuadTree;
 
-    constructor(id: number, width: number, height: number) {
-        this.id = id ?? -1;
+    constructor(id: ZoneType, width: number, height: number) {
+        this.id = id;
 
         this.width = width;
         this.height = height;
@@ -94,9 +82,9 @@ class Zone {
                     respawnTime: spawn.respawnTime * 1000,
                     //@ts-ignore
                     statistics: {
-                        health: new Statistic(baseMonster.statistics.health),
+                        health: baseMonster.statistics.health,
                         maxHealth: new Statistic(baseMonster.statistics.health),
-                        mana: new Statistic(baseMonster.statistics.mana),
+                        mana: baseMonster.statistics.mana,
                         maxMana: new Statistic(baseMonster.statistics.mana),
                         attack: new Statistic(baseMonster.statistics.attack),
                         magicAttack: new Statistic(baseMonster.statistics.magicAttack),
@@ -115,7 +103,7 @@ class Zone {
                     }
                 });
 
-                this.add('monster', monster);
+                this.add(GameObjectType.Monster, monster);
             }
         }
 
@@ -130,11 +118,11 @@ class Zone {
                     flags: baseNPC.flags,
                     level: baseNPC.level,
                     statistics: {
-                        health: new Statistic(baseNPC.statistics.health),
+                        health: baseNPC.statistics.health,
                         //@ts-ignore
                         maxHealth: new Statistic(baseNPC.statistics.health),
                         healthRegen: new Statistic(0), // TODO: delete this later
-                        mana: new Statistic(baseNPC.statistics.mana),
+                        mana: baseNPC.statistics.mana,
                         maxMana: new Statistic(baseNPC.statistics.mana),
                         manaRegen: new Statistic(0), // TODO: delete this later
                         attack: new Statistic(baseNPC.statistics.attack),
@@ -156,7 +144,7 @@ class Zone {
                     position: spawn.position
                 });
 
-                this.add('npc', n);
+                this.add(GameObjectType.NPC, n);
             }
         }
 
@@ -172,14 +160,12 @@ class Zone {
         let attrData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${this.id}.sat`);
         const reader2 = SmartBuffer.fromBuffer(attrData);
 
-        let flagsKeys = Object.keys(this.AttributeFlags);
         for (let h = 0; h < this.height; h++) {
             for (let w = 0; w < this.width; w++) {
                 let val = reader2.readUInt8();
-                this.attributeMap[w][h] = flagsKeys.includes(String(val)) ? val : 255;
+                this.attributeMap[w][h] = (val === 0 || val in AttributeFlags) ? val : AttributeFlags.BLOCK;
             }
         }
-
     }
 
     getObjectsInArea(x: number, y: number, range: number) {
@@ -189,128 +175,62 @@ class Zone {
         return this.quadTree.query(new Box(x, y, range, range)) as GamePoint[];
     }
 
-    add(type: 'character' | 'npc' | 'monster' | 'item', data: any) {
-        // return if object doesn't have unique identifier
+    private getGameObjectsByType(type: GameObjectType) {
+        switch (type) {
+            case GameObjectType.Character:
+                return this.characters;
+            case GameObjectType.NPC:
+                return this.npcs;
+            case GameObjectType.Monster:
+                return this.monsters;
+            case GameObjectType.Item: // Not an actual game object atm (just a data structure) (TODO: make it an actual game object)
+                return this.items;
+        }
+    }
+
+    add(type: GameObjectType, data: any) {
         if (!('uid' in data))
             return;
 
-        switch (type) {
-            case 'character': {
-                let found = this.characters.find((ch: Character) => ch.uid == data.uid);
+        const gameobjects = this.getGameObjectsByType(type);
 
-                if (found)
-                    return;
+        if (gameobjects.find((item: any) => item.uid == data.uid))
+            return;
 
-                this.quadTree.insert({
-                    x: data.position.x,
-                    y: data.position.y,
-                    // @ts-ignore
-                    uid: data.uid,
-                    type: 'character',
-                    character: data
-                });
+        this.quadTree.insert({
+            x: data.position.x,
+            y: data.position.y,
+            // @ts-ignore
+            uid: data.uid,
+            type: type,
+            character: (type === GameObjectType.Character) ? data : undefined
+        });
 
-                // @ts-ignore
-                this.characters.push(data);
-                break;
-            }
-            case 'npc': {
-                let found = this.npcs.findIndex((n: NPC) => n.uid == data.uid);
-
-                if (found != -1)
-                    return;
-
-                this.quadTree.insert({
-                    x: data.position.x,
-                    y: data.position.y,
-                    // @ts-ignore
-                    uid: data.uid,
-                    type: 'npc'
-                });
-
-                // @ts-ignore
-                this.npcs.push(data);
-                break;
-            }
-            case 'monster': {
-                let found = this.monsters.findIndex((m: Monster) => m.uid == data.uid);
-
-                if (found != -1)
-                    return;
-
-                this.quadTree.insert({
-                    x: data.position.x,
-                    y: data.position.y,
-                    // @ts-ignore
-                    uid: data.uid,
-                    type: 'monster'
-                });
-
-                // @ts-ignore
-                this.monsters.push(data);
-                break;
-            }
-            /* TODO:
-            case 'item': {
-                let found = this.items.findIndex((i) => i.uid == data.uid);
-
-                if (found != -1)
-                    return;
-
-                this.quadTree.insert({
-                    x: data.position.x,
-                    y: data.position.y,
-                    uid: data.uid,
-                    type: 'item'
-                });
-
-                this.items.push(data);
-                break;
-            }
-            */
-        }
+        gameobjects.push(data);
     }
 
-    find(type: 'character' | 'npc' | 'monster' | 'item', opts: any) {
-        switch (type) {
-            case 'character':
-                return this.characters.find(opts);
-            case 'npc':
-                return this.npcs.find(opts);
-            case 'monster':
-                return this.monsters.find(opts);
-            case 'item':
-                return this.items.find(opts);
-        }
+    find(type: GameObjectType, opts: any) {
+        return this.getGameObjectsByType(type).find(opts);
     }
 
-    filter(type: 'character' | 'npc' | 'monster' | 'item', opts: any) {
-        switch (type) {
-            case 'character':
-                return this.characters.filter(opts);
-            case 'npc':
-                return this.npcs.filter(opts);
-            case 'monster':
-                return this.monsters.filter(opts);
-            case 'item':
-                return this.items.filter(opts);
-        }
+    filter(type: GameObjectType, opts: any) {
+        return this.getGameObjectsByType(type).filter(opts);
     }
 
     // TODO: this is not the best way, but sufficient for now
-    remove(type: 'character' | 'npc' | 'monster' | 'item', opts: any) {
+    remove(type: GameObjectType, opts: any) {
         switch (type) {
-            case 'character':
-                this.characters = this.characters.filter(opts);
+            case GameObjectType.Character:
+                this.characters = this.characters.filter(c => !opts(c));
                 break;
-            case 'npc':
-                this.npcs = this.npcs.filter(opts);
+            case GameObjectType.NPC:
+                this.npcs = this.npcs.filter(n => !opts(n));
                 break;
-            case 'monster':
-                this.monsters = this.monsters.filter(opts);
+            case GameObjectType.Monster:
+                this.monsters = this.monsters.filter(m => !opts(m));
                 break;
-            case 'item':
-                this.items = this.items.filter(opts);
+            case GameObjectType.Item:
+                this.items = this.items.filter(i => !opts(i));
                 break;
         }
     }
@@ -320,13 +240,14 @@ class Zone {
         let y = Math.round(position.y);
 
         if (x < 0 || x >= this.width || y < 0 || y >= this.height)
-            return !!asText ? this.AttributeFlags[255] : 255;
+            return asText ? AttributeFlags[AttributeFlags.BLOCK] : AttributeFlags.BLOCK;
 
-        let attribute = this.attributeMap[x][y] as keyof Zone["AttributeFlags"];
+        let attribute = this.attributeMap[x][y];
+
         if (!asText)
             return attribute;
 
-        return this.AttributeFlags[attribute];
+        return AttributeFlags[attribute];
     }
 
     getHeight(position: Position) {

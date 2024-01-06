@@ -1,14 +1,12 @@
 import app from "../app";
-
 import log from '@local/shared/logger';
-
 
 type item = {
     itemId: number; // ID of the item to be inserted.
     accountId: number; // ID of the account to which the item belongs.
     charId: number; // ID of the character who owns the item.
     place: number; // The location where the item is placed.
-    position: number; // The position of the item in the location.
+    position: string; // The position of the item in the location.
     plus: number; // The plus value of the item.
     seals?: {// seals of the item to be created.
         [key: string]: number

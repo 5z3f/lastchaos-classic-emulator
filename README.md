@@ -1,102 +1,85 @@
 # lastchaos-classic-emulator
-![Nksp_XuX5KlFjEQ](https://user-images.githubusercontent.com/39301116/224224116-f1b8efe9-82a4-4859-a0e5-76748a43fd5a.png)
 
-https://user-images.githubusercontent.com/39301116/187806343-64885c75-1463-4ced-ba07-f3c042920a7b.mp4
+![health-potion](https://github.com/5z3f/lastchaos-classic-emulator/assets/39301116/38fa73b0-ad47-4574-ad67-ca7fa7c9bb92)
 
 
-# setup
-```
-Import lastchaos.sql into your database and set connection details in the .env file
+# Installation
+#### __Set up the Database__
+- Import the `lastchaos.sql` file into your **MariaDB** instance. This will set up the necessary database structure for the server.
 
-> npm install
+#### __Configure the Environment__
+- Update the `.env` file with your database connection details. 
 
-> npm run loginserver
-> npm run gameserver
-```
+#### __Install Dependencies__
+- Run `npm install` in your terminal. This will install all the necessary dependencies for the project.
 
-# client
+#### __Run the Servers__
+- `npm run loginserver`
+- `npm run gameserver`
 
-**Server is currently based on client:**
-```
-> Nation:           USA
-> Version:          1107
-> Release date:     07.2008
-> --------------------------
-> Download:
-> https://mega.nz/file/Gy43nbBJ#ZmtL2TLEZbhz7DRGW8VA1Cg5p40r6LdYkWCekZd1bN0
-> --------------------------
-```
+# Client Version
+This server is currently based on the following client:
+| Version | Nation | Release date |
+| --- | --- | --- |
+| 1107 | USA | 07.2008 |
 
-**How to run it**
+You can download it [here](https://mega.nz/file/Gy43nbBJ#ZmtL2TLEZbhz7DRGW8VA1Cg5p40r6LdYkWCekZd1bN0).
 
-[sl.dta (test 127.0.0.1 4191)](https://github.com/5z3f/lastchaos-classic-emulator/files/10030763/sl.zip)
 
-[LastChaosDTA.exe](https://github.com/5z3f/lastchaos-classic-emulator/files/10042812/LastChaosDTA.zip)
+# Client Installation
+#### __Modify Connection Details__
+- Update the connection details in the `sl.dta` file. You can do this using the [LastChaosDTA](https://github.com/5z3f/lastchaos-classic-emulator/files/10042812/LastChaosDTA.zip) editor.
 
-```
-> 1. Change IP to localhost inside sl.dta using LastChaosDTA editor (or replace the file with the one I provided above)
-> 2. start bin/Nksp.exe 6574
-```
+    - *__Alternatively, you can download a pre-configured file from [here](https://github.com/5z3f/lastchaos-classic-emulator/files/10030763/sl.zip).__*
 
-```
-Ingame account:
-Username: test
-Password: test
-```
+#### __Apply Patches__
+- Apply the necessary client patches. These can be found in the [Patches](#patches) section of this document.
 
-# patches [USA Client 1107]
-```
-> File:             Engine.dll
-> Description:      IP Filter Patch
-> Starting Offset:  0x107379
-> Replace:          3c 3d 75 16 80 3d 29 c1 58 10 68
->                   ->
->                   e9 ec 03 00 00 90 90 90 90 90 90
-```
+#### __Launch the Client__
+- Run the client by executing the following command: `start bin/Nksp.exe 6574`.
 
-```
-> File:             Engine.dll
-> Description:      ReceiveFromServerNew() Encryption Patch
-> Starting Offset:  0x11110f
-> Replace:          85 c0 7d 04 33 f6 eb 1f 8b 7b 04 8b c8 8b d1 c1
->                   e9 02 8d b5 0c fc ff ff f3 a5 8b ca 83 e1 03 f3
->                   a4 8b 75 08 89 43 10
->                   ->
->                   90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
->                   90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90
->                   90 90 90 90 90 90 90
-```
+#### __Log In__
+- Use the credentials `test`:`test` to log in.
 
-```
-> File:             Engine.dll
-> Description:      SendToServerNew() Encryption Patch
-> Starting Offset:  0x111295
-> Replace:          50 8d 4d bc e8 e2 0e 00 00
->                   ->
->                   90 90 90 90 90 90 90 90 90
-```
+# Tools
+### packet-sniffer
+`py ./tools/packet-sniffer.py --version <clientVersion> --packdefault <true/false>`
 
-```
-> File:             EntitiesMP.dll
-> Description:      SendMyNextMovePosition() Tick Patch (1s -> 100ms)
-> Starting Offset:  0x00ED880
-> Replace:          E8 03 00 00
->                   ->
->                   64 00 00 00
-```
+Dumps sent/received packets into `msglog.txt`. The file is saved in your client directory. \
+**You need to have Python and Frida installed `pip install frida` to use it.**
 
-```
-> Patched Engine.dll:
-> https://mega.nz/file/LnRRURYC#tcxf1G21AegtNgfWa41Y8K-5X0Q5cpmZRazhS4k4CkQ
-```
+### export-packet-definition
+`npm run tools/export-packet-definition <jsonfileName> <MessageType.h>`
 
-```
-> Patched EntitiesMP.dll:
-> https://mega.nz/file/G6wWwDTT#uyy6BMqm9WX2QvW8VzKZtl6ryRVm9fKgWna4W0Ks9zk
-```
+Export packet definitions from official sources into `.json` file.
 
-# about
-```
-> under construction
-> by agsvn, Karmel0x
-```
+### convert-packet-dump
+`npm run tools/convert-packet-dump <packetDefinitionsFilePath> <packetDumpFilePath>`
+
+Converts first two bytes (which should be **type** and **subtype**) of every dumped packet in `msglog.txt` file into packet definition names.
+
+- also compatible with `log.txt` created by this [this](https://github.com/5z3f/lastchaos-classic-emulator/files/13848188/packet-dumper.zip) library
+
+# Patches
+<div align="center">
+
+| File | Description | Offset(s) | From | To |
+| --- | --- | --- | --- | --- |
+| Engine.dll | IP Filter Patch | 0x107379 | 3C 3D 75 16 80 3D 29 C1 58 10 68 | E9 EC 03 00 00 90 90 90 90 90 90 |
+| Engine.dll | ReceiveFromServerNew() Encryption Patch | 0x11110F | 85 C0 7D 04 33 F6 EB 1F 8B 7B 04 8B C8 8B D1 C1 E9 02 8D B5 0C FC FF FF F3 A5 8B CA 83 E1 03 F3 A4 8B 75 08 89 43 10 | 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 90 |
+| Engine.dll | SendToServerNew() Encryption Patch | 0x111295 | 50 8D 4D BC E8 E2 0E 00 00 | 90 90 90 90 90 90 90 90 90 |
+| Engine.dll | RenderToolTip() Time Calculation Patch (WORLDTIME_MUL Removal) | 0x22268F, 0x222634, 0x2225DC | 18 | 01 |
+| EntitiesMP.dll | SendMyNextMovePosition() Tick Patch (1s -> 100ms) | 0x00ED880 | E8 03 00 00 | 64 00 00 00 |
+
+</div>
+
+You can download the patched game-ready files here:
+
+- [Engine.dll](https://github.com/5z3f/lastchaos-classic-emulator/files/13848183/Engine.zip)
+- [EntitiesMP.dll](https://github.com/5z3f/lastchaos-classic-emulator/files/13848182/EntitiesMP.zip)
+
+Replace these files in the `Bin` folder.
+
+# Authors
+- [@agsvn](https://github.com/5z3f)
+- [@karmel0x](https://github.com/karmel0x)

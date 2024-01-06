@@ -1,5 +1,9 @@
+import App from '../app';
+
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+
+const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
 
 export default function (session) {
     return ({ uid, name, classType, jobType, hairType, faceType, zoneId, areaId, position }) => {
@@ -18,8 +22,14 @@ export default function (session) {
         msg.write('f<', position.z);                   // H
         msg.write('f<', position.r);                   // R
         msg.write('u8', position.layer);               // LAYER
-        msg.write('i32>', 1);                          // m_desc->m_index   // TODO:
-        msg.write('i32>', 0);                          // m_guildoutdate    // TODO:
+        msg.write('i32>', 1);                          // m_desc->m_index
+        msg.write('i32>', 0);                          // m_guildoutdate
+
+        if(clientHigherThan1107) {
+            msg.write('u8', 0);                        // m_plusEffect
+            msg.write('u8', 0);                        // ch->GetMapAttr()
+            msg.write('i32>', 0);                      // secretkey
+        }        
 
         session.write(msg.build());
     }

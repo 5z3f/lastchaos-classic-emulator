@@ -1,61 +1,61 @@
+import App from '../app';
+
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import { ItemWearingPosition } from '../api/item';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
 
-export default function (session) {
+const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
+
+function buildItemMessage(msg: Message, item) {
+    if (!item.baseItem.id) {
+        msg.write('i32>', -1);                                       // item index
+        return;
+    }
+
+    msg.write('i32>', item.itemUid);                                // unique index
+    msg.write('i32>', item.baseItem.id);                            // item index
+    msg.write('u8', item.wearingPosition == ItemWearingPosition.None ? 255 : item.wearingPosition);                          // wear position
+    msg.write('i32>', item.plus);                                   // plus
+    msg.write('i32>', item.flag);                                   // flag
+    msg.write('i32>', item.durability);                             // durability
+
+    if(clientHigherThan1107)
+        msg.write('i32>', 0);                                       // used2
+
+    msg.write('i64>', item.stack);                                  // count
+    msg.write('u8', item.options.length);                           // option count
+
+    for (let i = 0; i < item.options.length; i++) {
+        msg.write('u8', item.options[i].type);                      // option type
+        msg.write('u8', item.options[i].level);                     // option level
+    }
+}
+
+export default function (session: Session<SendersType>) {
     return (inventory) => {
-        const itemMsg = (
-            msg: Message,
-            itemUid = 0,
-            itemId = 0,
-            wearingPosition = 0,
-            plus = 0,
-            flag = 0,
-            durability = 0,
-            stack = 0,
-            options: { type: number, level: number }[] = []
-        ) => {
-            if (!itemId) {
-                msg.write('i32>', -1);      // unique index
-                return;
-            }
-
-            msg.write('i32>', itemUid);                                 // unique index
-            msg.write('i32>', itemId);                                  // item index
-            msg.write('u8', wearingPosition);                           // wear position
-            msg.write('i32>', plus);                                    // plus
-            msg.write('i32>', flag);                                    // flag
-            msg.write('i32>', durability);                              // durability
-            msg.write('i64>', stack);                                   // count
-
-            msg.write('u8', options.length);                            // option count
-
-            for (let i = 0; i < options.length; i++) {
-                msg.write('u8', options[i].type);                       // option type
-                msg.write('u8', options[i].level);                      // option level
-            }
-        };
-
-        let items = inventory.get();
+        let rows = inventory.rows;
 
         // tabs
-        for (let i = 0; i < items.length; i++) {
+        for (let i = 0; i < rows.length; i++) {
             // columns
-            for (let j = 0; j < items[i].length; j++) {
+            for (let j = 0; j < rows[i].length; j++) {
                 let msg = new Message({ type: _messages.MSG_INVENTORY });
 
                 msg.write('u8', 0);       // resultArrange
                 msg.write('u8', i);       // tabId
                 msg.write('u8', j);       // colId
 
-                for (let k = 0; k < items[i][j].length; k++) {
-                    let row = items[i][j][k];
+                for (let k = 0; k < rows[i][j].length; k++) {
+                    let item = rows[i][j][k].item;
 
-                    if (!row) {
-                        itemMsg(msg, undefined);
+                    if (!item) {
+                        msg.write('i32>', -1);                                       // item index
                         continue;
                     }
 
-                    itemMsg(msg, row.itemUid, row.item.id, row.wearingPosition, row.plus, row.flag, row.durability, row.stack, row.options);
+                    buildItemMessage(msg, item);
                 }
 
                 session.write(msg.build());

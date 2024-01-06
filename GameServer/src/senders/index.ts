@@ -25,9 +25,41 @@ import quest from './quest';
 import statpoint from './statpoint';
 import status from './status';
 import sys from './sys';
+import quickslot from './quickslot';
+import skill from './skill';
+import assist from './assist';
 
+export type SendersType = {
+    appear: ReturnType<typeof appear>,
+    attack: ReturnType<typeof attack>,
+    at: ReturnType<typeof at>,
+    autoattack: ReturnType<typeof autoattack>,
+    chat: ReturnType<typeof chat>,
+    custom: ReturnType<typeof custom>,
+    damage: ReturnType<typeof damage>,
+    db: ReturnType<typeof db>,
+    disappear: ReturnType<typeof disappear>,
+    effect: ReturnType<typeof effect>,
+    env: ReturnType<typeof env>,
+    extend: ReturnType<typeof extend>,
+    fail: ReturnType<typeof fail>,
+    friend: ReturnType<typeof friend>,
+    gm: ReturnType<typeof gm>,
+    inventory: ReturnType<typeof inventory>,
+    item: ReturnType<typeof item>,
+    move: ReturnType<typeof move>,
+    objectstatus: ReturnType<typeof objectstatus>,
+    pulse: ReturnType<typeof pulse>,
+    quest: ReturnType<typeof quest>,
+    statpoint: ReturnType<typeof statpoint>,
+    status: ReturnType<typeof status>,
+    sys: ReturnType<typeof sys>,
+    skill: ReturnType<typeof skill>,
+    quickslot: ReturnType<typeof quickslot>,
+    assist: ReturnType<typeof assist>
+};
 
-export default function (session: Session) {
+export function sendersFunction(session: Session<SendersType>) {
     return {
         appear: appear(session),
         at: at(session),
@@ -53,5 +85,10 @@ export default function (session: Session) {
         statpoint: statpoint(session),
         status: status(session),
         sys: sys(session),
+        skill: skill(session),
+        quickslot: quickslot(session),
+        assist: assist(session)
     };
 }
+
+export default sendersFunction;

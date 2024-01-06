@@ -1,5 +1,5 @@
 import BaseObject from './index';
-import { Statistic, Modifier, ModifierType } from '../types/statistic';
+import { Statistic, Modifier, ModifierType } from '../system/core/statistic';
 
 type NPCOptions = {
     id: number,

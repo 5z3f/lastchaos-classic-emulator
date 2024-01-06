@@ -1,14 +1,10 @@
-import log from '@local/shared/logger';
 import { Position } from '../types';
-import util from '../util';
-
 import GameObject, { GameObjectEvents, GameObjectType, MonsterEvents, PacketObjectType } from './index';
 import Attackable from './traits/attackable';
-import { Vector2 } from 'three';
 import Zone from '../zone';
 import Character from './character';
 import type { Statistics } from './index';
-import { Statpoints } from '../system/statpoints';
+import { Statpoints } from '../system/core/statpoints';
 
 type Reward = {
     experience: number,
@@ -74,7 +70,6 @@ class Monster extends GameObject<GameObjectType.Monster> {
             condition: statpoints.condition || 0
         });
 
-
         this.respawnTime = /*respawnTime ||*/ 15 * 1000;
 
         this.testMoveInRange(250);
@@ -86,18 +81,17 @@ class Monster extends GameObject<GameObjectType.Monster> {
         if (this.state.dead)
             return;
 
-        character.session.send.appear('monster', {
+        character.session.send.appear({
+            objType: PacketObjectType.NPC,
             uid: this.uid,
             firstAppearance: this.firstAppearance, // TODO:
             id: this.id,
-            zoneId: this.zone.id,
-            areaId: this.areaId,
             position: this.position,
-            health: this.statistics.health.getTotalValue(),
+            health: this.statistics.health,
             maxHealth: this.statistics.maxHealth.getTotalValue()
         });
 
-        character.addVisibleObject('monster', this.uid);
+        character.addVisibleObject(GameObjectType.Monster, this.uid);
 
         this.appearCount += 1;
 
@@ -123,7 +117,7 @@ class Monster extends GameObject<GameObjectType.Monster> {
             uid: this.uid
         });
 
-        character.removeVisibleObject('monster', this.uid);
+        character.removeVisibleObject(GameObjectType.Monster, this.uid);
 
         // TODO: disappearedFirstTime should indicate whether the object disappeared for the first time
         this.emit(GameObjectEvents.Disappear, /* disappearedFirstTime */);
@@ -131,8 +125,8 @@ class Monster extends GameObject<GameObjectType.Monster> {
 
     die() {
         super.die();
-        setTimeout(() => this.respawn(), this.respawnTime);
-        this.emit(MonsterEvents.Die);
+        this.wait(() => this.respawn(), this.respawnTime);
+        this.emit(GameObjectEvents.Die);
     }
 }
 

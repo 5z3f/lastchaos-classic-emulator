@@ -1,55 +1,37 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import app from '../app';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
+import { GMMessageType } from '../handlers/MSG_GM';
 import log from '@local/shared/logger';
 
-export default function (session) {
-    return (subType) => {
-        // TODO: figure out what the fug is this
-        // 0x119240  4336  ?ReceiveGmMessage@CSessionState@@QAEXPAVCNetworkMessage@@@Z
-        // -----------------------------------------------------------------------------
-        // pcVar3 = *(char **)(param_1 + 0xc) + 1;
-        // if ((char *)(*(int *)(param_1 + 4) + *(int *)(param_1 + 0x10)) < pcVar3) {
-        //     pcVar3 = Translate(s_ETRSWarning:_Message_over-readin,4);
-        //     CPrintF(pcVar3);
-        //     cVar2 = '\0';
-        // }
-        // else {
-        //     cVar2 = **(char **)(param_1 + 0xc);
-        //     *(char **)(param_1 + 0xc) = pcVar3;
-        //     *(undefined4 *)(param_1 + 0x14) = 0;
-        // }
-        // if (cVar2 == '\0') {
-        //     pCVar1 = _pNetwork + 0xe610c;
-        //     if ((CNetworkLibrary *)(*(int *)(param_1 + 4) + *(int *)(param_1 + 0x10)) <
-        //         *(CNetworkLibrary **)(param_1 + 0xc) + 1) {
-        //     pcVar3 = Translate(s_ETRSWarning:_Message_over-readin,4);
-        //     CPrintF(pcVar3);
-        //     *pCVar1 = (CNetworkLibrary)0x0;
-        //     }
-        //     else {
-        //     *pCVar1 = **(CNetworkLibrary **)(param_1 + 0xc);
-        //     *(int *)(param_1 + 0xc) = *(int *)(param_1 + 0xc) + 1;
-        //     *(undefined4 *)(param_1 + 0x14) = 0;
-        //     }
-        //     CPrintF(s_I'm_a_GM,_level_%d._104f4928,(uint)(byte)_pNetwork[0xe610c]);
-        // }
-        // return;
-        // }
-        // -------------------------------------------------------------------------------
+const clientHigherThan1107 = app.config.gameserver.clientVersion > 1107;
 
-        const whoami = (level) => {
-            //let msg = new Message({ type: msgId, subType: 0 });
-            //msg.write('i8', level) // level
-            //
-            //session.write(msg.build());
+function buildWhoAmIMessage(msg: Message, level: number) {
+    msg.write('u8', level);
+
+    if(!clientHigherThan1107)
+        msg.write('u8', 0);     // kek barunson
+}
+
+type GMMessageData = {
+    subType: GMMessageType;
+    level: number;
+};
+
+export default function (session: Session<SendersType>) {
+    return ({ subType, level }: GMMessageData) => {
+        const msg = new Message({ type: _messages.MSG_GM, subType });
+
+        switch(subType) {
+            case GMMessageType.WhoAmI:
+                buildWhoAmIMessage(msg, level);
+                break;
+            default:
+                log.error(`Unhandled message subtype: ${subType}`);
         }
 
-        const subTypeHandler = {
-            MSG_GM_WHOAMI: () => whoami(10),
-            //MSG_GM_COMMAND: () => command(),
-        };
-
-        if (subType in subTypeHandler)
-            subTypeHandler[subType]();
+        session.write(msg.build());
     }
 }

@@ -1,7 +1,9 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import { SendersType } from '.';
+import Session from '@local/shared/session';
 
-export default function (session) {
+export default function (session: Session<SendersType>) {
     // TODO:
     return () => {
         // 0x23, 0x1, 0x0, 0x0, 0x0, 0x14

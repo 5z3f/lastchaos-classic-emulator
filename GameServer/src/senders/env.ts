@@ -1,38 +1,59 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
 
-export default function (session) {
-    return (subType, data) => {
-        const taxChange = () => {
-            let msg = new Message({ type: _messages.MSG_ENV, subType: 0 });
+export enum EnvMessageType {
+    TaxChange,
+    Weather,
+    Time
+}
 
-            msg.write('i32>', 0);
-            msg.write('i32>', 70);
-            msg.write('i32>', 20);
+interface TaxChangeData {
+    subType: EnvMessageType.TaxChange;
+    zoneId: number;
+    sellRate: number;
+    buyRate: number;
+}
 
-            session.write(msg.build());
+interface WeatherData {
+    subType: EnvMessageType.Weather;
+    weather: number;
+}
+
+interface TimeData {
+    subType: EnvMessageType.Time;
+    year: number;
+    month: number;
+    day: number;
+    hour: number;
+    startTime: number;
+}
+
+type EnvMessageData = TaxChangeData | WeatherData | TimeData;
+
+export default function (session: Session<SendersType>) {
+    return (data: EnvMessageData) => {
+        let msg = new Message({ type: _messages.MSG_ENV, subType: data.subType });
+
+        switch (data.subType) {
+            case EnvMessageType.TaxChange:
+                msg.write('i32>', data.zoneId);
+                msg.write('i32>', data.sellRate);
+                msg.write('i32>', data.buyRate);
+                break;
+            case EnvMessageType.Weather:
+                msg.write('u8', data.weather);
+                break;
+            case EnvMessageType.Time:
+                msg.write('i32>', data.year);
+                msg.write('u8', data.month);
+                msg.write('u8', data.day);
+                msg.write('u8', data.hour);
+                msg.write('i32>', data.startTime);
+                break;
         }
 
-        const gameTime = (date) => {
-            let msg = new Message({ type: _messages.MSG_ENV, subType: 2 });
-
-            msg.write('i32>', date.getFullYear() - 2001);
-            msg.write('u8', date.getMonth());
-            msg.write('u8', date.getDate() - 1);
-            msg.write('u8', date.getHours());
-            msg.write('u8', date.getMinutes());
-            msg.write('u8', date.getSeconds());
-
-            session.write(msg.build());
-        }
-
-        const subTypeHandler = {
-            MSG_ENV_TAX_CHANGE: () => taxChange(),
-            //MSG_ENV_WEATHER: () =>
-            MSG_ENV_TIME: () => gameTime(new Date()),
-        };
-
-        if (subType in subTypeHandler)
-            subTypeHandler[subType]();
+        session.write(msg.build());
     }
 }

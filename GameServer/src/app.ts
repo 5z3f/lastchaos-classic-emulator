@@ -1,12 +1,15 @@
+import db from '@local/shared/db';
 import config from '../../servers.config.json';
 import game from './game';
 import { Pool } from 'mariadb';
 
-class App {
-    static config = config;
+export default class App {
+    static config = config; // FIXME: type this properly
     static dbc: Pool;
     static game: typeof game;
-};
 
-console.log('App', App);
-export default App;
+    static initialize() {
+        this.dbc = db.initialize();
+        this.game = game.initialize();
+    }
+}

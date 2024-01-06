@@ -1,7 +1,9 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import { SendersType } from '.';
+import Session from '@local/shared/session';
 
-export default function (session) {
+export default function (session: Session<SendersType>) {
     return (subType, data) => {
         let msg = new Message({ type: _messages.MSG_STATPOINT, subType: subType });
 

@@ -1,61 +1,93 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import { SendersType } from '.';
+import Session from '@local/shared/session';
+import log from '@local/shared/logger';
 
 const WEAR_COUNT = 7;
 
-export default function (session) {
-    return (subType, data) => {
-        const characterExists = ([dbCharacter, wearingItems]) => {
-            // MSG_DB -> MSG_DB_CHAR_EXIST
-            let msg = new Message({ type: _messages.MSG_DB, subType: 2 });
+// TODO: unused s2s message types will be removed probably
+export enum DBMessageType {
+    Success,
+    OK,
+    CharacterExist,
+    CharacterExistEnd,
+    OtherServer
+}
 
-            msg.write('i32>', dbCharacter.id);             // Character ID (UID)
-            msg.write('stringnt', dbCharacter.nickname);   // Nickname
-            msg.write('u8', dbCharacter.class);            // Class
-            msg.write('u8', dbCharacter.profession || 0);  // Profession
-            msg.write('u8', dbCharacter.hair);             // Hair
-            msg.write('u8', dbCharacter.face);             // Face
-            msg.write('i32>', dbCharacter.level);          // Level
-            msg.write('u64>', dbCharacter.experience);     // Current Experience
-            msg.write('u64>', 100);                        // TODO: Max Experience
-            msg.write('i32>', dbCharacter.skillpoints);    // Skill Points
-            msg.write('i32>', dbCharacter.health);         // TODO: Current Health Points
-            msg.write('i32>', dbCharacter.health);         // Max Health Points
-            msg.write('i32>', dbCharacter.mana);           // Current Mana Points
-            msg.write('i32>', dbCharacter.mana);           // TODOMax Mana Points
+interface DBCharacter {
+    id: number;
+    nickname: string;
+    class: number;
+    profession: number;
+    hair: number;
+    face: number;
+    level: number;
+    experience: number;
+    skillpoints: number;
+    recentHealth: number;
+    recentMana: number;
+}
 
-            for (let pos = 0; pos < WEAR_COUNT; pos++) {
-                let item = wearingItems.find((i) => i.wearingPosition == pos);
+interface WearingItem {
+    wearingPosition: number;
+    itemId?: number;
+    plus?: number;
+}
 
-                msg.write('i32>', item?.itemId || -1);
-                msg.write('i32>', item?.plus || 0);
-            }
+interface DBMessageData {
+    subType: DBMessageType;
+    dbCharacter?: DBCharacter;
+    wearingItems?: WearingItem[];
+}
 
-            msg.write('i32>', -1);              // Remain Character Delete Time
+function buildCharacterExistMessage(msg, dbCharacter: DBCharacter, wearingItems: WearingItem[]) {
+    msg.write('i32>', dbCharacter.id);              // Character ID (UID)
+    msg.write('stringnt', dbCharacter.nickname);    // Nickname
+    msg.write('u8', dbCharacter.class);             // Class
+    msg.write('u8', dbCharacter.profession || 0);   // Profession
+    msg.write('u8', dbCharacter.hair);              // Hair
+    msg.write('u8', dbCharacter.face);              // Face
+    msg.write('i32>', dbCharacter.level);           // Level
+    msg.write('u64>', dbCharacter.experience);      // Current Experience
+    msg.write('u64>', 100);                         // TODO: Max Experience
+    msg.write('i32>', dbCharacter.skillpoints);     // Skill Points
+    msg.write('i32>', dbCharacter.recentHealth);    // Current Health Points
+    msg.write('i32>', dbCharacter.recentHealth);    // TODO: Max Health Points
+    msg.write('i32>', dbCharacter.recentMana);      // Current Mana Points
+    msg.write('i32>', dbCharacter.recentMana);      // TODO: Max mana Points
 
-            session.write(msg.build());
+    for (let pos = 0; pos < WEAR_COUNT; pos++) {
+        let item = wearingItems.find((i) => i.wearingPosition == pos);
+
+        msg.write('i32>', item?.itemId || -1);
+        msg.write('i32>', item?.plus || 0);
+    }
+
+    msg.write('i32>', -1);                          // Remain Character Delete Time
+}
+
+export default function (session: Session<SendersType>) {
+    return ({ subType, dbCharacter, wearingItems }: DBMessageData) => {
+        let msg = new Message({ type: _messages.MSG_DB, subType: subType });
+
+        switch (subType) {
+            case DBMessageType.CharacterExist:
+                buildCharacterExistMessage(msg, dbCharacter, wearingItems);
+                break;
+            case DBMessageType.CharacterExistEnd:
+            case DBMessageType.OK:
+                // only subType is needed here
+                break;
+            case DBMessageType.Success:
+            case DBMessageType.OtherServer:
+                // TODO: handle it
+                break;
+            default:
+                log.error(`Unhandled message subtype: ${subType}`);
+                break;
         }
 
-        const characterExistEnd = () => {
-            // MSG_DB -> MSG_DB_CHAR_END
-            let msg = new Message({ type: _messages.MSG_DB, subType: 3 });
-            session.write(msg.build());
-        }
-
-        const startGame = () => {
-            let msg = new Message({ type: _messages.MSG_DB, subType: 1 });
-            session.write(msg.build());
-        }
-
-        const subTypeHandler = {
-            //MSG_DB_SUCCESS: 0,
-            MSG_DB_OK: () => startGame(),
-            MSG_DB_CHAR_EXIST: (data) => characterExists(data),
-            MSG_DB_CHAR_END: () => characterExistEnd(),
-            //MSG_DB_OTHER_SERVER: 4,
-        };
-
-        if (subType in subTypeHandler)
-            subTypeHandler[subType](data);
+        session.write(msg.build());
     }
 }

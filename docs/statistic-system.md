@@ -1,3 +1,5 @@
+#### DEPRECATED
+
 # How to use the Statistic class
 
 The Statistic class is used to represent a game statistic, such as health or strength. It provides methods for increasing and decreasing the statistic value, applying modifiers, and getting the modified value.

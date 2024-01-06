@@ -1,10 +1,11 @@
 import log from '@local/shared/logger';
 import Message from '@local/shared/message';
 import session from '@local/shared/session';
-import app from '../app';
 import database from '../database';
+import Session from '@local/shared/session';
+import { SendersType } from '../senders';
 
-export default async function (session: session, msg: Message) {
+export default async function (session: Session<SendersType>, msg: Message) {
     let data = {
         version: msg.read('u32>'),
         mode: msg.read('u8'),
@@ -31,5 +32,7 @@ export default async function (session: session, msg: Message) {
     session.pinAccount(dbAccount.id);
 
     log.data(`[IN]  >> client login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}`);
+    
+    // @ts-ignore
     session.send.channelInfo();
 }

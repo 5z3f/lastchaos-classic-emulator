@@ -3,27 +3,27 @@ import api from '../api';
 import app from '../app';
 import database from '../database';
 import Session from '@local/shared/session';
+import { SendersType } from '../senders';
+import { DBMessageType } from '../senders/db';
+import { FailMessageType } from '../senders/fail';
 
-export default async function (session: Session, msg: any) {
+export default async function (session: Session<SendersType>, msg: any) {
     let data = {
         version: msg.read('u32>'),
         mode: msg.read('u8'),
         username: msg.read('stringnt'),
         password: msg.read('stringnt'),
-        nation: msg.read('u8'),
+        nation: msg.read('u8')
     };
 
     // TODO: check client version and if its wrong send fail message: MSG_FAIL_WRONG_VERSION
 
+    // will return null if account doesn't exist or password is incorrect
     let dbAccount = await database.accounts.getByCredentials(data.username, data.password);
 
-    if (dbAccount === false) {
-        session.send.fail(3); // MSG_FAIL_WRONG_PASSWORD
+    if (!dbAccount) {
+        session.send.fail(FailMessageType.IncorrectCredentials);
         log.data(`[IN]  >> client failed login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}`);
-        return;
-    }
-    else if (dbAccount == null) {
-        session.send.fail(37); // MSG_FAIL_LOGINSERV_NO_SERVICE
         return;
     }
 
@@ -43,12 +43,18 @@ export default async function (session: Session, msg: any) {
         const wearingItems = await database.characters.getWearingItems(dbCharacter.id);
 
         if (!wearingItems) {
-            session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
+            session.send.fail(FailMessageType.DatabaseFailure);
             return;
         }
 
-        session.send.db('MSG_DB_CHAR_EXIST', [dbCharacter, wearingItems]);
+        session.send.db({
+            subType: DBMessageType.CharacterExist,
+            // @ts-ignore
+            dbCharacter, wearingItems
+        })
     }
 
-    session.send.db('MSG_DB_CHAR_END');
+    session.send.db({
+        subType: DBMessageType.CharacterExistEnd,
+    });
 }

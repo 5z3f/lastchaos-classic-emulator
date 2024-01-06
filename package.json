@@ -1,30 +1,29 @@
 {
   "name": "lastchaos-classic-emulator",
-  "version": "1.8.0",
+  "version": "0.0.9",
   "description": "Last Chaos Classic Emulator",
   "scripts": {
     "loginserver": "ts-node LoginServer/src/main.ts",
     "gameserver": "ts-node GameServer/src/main.ts",
-    "test": "mocha"
+    "tools/gameserver-via-repl": "node ./tools/gameserver-via-repl.js",
+    "tools/export-packet-definition": "ts-node ./tools/export-packet-definition.ts",
+    "tools/convert-packet-dump": "ts-node ./tools/convert-packet-dump.ts"
   },
   "author": "agsvn",
   "dependencies": {
     "@local/shared": "file:./shared/",
-    "bcrypt": "^5.1.0",
-    "chai": "^4.3.7",
+    "bcrypt": "^5.1.1",
     "chalk": "^4.1.0",
-    "dotenv": "^16.0.3",
-    "farmhash": "^3.3.0",
+    "dotenv": "^16.3.1",
     "js-quadtree": "^3.3.6",
-    "mariadb": "^3.2.0",
+    "mariadb": "^3.2.2",
     "mocha": "^10.2.0",
     "smart-buffer": "^4.2.0",
-    "three": "^0.144.0",
-    "xxhash-addon": "^2.0.1"
+    "three": "^0.159.0",
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@types/bcrypt": "^5.0.0",
-    "@types/node": "^20.4.2",
-    "@types/three": "^0.154.0"
+    "@types/node": "^20.10.5",
+    "@types/three": "^0.159.0"
   }
 }

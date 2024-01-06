@@ -1,13 +1,59 @@
-import { InventoryRow } from '../system/inventory';
+import { InventoryItem, InventoryRow, InventoryTabType } from '../system/core/inventory';
 import database from '../database';
 import game from '../game';
+import { FailMessageType } from '../senders/fail';
+import Character, { CharacterRole } from '../gameobject/character';
+import { Color } from '../system/core/chat';
+import { GameObjectType } from '../gameobject';
 
 const MAX_STACK = 9999;
 const GOLD_ID = 19;
 
+/**
+ * Represents the type of storage for an item.
+ */
+export enum ItemPlaceType {
+    Ground,
+    Inventory,
+    Warehouse
+};
+
+/**
+ * Represents the type of item message.
+ */
+export enum ItemMessageType {
+    Use,
+    Take,	
+    Throw,	
+    Arrange,
+    Delete,
+    Wear,	
+    Swap,	
+    Add,
+    Update,
+    Drop,
+    Error = 37
+};
+
+export enum ItemWearingPosition {
+	None = -1,
+	Helmet,
+	Shirt,	
+	Weapon,
+	Pants,
+	Shield,
+	Gloves,
+	Boots,
+	Accessory1,
+	Accessory2,
+	Accessory3,
+	Pet
+};
+
+
 type ItemOptions = {
+    owner: Character,// owner of the item to be created.
     id: number,// id of the item to be created.
-    owner: any,// owner of the item to be created.
     stack?: number,// number of items to be created.
     plus?: number,// plus value of the item to be created.
     seals?: {// seals of the item to be created.
@@ -22,7 +68,7 @@ class item {
         
         @returns {number|boolean} - The uid of the created item or false if creation failed.
     */
-    static async create({ id, owner, stack = 1, plus = 0, seals = undefined, into = 'ground' }: ItemOptions) {
+    static async create({ owner, id, stack = 1, plus = 0, seals = undefined, into = 'ground' }: ItemOptions) {
         let contentItem = game.content.items.find((el) => el.id == id);
 
         if (!contentItem) {
@@ -38,29 +84,28 @@ class item {
         // TODO: calling it should be simpler, like: contentItem.flags.stackable
         const isStackable = contentItem.flags.includes('COUNT');
 
-        if (stack > 1 && !isStackable && owner.role == 'admin') {
-            owner.session.send.chat({
-                chatType: 6,
-                senderId: owner.uid,
-                senderName: owner.nickname,
-                receiverName: owner.nickname,
-                text: `This item is not stackable. You can create only one item.`
-            });
-
+        if (stack > 1 && !isStackable && owner.role == CharacterRole.Administrator) {
+            owner.chat.system(`This item is not stackable. You can create only one item.`, Color.IndianRed);
             return;
         }
 
         if (stack >= 5000) {
-            owner.session.send.chat({
-                chatType: 6,
-                senderId: owner.uid,
-                senderName: owner.nickname,
-                receiverName: owner.nickname,
-                text: (stack > MAX_STACK) ? `Max allowed stack to create: ${MAX_STACK}` : `Large amount, it might take some time...`
-            });
-
-            if (stack > MAX_STACK)
+            if(stack > MAX_STACK) {
+                owner.chat.system(`Max allowed stack to create: ${MAX_STACK}`, Color.IndianRed);
                 return;
+            }
+
+            owner.chat.system('Large amount, it might take some time...');
+        }
+
+        if(into == 'inventory') {
+            // FIXME: what about event and quest items?
+            let freeRowPosition = owner.inventory.findSpace(InventoryTabType.Normal);
+
+            if (!freeRowPosition) {
+                owner.chat.system('Not enough space in inventory.');
+                return;
+            }
         }
 
         let ownerPositionString = owner.position.clone().toArray().slice(0, 2).join(',');
@@ -69,14 +114,14 @@ class item {
             itemId: contentItem.id,
             accountId: owner.session.accountId,
             charId: owner.id,
-            place: 0,
+            place: ItemPlaceType.Inventory,
             position: ownerPositionString,
             plus: plus,
             seals: seals
         });
 
         if (!itemUid) {
-            owner.session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
+            owner.session.send.fail(FailMessageType.DatabaseFailure);
             return;
         }
 
@@ -93,46 +138,33 @@ class item {
             }, (stack - 1));
 
             if (!success) {
-                owner.session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
+                owner.session.send.fail(FailMessageType.DatabaseFailure);
                 return;
             }
         }
 
         if (into == 'ground') {
             // add item to on-ground item list
-            game.world.add({
-                type: 'item', zoneId: owner.zone.id, data: {
-                    uid: itemUid,
-                    item: contentItem,
-                    stack: stack,
-                    plus: plus,
-                    charUid: owner.uid,
-                    position: owner.position.clone() // TODO: apply radius on position
-                }
-            });
+            game.world.add(GameObjectType.Item, owner.zone.id, {
+                uid: itemUid,
+                baseItem: contentItem,
+                stack: stack,
+                plus: plus,
+                charUid: owner.uid,
+                position: owner.position.clone() // TODO: apply radius on position
+            })
         }
         else if (into == 'inventory') {
             // create inventory row
-            let invenRow = new InventoryRow({
+            let inventoryItem = new InventoryItem({
                 itemUid: itemUid,
-                item: contentItem,
-                plus: plus,
-                stack: stack
+                baseItem: contentItem,
+                stack: stack,
+                plus: plus
             });
 
-            // add row to inventory
-            let rowPosition = owner.inventory.add(0, invenRow);
-
-            if (!rowPosition) {
-                owner.session.send.chat({
-                    chatType: 6,
-                    senderId: owner.uid,
-                    senderName: owner.nickname,
-                    receiverName: owner.nickname,
-                    text: `Not enough space in inventory.`
-                });
-                return;
-            }
+            // add item to inventory
+            owner.inventory.add(0, inventoryItem);
         }
 
         return itemUid;

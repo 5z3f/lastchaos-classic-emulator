@@ -8,7 +8,8 @@ import { Position } from '../types';
 import type { Statistics } from './index';
 
 import Session from '@local/shared/session';
-import { Statpoints } from '../system/statpoints';
+import { Statpoints } from '../system/core/statpoints';
+import { SendersType } from '../senders';
 
 type Reward = {
     experience: number,
@@ -72,15 +73,14 @@ class NPC extends GameObject<GameObjectType.NPC> {
         Object.assign(this.statistics, statistics, this.statistics);
     }
 
-    appear(session: Session) {
-        session.send.appear('npc', {
+    appear(session: Session<SendersType>) {
+        session.send.appear({
+            objType: PacketObjectType.NPC,
             uid: this.uid,
-            appeared: !!this.appearCount,
+            firstAppearance: this.firstAppearance,
             id: this.id,
-            zoneId: this.zone.id,
-            areaId: this.areaId,
             position: this.position,
-            health: this.statistics.health.getTotalValue(),
+            health: this.statistics.health,
             maxHealth: this.statistics.maxHealth.getTotalValue(),
         });
 
@@ -88,7 +88,7 @@ class NPC extends GameObject<GameObjectType.NPC> {
         this.emit(GameObjectEvents.Appear, /* appearedFirstTime */);
     }
 
-    disappear(session: Session) {
+    disappear(session: Session<SendersType>) {
         session.send.disappear({
             objType: this.objType,
             uid: this.uid
@@ -98,7 +98,7 @@ class NPC extends GameObject<GameObjectType.NPC> {
         this.emit(GameObjectEvents.Disappear, /* disappearedFirstTime */);
     }
 
-    update({ session, type, data }: { session: Session, type: string, data: any }) {
+    update({ session, type, data }: { session: Session<SendersType>, type: string, data: any }) {
         if (type == 'position') {
             Object.assign(this.position, data);
 
@@ -106,8 +106,9 @@ class NPC extends GameObject<GameObjectType.NPC> {
                 objType: this.objType,
                 uid: this.uid,
                 moveType: 1, // TODO
-                runSpeed: this.statistics.runSpeed,
-                position: this.position
+                speed: this.statistics.runSpeed,
+                position: this.position,
+                attribute: 0, // TODO
             })
 
             this.emit(GameObjectEvents.Move, data);

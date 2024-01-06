@@ -1,20 +1,17 @@
 
-import server from '@local/shared/server';
-import App from './app';
+import Server from '@local/shared/server';
+import app from './app';
 import handlers from './handlers';
-import senders from './senders';
+import senders, { SendersType } from './senders';
 
-import config from '../../servers.config.json';
-import db from '@local/shared/db';
-import game from './game';
+app.initialize();
 
-App.dbc = db.initialize();
-App.game = game;
-game.initialize();
+// register app as global for REPL
+global.app = app;
 
-let srv = new server({
-    host: config.gameserver.host,
-    port: config.gameserver.port,
+let srv = new Server<SendersType>({
+    host: app.config.gameserver.host,
+    port: app.config.gameserver.port,
     handlers,
-    senders: senders,
+    senders: senders as unknown as SendersType,
 });

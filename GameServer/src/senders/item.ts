@@ -1,97 +1,173 @@
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
+import { ItemMessageType } from '../api/item';
+import Session from '@local/shared/session';
+import { SendersType } from '.';
 
-export default function (session) {
-    return (subType, data) => {
-        const wear = ({ wearingPosition, srcRow, dstRow }) => {
-            let msg = new Message({ type: _messages.MSG_ITEM, subType: 5 });
+type TakeMessageData = {
+    subType: ItemMessageType.Take;
+    objType: number;
+    objUid: number;
+    itemUid: number;
+}
 
-            msg.write('u8', wearingPosition);
+function buildTakeMessage(msg: Message, data: TakeMessageData) {
+    msg.write('u8', data.objType);
+    msg.write('i32>', data.objUid);
+    msg.write('i32>', data.itemUid);
+}
 
-            msg.write('u8', srcRow.position.tab);
-            msg.write('u8', srcRow.position.col);
-            msg.write('u8', srcRow.position.row);
-            msg.write('i32>', srcRow.itemUid);
-
-            msg.write('u8', dstRow.position.tab);
-            msg.write('u8', dstRow.position.col);
-            msg.write('u8', dstRow.position.row);
-            msg.write('i32>', dstRow.itemUid);
-
-            session.write(msg.build());
-        }
-
-        const swap = ({ tab, src, dst }) => {
-            let msg = new Message({ type: _messages.MSG_ITEM, subType: 6 });
-
-            msg.write('u8', tab);
-
-            msg.write('u8', src.position.col);
-            msg.write('u8', src.position.row);
-
-            msg.write('u8', dst.position.col);
-            msg.write('u8', dst.position.row);
-
-            session.write(msg.build());
+type WearMessageData = {
+    subType: ItemMessageType.Wear;
+    wearingPosition: number;
+    src: {
+        position: {
+            tab: number;
+            col: number;
+            row: number;
         };
-
-        const drop = ({ uid, id, stack, position, objType, objUid }) => {
-            let msg = new Message({ type: _messages.MSG_ITEM, subType: 9 });
-
-            msg.write('i32>', uid);         // item uid
-            msg.write('i32>', id);          // item id
-            msg.write('i64>', stack);       // item stack
-            msg.write('f<', position.x);
-            msg.write('f<', position.y);
-            msg.write('f<', position.z);
-            msg.write('f<', position.r);
-            msg.write('u8', position.layer);
-
-            msg.write('u8', objType);       // object type
-            msg.write('i32>', objUid);      // object uid
-
-            //msg.write('u8', 1);           // not sure wat is dis
-
-            session.write(msg.build());
-        }
-
-        const add = ({ itemUid, item, position, wearingPosition, plus, flag, durability, stack/* TODO: , options */ }) => {
-            let msg = new Message({ type: _messages.MSG_ITEM, subType: 7 });
-
-            msg.write('u8', position.tab);
-            msg.write('u8', position.col);
-            msg.write('u8', position.row);
-            msg.write('i32>', itemUid);
-            msg.write('i32>', item.id);
-            msg.write('u8', wearingPosition);
-            msg.write('i32>', plus);
-            msg.write('i32>', flag);
-            msg.write('i32>', durability);
-            msg.write('i64>', stack);
-            msg.write('u8', 0);
-
-            session.write(msg.build());
-        }
-
-        const take = ({ objType, objIndex, itemUid }) => {
-            let msg = new Message({ type: _messages.MSG_ITEM, subType: 1 });
-
-            msg.write('u8', objType);
-            msg.write('i32>', objIndex);
-            msg.write('i32>', itemUid);
-
-            session.write(msg.build());
-        }
-
-        const subTypeHandler = {
-            MSG_ITEM_WEAR: () => wear(data),
-            MSG_ITEM_SWAP: () => swap(data),
-            MSG_ITEM_DROP: () => drop(data),
-            MSG_ITEM_ADD: () => add(data),
-            MSG_ITEM_TAKE: () => take(data),
+        itemUid: number;
+    };
+    dst: {
+        position: {
+            tab: number;
+            col: number;
+            row: number;
         };
+        itemUid: number;
+    };
+}
 
-        if (subType in subTypeHandler)
-            subTypeHandler[subType]();
+function buildWearMessage(msg: Message, data: WearMessageData) {
+    msg.write('u8', data.wearingPosition);
+    msg.write('u8', data.src.position.tab);
+    msg.write('u8', data.src.position.col);
+    msg.write('u8', data.src.position.row);
+    msg.write('i32>', data.src.itemUid);
+    msg.write('u8', data.dst.position.tab);
+    msg.write('u8', data.dst.position.col);
+    msg.write('u8', data.dst.position.row);
+    msg.write('i32>', data.dst.itemUid);
+}
+
+type SwapMessageData = {
+    subType: ItemMessageType.Swap;
+    tab: number;
+    src: {
+        position: {
+            col: number;
+            row: number;
+        };
+    };
+    dst: {
+        position: {
+            col: number;
+            row: number;
+        };
+    };
+}
+
+function buildSwapMessage(msg: Message, data: SwapMessageData) {
+    msg.write('u8', data.tab);
+    msg.write('u8', data.src.position.col);
+    msg.write('u8', data.src.position.row);
+    msg.write('u8', data.dst.position.col);
+    msg.write('u8', data.dst.position.row);
+}
+
+type AddMessageData = {
+    subType: ItemMessageType.Add;
+    position: {
+        tab: number;
+        col: number;
+        row: number;
+    };
+    itemUid: number;
+    itemId: number;
+    wearingPosition: number;
+    plus: number;
+    flag: number;
+    durability: number;
+    stack: number;
+}
+
+function buildAddMessage(msg: Message, data: AddMessageData) {
+    msg.write('u8', data.position.tab);
+    msg.write('u8', data.position.col);
+    msg.write('u8', data.position.row);
+    msg.write('i32>', data.itemUid);
+    msg.write('i32>', data.itemId);
+    msg.write('u8', data.wearingPosition);
+    msg.write('i32>', data.plus);
+    msg.write('i32>', data.flag);
+    msg.write('i32>', data.durability);
+    msg.write('i64>', data.stack);
+
+    // TODO: item options
+    msg.write('u8', 0);
+}
+
+type DropMessageData = {
+    subType: ItemMessageType.Drop;
+    itemUid: number;
+    itemId: number;
+    stack: number;
+    position: {
+        x: number;
+        y: number;
+        z: number;
+        r: number;
+        layer: number;
+    };
+    objType: number;
+    objUid: number;
+    alive: number;
+}
+
+function buildDropMessage(msg: Message, data: DropMessageData) {
+    msg.write('i32>', data.itemUid);
+    msg.write('i32>', data.itemId);
+    msg.write('i64>', data.stack);
+    msg.write('f<', data.position.x);
+    msg.write('f<', data.position.y);
+    msg.write('f<', data.position.z);
+    msg.write('f<', data.position.r);
+    msg.write('u8', data.position.layer);
+
+    msg.write('u8', data.objType);          // owner object type
+    msg.write('i32>', data.objUid);         // owner object uid
+    msg.write('u8', data.alive || 0);       // is owner alive?
+}
+
+type ItemMessageData = TakeMessageData | WearMessageData | SwapMessageData | AddMessageData | DropMessageData;
+                
+export default function (session: Session<SendersType>) {
+    return (data: ItemMessageData) => {
+        let msg = new Message({ type: _messages.MSG_ITEM, subType: data.subType });
+
+        switch (data.subType) {
+            case ItemMessageType.Take:
+                buildTakeMessage(msg, data);
+                break;
+            case ItemMessageType.Wear:
+                buildWearMessage(msg, data);
+                break;
+            case ItemMessageType.Swap:
+                buildSwapMessage(msg, data);
+                break;
+            case ItemMessageType.Add:
+                buildAddMessage(msg, data);
+                break;
+            case ItemMessageType.Drop:
+                buildDropMessage(msg, data);
+                break;
+            // TODO: implement 
+            //case ItemMessageType.Error:
+            //    msg.write('i32>', data);
+            //    console.log(data);
+            //    break;
+        }
+
+        session.write(msg.build());
     }
 }
