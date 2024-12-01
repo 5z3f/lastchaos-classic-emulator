@@ -30,7 +30,8 @@ export default async function (session: Session<SendersType>, msg: any) {
 
     log.data(`[IN]  >> client login request: [ver: ${data.version}, username: ${data.username}, password: ${data.password}, nation: ${data.nation}]`);
 
-    const dbCharacters = await database.accounts.getCharacters(session.accountId);
+    const accountId = session.accountId!;
+    const dbCharacters = await database.accounts.getCharacters(accountId);
 
     if (!dbCharacters) {
         //session.send.fail( ); // TODO: 

@@ -44,10 +44,11 @@ export default function (session: Session<SendersType>, msg: Message) {
                     const data = {
                         senderUid: msg.read('i32>'),
                         receiverId: msg.read('i32>'),
-                        text: msg.read('stringnt')
-                    }
+                        text: msg.read('stringnt'),
+                    };
+                    const character = session.character!;
 
-                    if (data.senderUid !== session.character.uid) {
+                    if (data.senderUid !== character.uid) {
                         // TODO: malformed packet, log it
                         return;
                     }
@@ -55,8 +56,8 @@ export default function (session: Session<SendersType>, msg: Message) {
                     session.send.extend({
                         subType: ExtendMessageType.Messenger,
                         thirdType: ExtendMessengerType.OneVsOne,
-                        senderUid: session.character.uid,
-                        senderNickname: session.character.nickname,
+                        senderUid: character.uid,
+                        senderNickname: character.nickname,
                         receiverUid: data.receiverId,
                         colorId: 1, // tmp
                         text: data.text
@@ -69,7 +70,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                             thirdType: ExtendMessengerType.OneVsOne,
                             senderUid: 0,
                             senderNickname: 'System',
-                            receiverUid: session.character.uid,
+                            receiverUid: character.uid,
                             colorId: 1,
                             text: 'lorem ipsum'
                         });
@@ -80,8 +81,8 @@ export default function (session: Session<SendersType>, msg: Message) {
                         receiverCharacter.session.send.extend({
                             subType: ExtendMessageType.Messenger,
                             thirdType: ExtendMessengerType.OneVsOne,
-                            senderUid: session.character.id,
-                            senderNickname: session.character.nickname,
+                            senderUid: character.id,
+                            senderNickname: character.nickname,
                             receiverUid: receiverCharacter.uid,
                             colorId: 1, // TODO: messenger chat color enum
                             text: data.text

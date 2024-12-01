@@ -67,7 +67,7 @@ export default class lccrypt {
         let j = 0;
 
         while (nLen-- > 0) {
-            crc = crc ^ (pDest[j++] << 8);
+            crc = crc ^ (pDest[j++]! << 8);
 
             i = 8;
             while (i-- > 0) {
@@ -107,22 +107,22 @@ export default class lccrypt {
 
         while (nIndexSrc < bufferLen) {
             // save the current decoded value
-            btTrans = byteArray[nIndexSrc];
+            btTrans = byteArray[nIndexSrc]!;
 
             // rotate to the left
             btTrans = this.CNM_ROTATE_LEFT(btTrans);
 
             // perform xor key operation
-            btTrans ^= btKey[nIndexSrc % 4];
+            btTrans ^= btKey[nIndexSrc % 4]!;
 
             // substitution
             btTrans = this.CNM_RTransTable[btTrans];
 
             // change key
-            btKey[nIndexSrc % 4] = byteArray[nIndexSrc];
+            btKey[nIndexSrc % 4] = byteArray[nIndexSrc]!;
 
             // update value in buffer
-            pTmpBuf[nIndexSrc] = btTrans;
+            pTmpBuf[nIndexSrc] = btTrans!;
 
             nIndexSrc++;
         }
@@ -180,7 +180,7 @@ export default class lccrypt {
 
         // copy data
         while (nIndexSrc < bufferLen) {
-            pTmpBuf[nIndexDest] = byteArray[nIndexSrc];
+            pTmpBuf[nIndexDest] = byteArray[nIndexSrc]!;
             nIndexDest++;
             nIndexSrc++;
         }
@@ -202,9 +202,9 @@ export default class lccrypt {
         nIndexDest = this.CNM_DUMMY_SIZE;
 
         while (nIndexDest < nLenDest) {
-            btTrans = this.CNM_TransTable[pTmpBuf[nIndexDest]]; // convert byte to an equivalent in the table 
-            btTrans ^= btKey[nIndexDest % 4];                   // perform xor key operation
-            btTrans = this.CNM_ROTATE_RIGHT(btTrans);           // rotate right
+            btTrans = this.CNM_TransTable[pTmpBuf[nIndexDest]!]!; // convert byte to an equivalent in the table 
+            btTrans ^= btKey[nIndexDest % 4]!;                   // perform xor key operation
+            btTrans = this.CNM_ROTATE_RIGHT(btTrans!);           // rotate right
             btKey[nIndexDest % 4] = btTrans;                    // change key
             pTmpBuf[nIndexDest] = btTrans;                      // store the value
 

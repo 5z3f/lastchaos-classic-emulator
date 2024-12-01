@@ -20,13 +20,13 @@ const commands = {
             const availableCommands = Object.keys(commands)
                 .filter(command => command !== "help")
                 .map(command => {
-                    return commands[command].usage;
+                    return commands[command as keyof typeof commands].usage;
                 });
 
             for (let i = 0; i < availableCommands.length; i++) {
                 api.chat.message({
                     chatType: ChatType.Whisper,
-                    text: availableCommands[i],
+                    text: availableCommands[i]!,
                     senderCharacter: '',
                     receiverCharacter: session.character
                 });
@@ -37,38 +37,40 @@ const commands = {
         "description": "Speeds up the character by a given amount",
         "usage": "/speedup <speed>",
         execute: (args: string[], session: Session<SendersType>) => {
-            const speed = parseFloat(args[0]);
+            const speed = parseFloat(args[0] || '0');
+            const character = session.character!;
 
             // remove previous speed buff
-            const prevRunSpeedBuff = session.character.buffs.find(BuffOrigin.Command, '/speedup');
+            const prevRunSpeedBuff = character.buffs.find(BuffOrigin.Command, '/speedup');
 
             if (prevRunSpeedBuff)
-                session.character.buffs.remove(prevRunSpeedBuff);
+                character.buffs.remove(prevRunSpeedBuff);
 
 
-            const runSpeedBefore = session.character.statistics.runSpeed.getTotalValue();
-            const runSpeedBuff = new Buff(session.character, BuffOrigin.Command, '/speedup', [
-                [session.character.statistics.runSpeed, new Modifier(ModifierType.Additive, speed)]
+            const runSpeedBefore = character.statistics.runSpeed.getTotalValue();
+            const runSpeedBuff = new Buff(character, BuffOrigin.Command, '/speedup', [
+                [character.statistics.runSpeed, new Modifier(ModifierType.Additive, speed)]
             ]);
 
-            session.character.buffs.add(runSpeedBuff);
-            api.chat.system(session.character, `Applied running speed buff (${runSpeedBefore} >> ${session.character.statistics.runSpeed.getTotalValue()})`, Color.LightSeaGreen);
+            character.buffs.add(runSpeedBuff);
+            api.chat.system(character, `Applied running speed buff (${runSpeedBefore} >> ${character.statistics.runSpeed.getTotalValue()})`, Color.LightSeaGreen);
         }
     },
     "itemdrop": {
         "description": "Drops an item",
         "usage": "/itemdrop <itemId> <amount> <plus>",
         execute: async (args: string[], session: Session<SendersType>) => {
-            const itemId = parseInt(args[0]);
-            const amount = parseInt(args[1]);
-            const plus = parseInt(args[2]);
+            const itemId = parseInt(args[0] || '0');
+            const amount = parseInt(args[1] || '0');
+            const plus = parseInt(args[2] || '0');
 
             if (!itemId)
                 return;
 
+            const character = session.character!;
             const itemUid = await api.item.create({
                 id: itemId,
-                owner: session.character,
+                owner: character,
                 stack: amount || 1,
                 plus: plus || 0
             });
@@ -82,32 +84,33 @@ const commands = {
                 itemUid: itemUid,
                 itemId: itemId,
                 stack: amount || 1,
-                position: session.character.position,
+                position: character.position,
                 objType: 1,
-                objUid: session.character.uid,
+                objUid: character.uid,
                 alive: 0 // TODO: implement
             });
 
-            api.chat.system(session.character, `Item created (uid: ${itemUid}, id: ${itemId})`, Color.LightSeaGreen);
+            api.chat.system(character, `Item created (uid: ${itemUid}, id: ${itemId})`, Color.LightSeaGreen);
         }
     },
     "itemget": {
         "description": "Gets an item",
         "usage": "/itemget <itemId> <amount> <plus>",
         execute: async (args: string[], session: Session<SendersType>) => {
-            const itemId = parseInt(args[0]);
-            const amount = parseInt(args[1]);
-            const plus = parseInt(args[2]);
+            const itemId = parseInt(args[0] || '0');
+            const amount = parseInt(args[1] || '0');
+            const plus = parseInt(args[2] || '0');
+            const character = session.character!;
 
             const itemUid = await api.item.create({
                 id: itemId,
-                owner: session.character,
+                owner: character,
                 stack: amount || 1,
                 plus: plus || 0,
                 into: 'inventory'
             });
 
-            api.chat.system(session.character, `Item created (uid: ${itemUid}, id: ${itemId})`, Color.LightSeaGreen);
+            api.chat.system(character, `Item created (uid: ${itemUid}, id: ${itemId})`, Color.LightSeaGreen);
         }
     },
     "search": {
@@ -119,18 +122,24 @@ const commands = {
                 'monster': ContentType.Monster,
                 'npc': ContentType.NPC
             };
+            const character = session.character!;
 
-            const contentType = contentTypeMap[args[0].toLowerCase()];
+            const arg0 = args[0]?.toLowerCase() as keyof typeof contentTypeMap | undefined;
+            if (!arg0) {
+                api.chat.system(character, 'Please provide a content type', Color.IndianRed);
+                return;
+            }
 
-            if (contentType == undefined) {
-                api.chat.system(session.character, 'Please provide a valid content type', Color.IndianRed);
+            const contentType = contentTypeMap[arg0];
+            if (!contentType) {
+                api.chat.system(character, 'Please provide a valid content type', Color.IndianRed);
                 return;
             }
 
             const text = args[1] ? args[1].toLowerCase() : '';
 
             if (!text) {
-                api.chat.system(session.character, 'Please provide a search term', Color.IndianRed);
+                api.chat.system(character, 'Please provide a search term', Color.IndianRed);
                 return;
             }
 
@@ -152,7 +161,7 @@ const commands = {
             });
 
             if (!paginatedItems.length) {
-                api.chat.system(session.character, `No results found`, Color.IndianRed);
+                api.chat.system(character, `No results found`, Color.IndianRed);
                 return;
             }
 
@@ -171,13 +180,14 @@ const commands = {
         "usage": "/spawn <monsterId>",
         execute: (args: string[], session: Session<SendersType>) => {
             // TODO: Spawn NPCs
-            const contentId = parseInt(args[0]);
+            const contentId = parseInt(args[0] || '0');
+            const character = session.character!;
 
             // find monster from database by id
             const baseMonster = game.content.monsters.find((m) => m.id === contentId);
 
             if (!baseMonster) {
-                api.chat.system(session.character, `Not found monster with id ${contentId}`, Color.IndianRed);
+                api.chat.system(character, `Not found monster with id ${contentId}`, Color.IndianRed);
                 return;
             }
 
@@ -185,8 +195,8 @@ const commands = {
                 id: baseMonster.id,
                 flags: baseMonster.flags,
                 level: baseMonster.level,
-                zone: session.character.zone,
-                position: session.character.position,
+                zone: character.zone,
+                position: character.position,
                 respawnTime: 0, // TODO:
                 //@ts-ignore
                 statistics: {
@@ -212,40 +222,42 @@ const commands = {
             });
 
             game.world.add(GameObjectType.Monster, ZoneType.Juno, monster);
-            monster.appear(session.character);
+            monster.appear(character);
 
-            api.chat.system(session.character, `Spawned monster ${contentId}`, Color.LightSeaGreen);
+            api.chat.system(character, `Spawned monster ${contentId}`, Color.LightSeaGreen);
         }
     },
     "hp": {
         "description": "Set character's health points by percentage or value (can't exceed max health points)",
         "usage": "/hp <percentOrValue>",
         execute: (args: string[], session: Session<SendersType>) => {
-            const percentage = args[0].includes('%');
+            const arg0 = args[0] || '100%';
+            const percentage = arg0.includes('%');
+            const character = session.character!;
 
             let value = 0;
             if (percentage) {
-                value = parseInt(args[0].replace('%', ''));
-                value = session.character.statistics.maxHealth.getTotalValue() * (value / 100);
+                value = parseInt(arg0.replace('%', ''));
+                value = character.statistics.maxHealth.getTotalValue() * (value / 100);
             }
             else {
-                value = parseInt(args[0]);
+                value = parseInt(arg0);
             }
 
             if (value < 1) {
-                api.chat.system(session.character, `Please provide a valid value`, Color.IndianRed);
+                api.chat.system(character, `Please provide a valid value`, Color.IndianRed);
                 return;
             }
 
-            if (value > session.character.statistics.maxHealth.getTotalValue()) {
-                api.chat.system(session.character, `Health value can't exceed max health points`, Color.IndianRed);
+            if (value > character.statistics.maxHealth.getTotalValue()) {
+                api.chat.system(character, `Health value can't exceed max health points`, Color.IndianRed);
                 return;
             }
 
-            session.character.statistics.health = value;
-            session.character.updateStatistics();
+            character.statistics.health = value;
+            character.updateStatistics();
 
-            api.chat.system(session.character, `Set health points to ${value}`, Color.LightSeaGreen);
+            api.chat.system(character, `Set health points to ${value}`, Color.LightSeaGreen);
         }
     }
 

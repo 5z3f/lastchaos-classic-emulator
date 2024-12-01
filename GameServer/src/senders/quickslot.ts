@@ -17,7 +17,8 @@ function buildSlotMessage(session: Session<SendersType>, msg: Message, pageId: n
     let value1: number;
     let value2: number;
 
-    [slotType, value1, value2] = session.character.quickslot.quickSlots[pageId][slot];
+    const character = session.character!;
+    [slotType, value1, value2] = character.quickslot.quickSlots[pageId][slot];
     msg.write('u8', (slotType === QuickSlotType.Empty) ? 255 : slotType);
 
     switch (slotType) {

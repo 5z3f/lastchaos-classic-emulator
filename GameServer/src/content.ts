@@ -59,7 +59,7 @@ export default class Content {
 
     loadBuffScripts() {
         for (const buffId in buffScripts) {
-            const buffScript = buffScripts[buffId];
+            const buffScript = buffScripts[buffId as keyof typeof buffScripts];
             this.buffs.push(buffScript);
         }
     }

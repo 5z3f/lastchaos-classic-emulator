@@ -115,11 +115,9 @@ export default class Message {
             'f': isLittleEndian ? this._sb.readFloatLE : this._sb.readFloatBE,
         };
 
-        const method = typeToMethod[baseType];
-
-        if (!method) {
+        const method = typeToMethod[baseType as keyof typeof typeToMethod] as any;
+        if (!method)
             throw new Error(`Unsupported type: ${baseType}`);
-        }
 
         return method.call(this._sb);
     }

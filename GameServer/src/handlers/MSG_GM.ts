@@ -12,7 +12,8 @@ export enum GMMessageType {
 }
 
 function handleWhoAmI(session: Session<SendersType>) {
-    if (session.character.role === CharacterRole.None)
+    const character = session.character!;
+    if (character.role === CharacterRole.None)
         return;
 
     session.send.gm({
@@ -20,8 +21,8 @@ function handleWhoAmI(session: Session<SendersType>) {
         level: 10, // TODO: implement role levels
     });
 
-    const roleName = CharacterRole[session.character.role];
-    session.character.chat.system(`Authorized as ${roleName}`, Color.LightSeaGreen);
+    const roleName = CharacterRole[character.role];
+    character.chat.system(`Authorized as ${roleName}`, Color.LightSeaGreen);
 }
 
 function handleCommand(session: Session<SendersType>, msg: Message) {
@@ -30,10 +31,11 @@ function handleCommand(session: Session<SendersType>, msg: Message) {
     };
 
     const [commandName, ...args] = data.command.split(' ');
-    const command = commands[commandName];
+    const command = commands[commandName as keyof typeof commands];
 
     if (!command) {
-        session.character.chat.system(`Unknown command: ${commandName}`, Color.IndianRed);
+        const character = session.character!;
+        character.chat.system(`Unknown command: ${commandName}`, Color.IndianRed);
         return;
     }
 

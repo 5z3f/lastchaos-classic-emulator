@@ -12,6 +12,8 @@ export default function (session: Session<SendersType>) {
         const MSG_SKILL_FIRE = 3;
         const MSG_SKILL_CANCEL = 4;
 
+        const character = session.character!;
+
         if (subType === MSG_SKILL_LIST) {
             msg.write('u8', 1); // test 1 skill
             msg.write('i32>', data.skillId); // triple bash
@@ -45,17 +47,17 @@ export default function (session: Session<SendersType>) {
 
             const isselftmp = data.x === 0 && data.y === 0;
 
-            msg.write('f<', isselftmp ? 0.0 : session.character.position.x);    // 0xe6, 0x1, 0x90, 0x44
-            msg.write('f<', isselftmp ? 0.0 : session.character.position.y);    // 0xe1, 0x9e, 0x3e, 0x44
-            msg.write('f<', isselftmp ? 0.0 : session.character.position.z);    // 0xb8, 0xde, 0x1e, 0x43
-            msg.write('f<', isselftmp ? 0.0 : session.character.position.r);    // 0x31, 0x2e, 0xa4, 0xc1
-            msg.write('u8', isselftmp ? 0 : session.character.position.layer);  // 0x0
+            msg.write('f<', isselftmp ? 0.0 : character.position.x);    // 0xe6, 0x1, 0x90, 0x44
+            msg.write('f<', isselftmp ? 0.0 : character.position.y);    // 0xe1, 0x9e, 0x3e, 0x44
+            msg.write('f<', isselftmp ? 0.0 : character.position.z);    // 0xb8, 0xde, 0x1e, 0x43
+            msg.write('f<', isselftmp ? 0.0 : character.position.r);    // 0x31, 0x2e, 0xa4, 0xc1
+            msg.write('u8', isselftmp ? 0 : character.position.layer);  // 0x0
 
             console.log('sent skill fire', data, msg.toString());
         }
         else if (subType === MSG_SKILL_CANCEL) {
-            msg.write('u8', session.character.objType);
-            msg.write('i32>', session.character.uid);
+            msg.write('u8', character.objType);
+            msg.write('i32>', character.uid);
         }
 
         session.write(msg.build());

@@ -26,9 +26,7 @@ export default function (session: Session<SendersType>, msg: Message) {
         3: 'MSG_MOVE_STOP',
     };
 
-    const character = session.character;
-    if (!character)
-        return;
+    const character = session.character!;
 
     if (character.uid != data.uid) {
         // TODO: sorcerer summoners
@@ -80,11 +78,11 @@ export default function (session: Session<SendersType>, msg: Message) {
         uid: data.uid,
         speed: 0.0,
         position: {
-            x: session.character.position.x,
-            y: session.character.position.y,
-            z: session.character.position.z,
-            r: session.character.position.r,
-            layer: session.character.position.layer,
+            x: character.position.x,
+            y: character.position.y,
+            z: character.position.z,
+            r: character.position.r,
+            layer: character.position.layer,
         },
         attribute: 0,
     })

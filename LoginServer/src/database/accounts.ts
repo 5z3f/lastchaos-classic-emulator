@@ -22,7 +22,11 @@ export default class Accounts {
         try {
             const [dbAccount]: DBAccount[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
 
-            if (!(await bcrypt.compare(password, dbAccount.hash)))
+            if (!dbAccount)
+                return false;
+
+            const isValid = await bcrypt.compare(password, dbAccount.hash);
+            if (!isValid)
                 return false;
 
             return dbAccount;

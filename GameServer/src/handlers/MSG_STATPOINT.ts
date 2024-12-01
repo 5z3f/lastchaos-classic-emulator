@@ -32,25 +32,26 @@ export default function (session: Session<SendersType>, msg: Message) {
                 return false;
             }
 
-            if (session.character.statpoints.availablePoints < amount) {
+            const character = session.character!;
+            if (character.statpoints.availablePoints < amount) {
                 // TODO: handle error
                 return false;
             }
 
             const statpointTypeKey = Object.keys(StatpointType).find(key => StatpointType[key] === statpointType) as string;
-            const result = await database.characters.increaseStatistic(session.character.id, statpointTypeKey);
+            const result = await database.characters.increaseStatistic(character.id, statpointTypeKey);
 
             if (result) {
-                session.character.statpoints.add(statpointType, amount);
-                session.character.statpoints.availablePoints -= amount;
+                character.statpoints.add(statpointType, amount);
+                character.statpoints.availablePoints -= amount;
 
                 session.send.statpoint(1, {
                     type: statpointType,
                     value: amount,
-                    remainingPoints: session.character.statpoints.availablePoints
+                    remainingPoints: character.statpoints.availablePoints
                 });
 
-                session.character.updateStatistics();
+                character.updateStatistics();
             }
             else {
                 session.send.fail(14); // MSG_FAIL_DB_UNKNOWN

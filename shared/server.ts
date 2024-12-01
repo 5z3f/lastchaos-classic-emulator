@@ -19,8 +19,8 @@ export default class Server<T> {
     constructor({ host, port, handlers, senders }: serverOptions<T>) {
         const that = this;
 
-        this.host = host;
-        this.port = port;
+        this.host = host || '127.0.0.1';
+        this.port = port || 4190;
 
         // hold current sessions
         this.sessions = [];

@@ -42,8 +42,9 @@ export default function (session: Session<SendersType>, msg: Message) {
                 return;
             }
 
+            const accountId = session.accountId!;
             const result = await database.characters.create({
-                accountId: session.accountId,
+                accountId: accountId,
                 nickname: data.nickname,
                 classId: data.classId,
                 faceId: data.faceId,
@@ -60,7 +61,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             // TODO: add standard items here (?)
 
             // TODO: this code is duplicated, we need to import it from somewhere (origin: MSG_LOGIN)
-            const dbCharacters = await database.accounts.getCharacters(session.accountId);
+            const dbCharacters = await database.accounts.getCharacters(accountId);
             if (!dbCharacters) {
                 session.send.fail(14); // MSG_FAIL_DB_UNKNOWN
                 return;

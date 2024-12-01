@@ -35,13 +35,15 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 return;
             }
 
+            const character = session.character!;
+
             // IMPORTANT: Check if the moved inventory item is pinned to the quickslot.
             // If it is, send the new slot row and column to prevent crashes.
             // TODO: Implement logic to handle pinned quickslot items.
 
             switch (data.slotType) {
                 case QuickSlotType.Empty:
-                    session.character.quickslot.remove({
+                    character.quickslot.remove({
                         pageId: data.pageId,
                         slotId: data.slotId
                     });
@@ -50,7 +52,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 case QuickSlotType.Action:
                     const id = msg.read('i32>');
 
-                    session.character.quickslot.add({
+                    character.quickslot.add({
                         pageId: data.pageId,
                         slotId: data.slotId,
                         slotType: data.slotType,
@@ -61,7 +63,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                     const row = msg.read('u8');
                     const col = msg.read('u8');
 
-                    session.character.quickslot.add({
+                    character.quickslot.add({
                         pageId: data.pageId,
                         slotId: data.slotId,
                         slotType: data.slotType,
@@ -85,7 +87,9 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 return;
             }
 
-            session.character.quickslot.swap({
+            const character = session.character!;
+
+            character.quickslot.swap({
                 pageId: data.pageId,
                 slotIdFrom: data.slotIdFrom,
                 slotIdTo: data.slotIdTo

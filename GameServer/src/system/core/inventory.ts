@@ -45,12 +45,12 @@ export class InventoryItem {
     options: number[];
 
     // can be undefined at the beginning
-    position: { tab: InventoryTabType, col: number, row: number };
+    position?: { tab: InventoryTabType, col: number, row: number };
 
     constructor({ itemUid, baseItem, stack, plus, wearingPosition, flag, durability, options, stackUids }: InventoryItemOptions) {
         this.itemUid = itemUid;
         this.baseItem = baseItem;
-        this.stack = stack;
+        this.stack = stack || 1;
         this.stackUids = stackUids || [];
         this.wearingPosition = wearingPosition ?? ItemWearingPosition.None;
         this.plus = plus || 0;
@@ -67,7 +67,7 @@ export class InventoryItem {
 
 // FIXME: currently almost unused but maybe later there will be some changes
 export class InventoryRow {
-    item: InventoryItem = null;
+    item?: InventoryItem;
 
     constructor(item?: InventoryItem) {
         this.item = item;
@@ -364,13 +364,11 @@ export class Inventory {
             for (let row = 0; row < MAX_ROWS; row++) {
                 const rowItem = this.rows[tabType][col][row];
                 if (!rowItem.item) {
-                    if (!rowItem.item) {
-                        return {
-                            tab: tabType,
-                            col: col,
-                            row: row
-                        };
-                    }
+                    return {
+                        tab: tabType,
+                        col: col,
+                        row: row
+                    };
                 }
             }
         }

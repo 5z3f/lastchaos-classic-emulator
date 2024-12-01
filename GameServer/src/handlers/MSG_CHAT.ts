@@ -15,7 +15,8 @@ export default async function (session: Session<SendersType>, msg: Message) {
         text: msg.read('stringnt'),
     };
 
-    if (data.senderId != session.character.uid || data.senderName != session.character.nickname) {
+    const character = session.character!;
+    if (data.senderId != character.uid || data.senderName != character.nickname) {
         // TODO: log this
         return;
     }

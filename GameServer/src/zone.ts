@@ -155,7 +155,7 @@ export default class Zone {
 
         for (let h = 0; h < this.height; h++)
             for (let w = 0; w < this.width; w++)
-                this.heightMap[w][h] = reader1.readUInt16BE() / 100.0;
+                this.heightMap[w]![h]! = reader1.readUInt16BE() / 100.0;
 
         // read attribute map
         const attrData = fs.readFileSync(path.dirname(__filename) + `/../data/maps/${this.id}.sat`);
@@ -164,7 +164,7 @@ export default class Zone {
         for (let h = 0; h < this.height; h++) {
             for (let w = 0; w < this.width; w++) {
                 const val = reader2.readUInt8();
-                this.attributeMap[w][h] = (val === 0 || val in AttributeFlags) ? val : AttributeFlags.BLOCK;
+                this.attributeMap[w]![h]! = (val === 0 || val in AttributeFlags) ? val : AttributeFlags.BLOCK;
             }
         }
     }
@@ -244,7 +244,7 @@ export default class Zone {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height)
             return asText ? AttributeFlags[AttributeFlags.BLOCK] : AttributeFlags.BLOCK;
 
-        const attribute = this.attributeMap[x][y];
+        const attribute = this.attributeMap[x]![y]!;
 
         if (!asText)
             return attribute;
@@ -259,6 +259,6 @@ export default class Zone {
         if (x < 0 || x >= this.width || y < 0 || y >= this.height)
             return 0;
 
-        return this.heightMap[x][y];
+        return this.heightMap[x]![y]!;
     }
 }

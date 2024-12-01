@@ -30,7 +30,7 @@ export type ModifiedStatistic = [Statistic, Modifier];
 function getBuffScript(spellId: number) {
     // iterate over all buff scripts
     for (const buffName in buffScripts) {
-        const buffScript = buffScripts[buffName];
+        const buffScript = buffScripts[buffName as keyof typeof buffScripts];
 
         if ((Array.isArray(buffScript.id) ? buffScript.id.includes(spellId) : buffScript.id === spellId))
             return buffScript;
@@ -56,31 +56,35 @@ export class Buff extends EventEmitter<BuffEvents> {
     timeoutId?: NodeJS.Timeout;
     script?: BuffScript;
 
-    constructor(owner: Character, originType: BuffOrigin, originRef: string | BaseItem, modifiedStatistics?: ModifiedStatistic[], duration: number | string | undefined = null, script?: BuffScript) {
+    constructor(owner: Character, originType: BuffOrigin, originRef: string | BaseItem, modifiedStatistics?: ModifiedStatistic[], duration: number | string | undefined = undefined, script?: BuffScript) {
         super();
 
         this.owner = owner;
         this.duration = (typeof duration === 'string') ? durationToSeconds(duration)
             : (typeof duration === 'number') ? duration : duration;
 
-        this.modifiedStatistics = modifiedStatistics;
+        this.modifiedStatistics = modifiedStatistics || [];
         this.originType = originType;
         this.originRef = originRef;
         this.script = script;
     }
 
-    static fromItem(owner: Character, baseItem: BaseItem): Buff {
+    static fromItem(owner: Character, baseItem: BaseItem): Buff | undefined {
         // FIXME: check if baseItem is usable and has POTION flag
         const spellId = baseItem.values[0];
+        if (!spellId)
+            return;
 
         // search for buff script with given index
         const buffScript = getBuffScript(spellId);
+        if (!buffScript)
+            return;
 
         return new this(
             owner,
             BuffOrigin.Item,
             baseItem,
-            null,
+            undefined,
             buffScript.duration,
             buffScript,
         );

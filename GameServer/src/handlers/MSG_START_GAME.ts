@@ -65,21 +65,22 @@ function handleObjectDisappearance(character: Character, objectPoints) {
 
 // TODO: move the most of it somewhere else
 export default async function (session: Session<SendersType>, msg: Message) {
-    session.character.spawn();
+    const character = session.character!;
+    character.spawn();
 
     // setup object visibility
     {
         const visionRange = 150;
-        session.character.on(GameObjectEvents.Move, (pos) => {
-            const objectPoints = session.character.zone.getObjectsInArea(pos.x, pos.y, visionRange);
-            handleObjectAppearance(session.character, objectPoints);
-            handleObjectDisappearance(session.character, objectPoints);
+        character.on(GameObjectEvents.Move, (pos) => {
+            const objectPoints = character.zone.getObjectsInArea(pos.x, pos.y, visionRange);
+            handleObjectAppearance(character, objectPoints);
+            handleObjectDisappearance(character, objectPoints);
         });
     }
 
     // setup and send inventory to client
     {
-        const dbInventoryItems = await database.characters.getInventoryItems(session.character.id)
+        const dbInventoryItems = await database.characters.getInventoryItems(character.id)
         const inventoryStacks: any[][] = [];
 
         for (const dbInventoryItem of dbInventoryItems) {
@@ -135,19 +136,19 @@ export default async function (session: Session<SendersType>, msg: Message) {
 
             const [tab, col, row] = firstStackItem.position.split(',');
 
-            session.character.inventory.addToPosition(invenRow, tab, col, row);
+            character.inventory.addToPosition(invenRow, tab, col, row);
 
             // emit equip event if item is armor or weapon at start
             if (isArmor(firstStackItem.wearingPosition) || isWeapon(firstStackItem.wearingPosition)) {
-                session.character.emit(CharacterEvents.InventoryEquip, invenRow);
+                character.emit(CharacterEvents.InventoryEquip, invenRow);
             }
         }
 
-        session.send.inventory(session.character.inventory);
+        session.send.inventory(character.inventory);
     }
 
     // send stats to client
-    session.character.updateStatistics();
+    character.updateStatistics();
 
     // send test skills
     {
@@ -162,11 +163,11 @@ export default async function (session: Session<SendersType>, msg: Message) {
 
     // load quickslot from database
     {
-        const dbQuickslotPages = await database.quickslot.get(session.character.id);
+        const dbQuickslotPages = await database.quickslot.get(character.id);
 
         if (!dbQuickslotPages.length) {
             for (let i = 0; i < QUICKSLOT_PAGE_NUM; i++)
-                await database.quickslot.createPage(session.character.id, i, session.character.quickslot.quickSlots[i])
+                await database.quickslot.createPage(character.id, i, character.quickslot.quickSlots[i])
         }
 
         for (const dbQuickslotPage of dbQuickslotPages) {
@@ -174,7 +175,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 const key = `slot${i}`;
                 const [slotTypeId, value1, value2] = dbQuickslotPage[key].split(',');
 
-                session.character.quickslot.add({
+                character.quickslot.add({
                     pageId: Number(dbQuickslotPage.page),
                     slotId: i - 1,
                     slotType: Number(slotTypeId),
@@ -215,17 +216,17 @@ export default async function (session: Session<SendersType>, msg: Message) {
         session.send.friend({
             subType: FriendMessageType.NotifyAdd,
             uid: 0,
-            nickname: helperNames[session.character.classType],
-            class: session.character.classType,
+            nickname: helperNames[character.classType],
+            class: character.classType,
             status: FriendStatusType.Online
         });
 
         // send friends to client
-        for (let friend of session.character.messenger.friends)
+        for (let friend of character.messenger.friends)
             friend.show();
 
         // set my messenger status to online
-        session.character.messenger.status = FriendStatusType.Online;
+        character.messenger.status = FriendStatusType.Online;
     }
 
     // send current time
@@ -239,8 +240,8 @@ export default async function (session: Session<SendersType>, msg: Message) {
     });
 
     // FIXME: all npcs are spawned only once per session
-    const result = game.world.filter(GameObjectType.NPC, (n: NPC) => n.zone.id === session.character.zone.id) as NPC[];
+    const result = game.world.filter(GameObjectType.NPC, (n: NPC) => n.zone.id === character.zone.id) as NPC[];
 
     for (let npc of result)
-        npc.appear(session.character.session);
+        npc.appear(character.session);
 }

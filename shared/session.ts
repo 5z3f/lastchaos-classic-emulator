@@ -27,10 +27,10 @@ export default class Session<T> {
     uid: number;
 
     // pinned character
-    character: Character;
+    character?: Character;
 
     // database user account id
-    accountId: number;
+    accountId?: number;
 
     handlers: any;
     send: T;

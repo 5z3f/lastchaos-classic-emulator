@@ -116,7 +116,7 @@ export class Statistic extends EventEmitter<StatisticEvents> {
             if (mod.effectType === ModifierEffectType.Overtime) {
                 mod.intervalId = setInterval(() => {
                     if (mod.startTime + mod.applicationTime < Date.now())
-                        clearInterval(mod.intervalId);
+                        clearInterval(mod.intervalId!);
 
                     this.totalValue = this.getModifiedValue();
                 }, mod.applicationTick);

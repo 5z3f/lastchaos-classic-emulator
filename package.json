@@ -16,14 +16,15 @@
     "chalk": "^5.3.0",
     "dotenv": "^16.4.5",
     "js-quadtree": "^3.3.6",
-    "mariadb": "^3.3.2",
-    "mocha": "^10.7.3",
+    "mariadb": "^3.4.0",
+    "mocha": "^10.8.2",
     "smart-buffer": "^4.2.0",
-    "three": "^0.168.0",
+    "three": "^0.170.0",
     "ts-node": "^10.9.2"
   },
   "devDependencies": {
-    "@types/node": "^22.5.5",
-    "@types/three": "^0.168.0"
+    "@types/bcrypt": "^5.0.2",
+    "@types/node": "^22.10.1",
+    "@types/three": "^0.170.0"
   }
 }

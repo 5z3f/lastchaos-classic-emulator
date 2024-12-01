@@ -32,8 +32,8 @@ export function durationToSeconds(duration: string): number {
     let match;
 
     while ((match = regex.exec(duration)) !== null) {
-        const value = parseInt(match[1]);
-        const unit = match[2];
+        const value = parseInt(match[1]!);
+        const unit = match[2] as keyof typeof timeUnits;
         totalSeconds += value * timeUnits[unit];
     }
 

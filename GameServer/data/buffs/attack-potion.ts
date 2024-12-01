@@ -22,4 +22,3 @@ export default {
         api.chat.system(character, 'Your Attack Potion has expired.');
     },
 }
-
