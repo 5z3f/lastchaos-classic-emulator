@@ -7,10 +7,10 @@ type characterCreateOptions = {
     nickname: string,
     classId: number,
     faceId: number,
-    hairId: number
+    hairId: number,
 };
 
-class characters {
+export default class Characters {
 
     static async getById(id: number) {
         try {
@@ -99,5 +99,3 @@ class characters {
         }
     }
 }
-
-export default characters;

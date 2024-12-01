@@ -1,5 +1,5 @@
-import app from "../app";
 import log from '@local/shared/logger';
+import app from "../app";
 
 type item = {
     itemId: number; // ID of the item to be inserted.
@@ -9,12 +9,12 @@ type item = {
     position: string; // The position of the item in the location.
     plus: number; // The plus value of the item.
     seals?: {// seals of the item to be created.
-        [key: string]: number
+        [key: string]: number;
     };
     parentId?: number; // The ID of the parent item, if any.
 }
 
-class items {
+export default class Items {
 
     /**
         Inserts a new virtual item into the database.
@@ -46,6 +46,9 @@ class items {
     }
 
     static async insertStack(item: item, stack: number) {
+        if (stack <= 0)
+            return null;
+
         const values = [
             item.itemId,
             item.accountId,
@@ -57,13 +60,15 @@ class items {
             item.parentId ?? 'NULL'
         ];
 
-        let queryArray: string[] = [];
+        const queryValues: string[] = [];
 
         for (let i = 0; i < stack; i++)
-            queryArray.push(`INSERT INTO items (itemId, accountId, charId, place, position, plus, seals, parentId) VALUES (${values.join(', ')});`);
+            queryValues.push(`(${values.join(',')})`);
 
         try {
-            const result = await app.dbc.query(queryArray.join(''));
+            // TODO: probably will cause problem with max allowed packet
+            const query = `INSERT INTO items (itemId, accountId, charId, place, position, plus, seals, parentId) VALUES ${queryValues.join(',')}`;
+            const result = await app.dbc.query(query);
             return result.insertId;
         }
         catch (error) {
@@ -73,10 +78,10 @@ class items {
     }
 
     static async update({ where, data }: any) {
-        let k = Object.keys(data);
-        let v = Object.values(data);
+        const k = Object.keys(data);
+        const v = Object.values(data);
 
-        let updateItemQuery = `
+        const updateItemQuery = `
             UPDATE items
             SET ${k.map((key) => `${key}=?`)}
             WHERE ${Object.keys(where).map((key) => `${key}=?`).join(' AND ')}
@@ -86,5 +91,3 @@ class items {
         return result;
     }
 }
-
-export default items;

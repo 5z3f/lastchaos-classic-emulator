@@ -11,7 +11,7 @@ export enum MessageDamageType {
 
 export default function (session) {
     return ({ attackerObjType, attackerIndex, damageType, skillId, targetObjType, targetIndex, targetHp, targetMp, damage }) => {
-        let msg = new Message({ type: _messages.MSG_DAMAGE });
+        const msg = new Message({ type: _messages.MSG_DAMAGE });
 
         msg.write('u8', attackerObjType);
         msg.write('i32>', attackerIndex);

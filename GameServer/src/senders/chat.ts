@@ -1,8 +1,8 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
 import { ChatType, Color } from '../system/core/chat';
+import _messages from './_messages.json';
 
 type ChatMessageData = {
     subType: ChatType;
@@ -29,7 +29,7 @@ function buildMessage(msg: Message, senderId: number, senderName: string, receiv
 
 export default function (session: Session<SendersType>) {
     return (data: ChatMessageData) => {
-        if(data.subType === ChatType.System) {
+        if (data.subType === ChatType.System) {
             // type: MSG_EVENT, subType: MSG_EVENT_WHITEDAY_2007
             const msg = new Message({ type: 43, subType: 45 });
             buildSystemMessage(msg, data.color, data.text);

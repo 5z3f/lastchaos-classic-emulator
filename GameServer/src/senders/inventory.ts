@@ -1,10 +1,10 @@
 import App from '../app';
 
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { ItemWearingPosition } from '../api/item';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import { ItemWearingPosition } from '../api/item';
+import _messages from './_messages.json';
 
 const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
 
@@ -21,7 +21,7 @@ function buildItemMessage(msg: Message, item) {
     msg.write('i32>', item.flag);                                   // flag
     msg.write('i32>', item.durability);                             // durability
 
-    if(clientHigherThan1107)
+    if (clientHigherThan1107)
         msg.write('i32>', 0);                                       // used2
 
     msg.write('i64>', item.stack);                                  // count
@@ -35,20 +35,20 @@ function buildItemMessage(msg: Message, item) {
 
 export default function (session: Session<SendersType>) {
     return (inventory) => {
-        let rows = inventory.rows;
+        const rows = inventory.rows;
 
         // tabs
         for (let i = 0; i < rows.length; i++) {
             // columns
             for (let j = 0; j < rows[i].length; j++) {
-                let msg = new Message({ type: _messages.MSG_INVENTORY });
+                const msg = new Message({ type: _messages.MSG_INVENTORY });
 
                 msg.write('u8', 0);       // resultArrange
                 msg.write('u8', i);       // tabId
                 msg.write('u8', j);       // colId
 
                 for (let k = 0; k < rows[i][j].length; k++) {
-                    let item = rows[i][j][k].item;
+                    const item = rows[i][j][k].item;
 
                     if (!item) {
                         msg.write('i32>', -1);                                       // item index

@@ -1,8 +1,8 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { ItemMessageType } from '../api/item';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import { ItemMessageType } from '../api/item';
+import _messages from './_messages.json';
 
 type TakeMessageData = {
     subType: ItemMessageType.Take;
@@ -140,10 +140,10 @@ function buildDropMessage(msg: Message, data: DropMessageData) {
 }
 
 type ItemMessageData = TakeMessageData | WearMessageData | SwapMessageData | AddMessageData | DropMessageData;
-                
+
 export default function (session: Session<SendersType>) {
     return (data: ItemMessageData) => {
-        let msg = new Message({ type: _messages.MSG_ITEM, subType: data.subType });
+        const msg = new Message({ type: _messages.MSG_ITEM, subType: data.subType });
 
         switch (data.subType) {
             case ItemMessageType.Take:

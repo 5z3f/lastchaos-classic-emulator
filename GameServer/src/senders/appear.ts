@@ -1,6 +1,6 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
 import { PacketObjectType } from '../gameobject';
+import _messages from './_messages.json';
 
 function buildAppearMessageCharacter(msg: Message) {
     msg.write('u8', 1);             // new
@@ -21,13 +21,13 @@ function buildAppearMessageCharacter(msg: Message) {
     msg.write('i32>', 0);           // pkpenalty
     msg.write('u8', 0);             // getpkname    
 
-    let armor = [75, 34, 48, 38, 49, 39, 41];
-    let plus = [15, 15, 15, 15, 15, 15, 15];    
+    const armor = [75, 34, 48, 38, 49, 39, 41];
+    const plus = [15, 15, 15, 15, 15, 15, 15];
 
     for (let i = 1; i <= 6; ++i) {
         msg.write('i32>', armor[i - 1]);
         msg.write('i32>', plus[i - 1]);
-    }   
+    }
 
     msg.write('i32>', 0);           // assist state
     msg.write('u8', 1);             // assist count 
@@ -92,7 +92,7 @@ type AppearMessageData = NPCData /*| CharacterData*/;
 
 export default function (session) {
     return (data: AppearMessageData) => {
-        let msg = new Message({ type: _messages.MSG_APPEAR });
+        const msg = new Message({ type: _messages.MSG_APPEAR });
 
         switch (data.objType) {
             // @ts-ignore

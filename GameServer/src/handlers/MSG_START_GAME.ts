@@ -1,18 +1,18 @@
 import log from '@local/shared/logger';
-import NPC from '../gameobject/npc';
-import database from '../database';
-import game from '../game';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
-import Character, { ClassType } from '../gameobject/character';
-import { InventoryItem } from '../system/core/inventory';
-import { CharacterEvents, GameObjectEvents, GameObjectType } from '../gameobject';
 import { ItemWearingPosition } from '../api/item';
+import database from '../database';
+import game from '../game';
+import { CharacterEvents, GameObjectEvents, GameObjectType } from '../gameobject';
+import Character, { ClassType } from '../gameobject/character';
+import NPC from '../gameobject/npc';
 import { SendersType } from '../senders';
 import { EnvMessageType } from '../senders/env';
+import { InventoryItem } from '../system/core/inventory';
+import { QUICKSLOT_MAXSLOT, QUICKSLOT_PAGE_NUM } from '../system/core/quickslot';
 import { ExtendMessageType, ExtendMessengerType } from './MSG_EXTEND';
 import { FriendMessageType, FriendStatusType } from './MSG_FRIEND';
-import { QUICKSLOT_MAXSLOT, QUICKSLOT_PAGE_NUM } from '../system/core/quickslot';
 import { QuickSlotMessageType } from './MSG_QUICKSLOT';
 
 function handleObjectAppearance(character: Character, objectPoints) {
@@ -22,13 +22,13 @@ function handleObjectAppearance(character: Character, objectPoints) {
 
         const gameObject = game.world.find(apo.type, (o) => o.uid === apo.uid);
 
-        if(gameObject.state.dead)
+        if (gameObject.state.dead)
             return;
 
         if (gameObject?.zone.id != character.zone.id)
             return;
 
-        if(character.isObjectVisible(apo.type, apo.uid))
+        if (character.isObjectVisible(apo.type, apo.uid))
             return;
 
         gameObject.appear(character);
@@ -37,10 +37,10 @@ function handleObjectAppearance(character: Character, objectPoints) {
 
 function handleObjectDisappearance(character: Character, objectPoints) {
     for (let objType of Object.keys(character.visibleObjectUids)) {
-        let objectUids = character.visibleObjectUids[objType];
+        const objectUids = character.visibleObjectUids[objType];
 
         for (let objUid of objectUids) {
-            let inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
+            const inVisionRange = !!objectPoints.find((o) => o.type == objType && o.uid == objUid);
 
             // TODO: dont disappear objects that are in vision range of party members (if you are close to them - 100~150 units)
             if (!inVisionRange) {
@@ -79,8 +79,8 @@ export default async function (session: Session<SendersType>, msg: Message) {
 
     // setup and send inventory to client
     {
-        let dbInventoryItems = await database.characters.getInventoryItems(session.character.id)
-        let inventoryStacks: any[][] = [];
+        const dbInventoryItems = await database.characters.getInventoryItems(session.character.id)
+        const inventoryStacks: any[][] = [];
 
         for (const dbInventoryItem of dbInventoryItems) {
             if (dbInventoryItem.parentId !== null) {
@@ -98,32 +98,32 @@ export default async function (session: Session<SendersType>, msg: Message) {
         }
 
         function isArmor(wearingPosition: number) {
-            return wearingPosition == ItemWearingPosition.Helmet ||
-                wearingPosition == ItemWearingPosition.Shirt ||
-                wearingPosition == ItemWearingPosition.Pants ||
-                wearingPosition == ItemWearingPosition.Shield ||
-                wearingPosition == ItemWearingPosition.Gloves ||
-                wearingPosition == ItemWearingPosition.Boots;
+            return wearingPosition === ItemWearingPosition.Helmet ||
+                wearingPosition === ItemWearingPosition.Shirt ||
+                wearingPosition === ItemWearingPosition.Pants ||
+                wearingPosition === ItemWearingPosition.Shield ||
+                wearingPosition === ItemWearingPosition.Gloves ||
+                wearingPosition === ItemWearingPosition.Boots;
         }
 
         function isWeapon(wearingPosition: number) {
-            return wearingPosition == ItemWearingPosition.Weapon;
+            return wearingPosition === ItemWearingPosition.Weapon;
         }
 
         for (let invenStack in inventoryStacks) {
-            let inventoryStack = inventoryStacks[invenStack];
-            let firstStackItem = inventoryStack[0];
+            const inventoryStack = inventoryStacks[invenStack];
+            const firstStackItem = inventoryStack[0];
 
-            let baseItem = game.content.items.find((el) => el.id == firstStackItem.itemId);
+            const baseItem = game.content.items.find((el) => el.id == firstStackItem.itemId);
 
             if (!baseItem) {
                 log.debug(`Server attempted to add an item to character inventory that does not exist. ID: ${firstStackItem.itemId}`);
                 continue;
             }
 
-            let stackUids = inventoryStack.map((i) => i.id);
+            const stackUids = inventoryStack.map((i) => i.id);
 
-            let invenRow = new InventoryItem({
+            const invenRow = new InventoryItem({
                 itemUid: firstStackItem.id,
                 baseItem: baseItem,
                 stack: (inventoryStacks[invenStack].length > 1) ? inventoryStacks[invenStack].length : 1,
@@ -133,12 +133,12 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 stackUids: stackUids
             });
 
-            let [tab, col, row] = firstStackItem.position.split(',');
+            const [tab, col, row] = firstStackItem.position.split(',');
 
             session.character.inventory.addToPosition(invenRow, tab, col, row);
 
             // emit equip event if item is armor or weapon at start
-            if(isArmor(firstStackItem.wearingPosition) || isWeapon(firstStackItem.wearingPosition)) {
+            if (isArmor(firstStackItem.wearingPosition) || isWeapon(firstStackItem.wearingPosition)) {
                 session.character.emit(CharacterEvents.InventoryEquip, invenRow);
             }
         }
@@ -161,7 +161,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
     }
 
     // load quickslot from database
-    { 
+    {
         const dbQuickslotPages = await database.quickslot.get(session.character.id);
 
         if (!dbQuickslotPages.length) {
@@ -173,7 +173,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
             for (let i = 1; i <= QUICKSLOT_MAXSLOT; i++) {
                 const key = `slot${i}`;
                 const [slotTypeId, value1, value2] = dbQuickslotPage[key].split(',');
-                
+
                 session.character.quickslot.add({
                     pageId: Number(dbQuickslotPage.page),
                     slotId: i - 1,
@@ -187,7 +187,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
         }
 
         // send quickslot pages to client
-        for(let i = 0; i < QUICKSLOT_PAGE_NUM; i++)
+        for (let i = 0; i < QUICKSLOT_PAGE_NUM; i++)
             session.send.quickslot(QuickSlotMessageType.List, { pageId: i });
     }
 
@@ -221,7 +221,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
         });
 
         // send friends to client
-        for(let friend of session.character.messenger.friends)
+        for (let friend of session.character.messenger.friends)
             friend.show();
 
         // set my messenger status to online
@@ -237,9 +237,9 @@ export default async function (session: Session<SendersType>, msg: Message) {
         hour: 3,
         startTime: 0
     });
-    
+
     // FIXME: all npcs are spawned only once per session
-    let result = game.world.filter(GameObjectType.NPC, (n: NPC) => n.zone.id == session.character.zone.id) as NPC[];
+    const result = game.world.filter(GameObjectType.NPC, (n: NPC) => n.zone.id === session.character.zone.id) as NPC[];
 
     for (let npc of result)
         npc.appear(session.character.session);

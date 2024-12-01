@@ -1,14 +1,13 @@
-import game from '../game';
-import database from '../database';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
-import { SendersType } from '../senders';
-import Character from '../gameobject/character';
-import { FailMessageType } from '../senders/fail';
-import Invite, { InviteType } from '../system/core/invite';
-import { Color } from '../system/core/chat';
 import api from '../api';
+import game from '../game';
 import { GameObjectType } from '../gameobject';
+import Character from '../gameobject/character';
+import { SendersType } from '../senders';
+import { FailMessageType } from '../senders/fail';
+import { Color } from '../system/core/chat';
+import Invite, { InviteType } from '../system/core/invite';
 
 export enum FriendStatusType {
     Offline,
@@ -26,7 +25,7 @@ export enum FriendMessageType {
     Delete = 6,
     NotifyAdd = 7,
     NotifyDelete = 8,
-    List = 9
+    List = 9,
 }
 
 export enum FriendMessageErrorType {
@@ -42,15 +41,15 @@ export enum FriendMessageErrorType {
     IncorrectNameLength = 9,
     AlreadyBlock = 10,
     NotBlock = 11,
-    RegistRefusePVP = 12    
+    RegistRefusePVP = 12,
 }
 
 // TODO: move it (almost all) into system/core/messenger.ts
 
 async function handleFriendshipRequest(session: Session<SendersType>, msg: Message) {
-    let requesterUid = msg.read('i32>');
-    let receiverName = msg.read('stringnt');
-    
+    const requesterUid = msg.read('i32>');
+    const receiverName = msg.read('stringnt');
+
     if (receiverName.length < 2 || receiverName.length > 16) {
         session.send.friend({ subType: FriendMessageType.Error, code: FriendMessageErrorType.IncorrectNameLength });
         return;
@@ -61,7 +60,7 @@ async function handleFriendshipRequest(session: Session<SendersType>, msg: Messa
         return;
     }
 
-    let receiverCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.nickname === receiverName);
+    const receiverCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.nickname === receiverName);
 
     // TODO: offline invites (if possible?)
     if (!receiverCharacter) {
@@ -81,13 +80,13 @@ async function handleFriendshipRequest(session: Session<SendersType>, msg: Messa
 
     // remove previous invite (if exists)
     const previousPendingInvite = game.invites.find(i => i.type === InviteType.Friend && i.receiverId === receiverCharacter.id && i.requesterId === session.character.id);
-    
-    if(previousPendingInvite)
+
+    if (previousPendingInvite)
         await previousPendingInvite.remove();
 
     const invite = await Invite.create(InviteType.Friend, session.character, receiverCharacter);
 
-    if(!invite) {
+    if (!invite) {
         session.send.fail(FailMessageType.DatabaseFailure);
         return;
     }
@@ -125,7 +124,7 @@ async function handleFriendshipAccept(session: Session<SendersType>, msg: Messag
     }
 
     const resolved = await invite.resolve(true);
-    
+
     if (!resolved) {
         session.send.friend({
             subType: FriendMessageType.Error,
@@ -156,7 +155,7 @@ async function handleFriendshipCancel(session: Session<SendersType>, msg: Messag
     }
 
     const resolved = await invite.resolve(false);
-    
+
     if (!resolved) {
         session.send.friend({
             subType: FriendMessageType.Error,
@@ -171,7 +170,7 @@ async function handleFriendshipDelete(session: Session<SendersType>, msg: Messag
     const targetId = msg.read('i32>');
     const nickname = msg.read('stringnt');
 
-    if(requesterId != session.character.uid) {
+    if (requesterId != session.character.uid) {
         // TODO: packet is malformed, log it
         return;
     }
@@ -199,7 +198,7 @@ function handleStatusChange(session: Session<SendersType>, msg: Message) {
 
 
 export default function (session: Session<SendersType>, msg: Message) {
-    let subType = msg.read('u8');
+    const subType = msg.read('u8');
 
     switch (subType) {
         case FriendMessageType.Request:

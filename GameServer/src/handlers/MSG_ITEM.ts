@@ -1,21 +1,21 @@
 import log from '@local/shared/logger';
-import game from '../game';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
+import game from '../game';
 
-import { InventoryItem, InventoryTabType } from '../system/core/inventory';
-import { GameObjectType, PacketObjectType } from '../gameobject';
-import { Buff } from '../system/core/buff';
 import { ItemMessageType, ItemWearingPosition } from '../api/item';
-import { SystemMessageType } from '../senders/sys';
+import { GameObjectType, PacketObjectType } from '../gameobject';
 import { SendersType } from '../senders';
+import { SystemMessageType } from '../senders/sys';
+import { Buff } from '../system/core/buff';
+import { InventoryItem, InventoryTabType } from '../system/core/inventory';
 import { ZoneType } from '../world';
 
 export default function (session: Session<SendersType>, msg: Message) {
-    let subType = msg.read('u8');
+    const subType = msg.read('u8');
     console.log('item msg sub type', subType);
 
-    let subTypeMap = {
+    const subTypeMap = {
         0: 'MSG_ITEM_USE',
         1: 'MSG_ITEM_TAKE',
         2: 'MSG_ITEM_THROW',
@@ -37,7 +37,7 @@ export default function (session: Session<SendersType>, msg: Message) {
 
     const subTypeHandler = {
         MSG_ITEM_USE: () => {
-            let msgdata = {
+            const msgdata = {
                 tab: msg.read('u8'),
                 row: msg.read('u8'),
                 col: msg.read('u8'),
@@ -46,9 +46,9 @@ export default function (session: Session<SendersType>, msg: Message) {
             };
 
             // find base item with given itemUid
-            let inventoryItem = session.character.inventory.find(msgdata.tab, (item) => item?.itemUid == msgdata.itemUid);
+            const inventoryItem = session.character.inventory.find(msgdata.tab, (item) => item?.itemUid === msgdata.itemUid);
 
-            if(!inventoryItem) {
+            if (!inventoryItem) {
                 // TODO: error handling
                 return;
             }
@@ -56,13 +56,13 @@ export default function (session: Session<SendersType>, msg: Message) {
             // create buff from an item (baseItem.value[0], baseItem.value[1])
             const buff = Buff.fromItem(session.character, inventoryItem.baseItem);
 
-            if(!buff)
+            if (!buff)
                 return;
 
             session.character.buffs.add(buff);
         },
         MSG_ITEM_TAKE: async () => {
-            let msgdata = {
+            const msgdata = {
                 objType: msg.read('u8'),
                 objUid: msg.read('i32>'),
                 itemUid: msg.read('i32>'),
@@ -77,10 +77,10 @@ export default function (session: Session<SendersType>, msg: Message) {
                 return;
 
             // find ground item
-            let found = game.world.find(GameObjectType.Item, (i) => i.uid == msgdata.itemUid && i.charUid == session.character.uid);
+            const found = game.world.find(GameObjectType.Item, (i) => i.uid == msgdata.itemUid && i.charUid == session.character.uid);
 
             // create inventory row
-            let invenItem = new InventoryItem({
+            const invenItem = new InventoryItem({
                 itemUid: found.uid,
                 baseItem: found.baseItem,
                 plus: found.plus,
@@ -88,7 +88,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             });
 
             // add row to inventory
-            let rowPosition = await session.character.inventory.add(InventoryTabType.Normal, invenItem);
+            const rowPosition = await session.character.inventory.add(InventoryTabType.Normal, invenItem);
 
             // TODO: error handling
             if (!rowPosition)
@@ -109,7 +109,7 @@ export default function (session: Session<SendersType>, msg: Message) {
         MSG_ITEM_ARRANGE: () => { },
         MSG_ITEM_DELETE: () => { },
         MSG_ITEM_WEAR: async () => {
-            let msgdata = {
+            const msgdata = {
                 wearingPosition: msg.read('u8'),
                 item: {
                     position: {
@@ -120,8 +120,8 @@ export default function (session: Session<SendersType>, msg: Message) {
                     uid: msg.read('i32>'),
                 },
             };
-            
-            const isTakingOff = msgdata.item.uid == -1;
+
+            const isTakingOff = msgdata.item.uid === -1;
 
             // if character tries to take an item off
             if (isTakingOff) {
@@ -149,20 +149,20 @@ export default function (session: Session<SendersType>, msg: Message) {
                 return;
             }
 
-            if(!(msgdata.wearingPosition in ItemWearingPosition)) {
+            if (!(msgdata.wearingPosition in ItemWearingPosition)) {
                 // TODO: malformed packet, better log it in the future
                 session.send.sys(SystemMessageType.CannotWear);
                 return;
             }
-            
-            if(msgdata.item.position.tab != InventoryTabType.Normal) {
+
+            if (msgdata.item.position.tab != InventoryTabType.Normal) {
                 // TODO: malformed packet, better log it in the future
                 session.send.sys(SystemMessageType.CannotWear);
                 return;
             }
-    
+
             // find unequipped item by its unique id
-            let reqItem = session.character.inventory.find(msgdata.item.position.tab, (item) => item?.wearingPosition == ItemWearingPosition.None && item?.itemUid == msgdata.item.uid);
+            const reqItem = session.character.inventory.find(msgdata.item.position.tab, (item) => item?.wearingPosition === ItemWearingPosition.None && item?.itemUid === msgdata.item.uid);
 
             if (!reqItem) {
                 session.send.sys(SystemMessageType.CannotWear);
@@ -175,7 +175,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             // FIXME: type needs to be fixed
             let unequippedRow: InventoryItem | false | any = await session.character.inventory.unequip(msgdata.wearingPosition);
 
-            if(!unequippedRow) {
+            if (!unequippedRow) {
                 unequippedRow = {
                     position: {
                         tab: 0,
@@ -187,7 +187,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             }
 
             // wear requested item
-            let resp = await session.character.inventory.equip(reqItem.position, msgdata.wearingPosition);
+            const resp = await session.character.inventory.equip(reqItem.position, msgdata.wearingPosition);
 
             if (!resp) {
                 // TODO: send error message to the client
@@ -217,7 +217,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             });
         },
         MSG_ITEM_SWAP: () => {
-            let msgdata = {
+            const msgdata = {
                 tabId: msg.read('u8'),
                 item: {
                     src: {
@@ -238,12 +238,12 @@ export default function (session: Session<SendersType>, msg: Message) {
                 return false;
             }
 
-            if (msgdata.item.src.row == msgdata.item.dst.row && msgdata.item.src.col == msgdata.item.dst.col) {
+            if (msgdata.item.src.row === msgdata.item.dst.row && msgdata.item.src.col === msgdata.item.dst.col) {
                 // TODO: malformed packet, better log it in the future
                 return false;
             }
 
-            if (msgdata.item.src.uid == msgdata.item.dst.uid) {
+            if (msgdata.item.src.uid === msgdata.item.dst.uid) {
                 // TODO: malformed packet, better log it in the future
                 return false;
             }

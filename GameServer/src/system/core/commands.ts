@@ -1,19 +1,18 @@
 import Session from "@local/shared/session";
-import { CharacterRole } from "../../gameobject/character";
-import { Buff, BuffOrigin } from "./buff";
-import { Modifier, ModifierType, Statistic } from "./statistic";
 import api from "../../api";
 import { ItemMessageType } from "../../api/item";
-import game from "../../game";
-import { ContentType } from "../../content";
 import BaseItem from "../../baseobject/item";
+import { ContentType } from "../../content";
+import game from "../../game";
+import { GameObjectType } from "../../gameobject";
 import Monster from "../../gameobject/monster";
 import { SendersType } from "../../senders";
 import { ChatType, Color } from "../../system/core/chat";
-import { GameObjectType } from "../../gameobject";
 import { ZoneType } from "../../world";
+import { Buff, BuffOrigin } from "./buff";
+import { Modifier, ModifierType, Statistic } from "./statistic";
 
-const commands =  {
+const commands = {
     "help": {
         "description": "Displays a list of commands.",
         "usage": "/help",
@@ -23,8 +22,8 @@ const commands =  {
                 .map(command => {
                     return commands[command].usage;
                 });
-            
-            for(let i = 0; i < availableCommands.length; i++) {
+
+            for (let i = 0; i < availableCommands.length; i++) {
                 api.chat.message({
                     chatType: ChatType.Whisper,
                     text: availableCommands[i],
@@ -41,14 +40,14 @@ const commands =  {
             const speed = parseFloat(args[0]);
 
             // remove previous speed buff
-            let prevRunSpeedBuff = session.character.buffs.find(BuffOrigin.Command, '/speedup');
+            const prevRunSpeedBuff = session.character.buffs.find(BuffOrigin.Command, '/speedup');
 
-            if(prevRunSpeedBuff)
+            if (prevRunSpeedBuff)
                 session.character.buffs.remove(prevRunSpeedBuff);
 
 
-            let runSpeedBefore = session.character.statistics.runSpeed.getTotalValue();
-            let runSpeedBuff = new Buff(session.character, BuffOrigin.Command, '/speedup', [
+            const runSpeedBefore = session.character.statistics.runSpeed.getTotalValue();
+            const runSpeedBuff = new Buff(session.character, BuffOrigin.Command, '/speedup', [
                 [session.character.statistics.runSpeed, new Modifier(ModifierType.Additive, speed)]
             ]);
 
@@ -60,20 +59,20 @@ const commands =  {
         "description": "Drops an item",
         "usage": "/itemdrop <itemId> <amount> <plus>",
         execute: async (args: string[], session: Session<SendersType>) => {
-            let itemId = parseInt(args[0]);
-            let amount = parseInt(args[1]);
-            let plus = parseInt(args[2]);
-            
+            const itemId = parseInt(args[0]);
+            const amount = parseInt(args[1]);
+            const plus = parseInt(args[2]);
+
             if (!itemId)
                 return;
 
-            let itemUid = await api.item.create({
+            const itemUid = await api.item.create({
                 id: itemId,
                 owner: session.character,
                 stack: amount || 1,
                 plus: plus || 0
             });
-        
+
             // TODO: log and raise error message
             if (!itemUid)
                 return;
@@ -96,11 +95,11 @@ const commands =  {
         "description": "Gets an item",
         "usage": "/itemget <itemId> <amount> <plus>",
         execute: async (args: string[], session: Session<SendersType>) => {
-            let itemId = parseInt(args[0]);
-            let amount = parseInt(args[1]);
-            let plus = parseInt(args[2]);
+            const itemId = parseInt(args[0]);
+            const amount = parseInt(args[1]);
+            const plus = parseInt(args[2]);
 
-            let itemUid = await api.item.create({
+            const itemUid = await api.item.create({
                 id: itemId,
                 owner: session.character,
                 stack: amount || 1,
@@ -120,26 +119,26 @@ const commands =  {
                 'monster': ContentType.Monster,
                 'npc': ContentType.NPC
             };
-        
+
             const contentType = contentTypeMap[args[0].toLowerCase()];
 
-            if(contentType == undefined) {
+            if (contentType == undefined) {
                 api.chat.system(session.character, 'Please provide a valid content type', Color.IndianRed);
                 return;
             }
 
             const text = args[1] ? args[1].toLowerCase() : '';
 
-            if(!text) {
+            if (!text) {
                 api.chat.system(session.character, 'Please provide a search term', Color.IndianRed);
                 return;
             }
-        
+
             const content = game.content.filter(contentType, (item: BaseItem) => item.name.toLowerCase().includes(text.toLowerCase()));
-            
+
             // pagination
             const page = args[2] ? parseInt(args[2]) : 1;
-            const contentPerPage = args[3] ? parseInt(args[3]) : 10;        
+            const contentPerPage = args[3] ? parseInt(args[3]) : 10;
             const start = (page - 1) * contentPerPage;
             const end = start + contentPerPage;
             const paginatedItems = content.slice(start, end);
@@ -147,16 +146,16 @@ const commands =  {
 
             api.chat.message({
                 chatType: ChatType.Whisper,
-                text: `Search results for "${text}" ${ page <= totalPages ? `| Page ${page} of ${totalPages}` : '' }`,
+                text: `Search results for "${text}" ${page <= totalPages ? `| Page ${page} of ${totalPages}` : ''}`,
                 senderCharacter: '',
                 receiverCharacter: session.character
             });
 
-            if(!paginatedItems.length) {
+            if (!paginatedItems.length) {
                 api.chat.system(session.character, `No results found`, Color.IndianRed);
                 return;
             }
-        
+
             for (const item of paginatedItems) {
                 api.chat.message({
                     chatType: ChatType.Whisper,
@@ -167,7 +166,7 @@ const commands =  {
             }
         }
     },
-    "spawn" :{
+    "spawn": {
         "description": "Spawns a monster or npc",
         "usage": "/spawn <monsterId>",
         execute: (args: string[], session: Session<SendersType>) => {
@@ -175,14 +174,14 @@ const commands =  {
             const contentId = parseInt(args[0]);
 
             // find monster from database by id
-            const baseMonster = game.content.monsters.find((m) => m.id == contentId);
+            const baseMonster = game.content.monsters.find((m) => m.id === contentId);
 
             if (!baseMonster) {
                 api.chat.system(session.character, `Not found monster with id ${contentId}`, Color.IndianRed);
                 return;
             }
 
-            let monster = new Monster({
+            const monster = new Monster({
                 id: baseMonster.id,
                 flags: baseMonster.flags,
                 level: baseMonster.level,
@@ -214,18 +213,18 @@ const commands =  {
 
             game.world.add(GameObjectType.Monster, ZoneType.Juno, monster);
             monster.appear(session.character);
-            
+
             api.chat.system(session.character, `Spawned monster ${contentId}`, Color.LightSeaGreen);
         }
     },
-    "hp" : {
+    "hp": {
         "description": "Set character's health points by percentage or value (can't exceed max health points)",
         "usage": "/hp <percentOrValue>",
         execute: (args: string[], session: Session<SendersType>) => {
             const percentage = args[0].includes('%');
 
             let value = 0;
-            if(percentage) {
+            if (percentage) {
                 value = parseInt(args[0].replace('%', ''));
                 value = session.character.statistics.maxHealth.getTotalValue() * (value / 100);
             }

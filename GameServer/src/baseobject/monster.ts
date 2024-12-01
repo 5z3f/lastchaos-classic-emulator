@@ -24,9 +24,9 @@ type Spawn = {
         y: number,
         z: number,
         r: number,
-        layer: number
+        layer: number,
     },
-    respawnTime: number
+    respawnTime: number,
 };
 
 type MonsterOptions = {
@@ -49,7 +49,7 @@ type MonsterOptions = {
     },
 };
 
-class BaseMonster extends BaseObject {
+export default class BaseMonster extends BaseObject {
 
     vision: number;
     attackType: number;
@@ -108,5 +108,3 @@ class BaseMonster extends BaseObject {
     }
 
 }
-
-export default BaseMonster;

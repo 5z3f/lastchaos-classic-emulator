@@ -1,7 +1,7 @@
 import log from "@local/shared/logger";
 import app from "../app";
 
-class chatlog {
+export default class Chatlog {
     public static async get(chatType: number, senderId: number, receiverId: number | null = null, limit: number = 50) {
         const query = `
             SELECT * FROM chatlog
@@ -25,5 +25,3 @@ class chatlog {
         }
     }
 }
-
-export default chatlog;

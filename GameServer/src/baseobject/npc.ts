@@ -1,5 +1,4 @@
 import BaseObject from './index';
-import { Statistic, Modifier, ModifierType } from '../system/core/statistic';
 
 type NPCOptions = {
     id: number,
@@ -28,12 +27,12 @@ type Spawn = {
         y: number,
         z: number,
         r: number,
-        layer: number
+        layer: number,
     },
-    respawnTime: number
+    respawnTime: number,
 };
 
-class BaseNPC extends BaseObject {
+export default class BaseNPC extends BaseObject {
 
     vision: number;
     attackType: number;
@@ -107,5 +106,3 @@ class BaseNPC extends BaseObject {
         Object.assign(this.reward, reward, this.reward);
     }
 }
-
-export default BaseNPC;

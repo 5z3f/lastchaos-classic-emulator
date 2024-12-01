@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { XXHash32 } from 'xxhash-addon';
 
-class identifier {
+export default class identifier {
     static create() {
         const seed = crypto.randomBytes(4);
         const hash = XXHash32.hash(crypto.randomBytes(4))//, seed);
@@ -31,5 +31,3 @@ class identifier {
         return hex;
     }
 }
-
-export default identifier;

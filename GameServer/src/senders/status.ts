@@ -1,29 +1,29 @@
 import App from '../app';
 
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { SendersType } from '.';
 import Session from '@local/shared/session';
+import { SendersType } from '.';
+import _messages from './_messages.json';
 
 const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
 
 export default function (session: Session<SendersType>) {
     return (data) => {
-        let msg = new Message({ type: _messages.MSG_STATUS });
+        const msg = new Message({ type: _messages.MSG_STATUS });
 
         msg.write('i32>', data.level);                                                              // Level
         msg.write('u64>', data.experience);                                                         // Current Experience
         msg.write('u64>', data.maxExperience);                                                      // Max Experience
         msg.write('i32>', data.health);                                                             // Current Health Points
         msg.write('i32>', data.maxHealth.getTotalValue());                                          // Max Health Points
-        
-        if(clientHigherThan1107)
+
+        if (clientHigherThan1107)
             msg.write('i32>', data.maxHealth.getBaseValue());                                       // Base Health Points
 
         msg.write('i32>', data.mana);                                                               // Current Mana Points
         msg.write('i32>', data.maxMana.getTotalValue());                                            // Max Mana Points
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('i32>', data.maxMana.getBaseValue());                                         // Base Mana Points
 
         msg.write('i32>', data.strength.getTotalValue());                                           // Strength
@@ -38,25 +38,25 @@ export default function (session: Session<SendersType>) {
 
         msg.write('i32>', data.attack.getTotalValue());                                             // Attack
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('i32>', data.attack.getTotalValue());                                         // Added Attack
 
         msg.write('i32>', data.magicAttack.getTotalValue());                                        // Magic Attack
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('i32>', data.magicAttack.getTotalValue());                                    // Added Magic Attack
 
         msg.write('i32>', data.defense.getTotalValue());                                            // Defense
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('i32>', data.defense.getTotalValue());                                        // Added Defense
 
         msg.write('i32>', data.magicResist.getTotalValue());                                        // Magic Resist
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('i32>', data.magicResist.getTotalValue());                                    // Added Magic Resist
 
-        if(clientHigherThan1107) {
+        if (clientHigherThan1107) {
             msg.write('i32>', 1);                                                                   // Physical Evasion Rate
             msg.write('i32>', 2);                                                                   // Physical Base Evasion Rate
 
@@ -85,14 +85,14 @@ export default function (session: Session<SendersType>) {
 
         msg.write('f<', data.runSpeed.getTotalValue());                                             // Run Speed
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('f<', data.runSpeed.getBaseValue());                                          // Base Run Speed
 
         msg.write('u8', data.attackSpeed.getTotalValue());                                          // Attack Speed
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('u8', data.attackSpeed.getBaseValue());                                       // Base Attack Speed
-        
+
         msg.write('u8', data.magicSpeed.getTotalValue());                                           // Magic Speed (?)
 
         msg.write('u8', data.pkName);                                                               // PK Name
@@ -103,7 +103,7 @@ export default function (session: Session<SendersType>) {
         msg.write('f<', data.attackRange.getTotalValue());                                          // Attack Range
         msg.write('u8', data.meracJoinFlag);                                                        // GetJoinFlag(ZONE_MERAC)
 
-        if(clientHigherThan1107)
+        if (clientHigherThan1107)
             msg.write('u8', data.dratanJoinFlag);                                                   // GetJoinFlag(ZONE_DRATAN)
 
         msg.write('i32>', data.skillSpeed.getTotalValue());                                         // Skill Speed

@@ -2,7 +2,7 @@ import log from "@local/shared/logger";
 import app from "../app";
 import { InviteType } from "../system/core/invite";
 
-export default class invite {
+export default class Invite {
     public static async getByType(inviteType: InviteType) {
         const query = `
             SELECT * FROM invites

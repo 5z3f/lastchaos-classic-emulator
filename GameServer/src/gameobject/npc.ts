@@ -1,15 +1,13 @@
-import log from '@local/shared/logger';
-import util from '../util';
 
+import { Position } from '../types';
 import GameObject, { GameObjectEvents, GameObjectType, PacketObjectType } from './index';
 import Attackable from './traits/attackable';
-import { Position } from '../types';
 
 import type { Statistics } from './index';
 
 import Session from '@local/shared/session';
-import { Statpoints } from '../system/core/statpoints';
 import { SendersType } from '../senders';
+import { Statpoints } from '../system/core/statpoints';
 
 type Reward = {
     experience: number,
@@ -28,11 +26,11 @@ type NPCOptions = {
         strength: number,
         dexterity: number,
         intelligence: number,
-        condition: number
-    }
+        condition: number,
+    },
 };
 
-class NPC extends GameObject<GameObjectType.NPC> {
+export default class NPC extends GameObject<GameObjectType.NPC> {
     level: number;
     reward: Reward;
 
@@ -99,7 +97,7 @@ class NPC extends GameObject<GameObjectType.NPC> {
     }
 
     update({ session, type, data }: { session: Session<SendersType>, type: string, data: any }) {
-        if (type == 'position') {
+        if (type === 'position') {
             Object.assign(this.position, data);
 
             session.send.move({
@@ -115,5 +113,3 @@ class NPC extends GameObject<GameObjectType.NPC> {
         }
     };
 }
-
-export default NPC;

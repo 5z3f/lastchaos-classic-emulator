@@ -7,7 +7,7 @@ export enum StatpointType {
     Strength,
     Dexterity,
     Intelligence,
-    Condition
+    Condition,
 }
 
 type StatpointOptions = {

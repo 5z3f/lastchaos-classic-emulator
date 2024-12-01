@@ -1,6 +1,6 @@
+import log from '@local/shared/logger';
 import Message from '@local/shared/message';
 import _messages from './_messages.json';
-import log from '@local/shared/logger';
 
 export enum AssistMessageType {
     Add,
@@ -19,12 +19,12 @@ interface AssistData {
 
 export default function (session) {
     return (subType: AssistMessageType, data: AssistData) => {
-        let msg = new Message({ type: _messages.MSG_ASSIST, subType });
+        const msg = new Message({ type: _messages.MSG_ASSIST, subType });
 
-        switch(subType) {
+        switch (subType) {
             case AssistMessageType.Add:
                 msg.write('u8', data.objType);
-                msg.write('i32>', data.objIndex); 
+                msg.write('i32>', data.objIndex);
                 msg.write('i32>', data.itemIndex);
                 msg.write('i32>', data.skillIndex);
                 msg.write('u8', data.skillLevel);

@@ -1,8 +1,8 @@
 import log from "@local/shared/logger";
-import app from "../app";
 import { ItemPlaceType, ItemWearingPosition } from "../api/item";
+import app from "../app";
 
-class inventory {
+export default class Inventory {
     /**
      * Adds an item to the inventory.
      * @param itemUid - The unique identifier of the item.
@@ -11,7 +11,7 @@ class inventory {
      * @param position - The position of the item. (tab,col,row)
      * @returns A boolean indicating whether the item was successfully added.
      */
-    static async add(itemUid: number, accountId: number, charId: number, position: string) {   
+    static async add(itemUid: number, accountId: number, charId: number, position: string) {
         const newInventoryItemQuery = `
             UPDATE items
             SET accountId = ?, charId = ?, place = ?, position = ?
@@ -97,5 +97,3 @@ class inventory {
         }
     }
 }
-
-export default inventory;

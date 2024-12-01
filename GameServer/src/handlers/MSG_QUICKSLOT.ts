@@ -10,17 +10,16 @@ export enum QuickSlotMessageType {
 }
 
 export default async function (session: Session<SendersType>, msg: Message) {
-    var subTypeMap = {
+    const subTypeMap = {
         1: 'MSG_QUICKSLOT_ADD',
         2: 'MSG_QUICKSLOT_SWAP',
         // TODO: 
     };
 
-    var subType = msg.read('u8');
+    const subType = msg.read('u8');
     console.log('quickslot subtype', subType);
 
-    const subTypeHandler =
-    {
+    const subTypeHandler = {
         MSG_QUICKSLOT_ADD: () => {
             const data = {
                 pageId: msg.read('u8'),
@@ -28,7 +27,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
                 slotType: msg.read('u8'),
             }
 
-            if(data.slotType == 255)
+            if (data.slotType === 255)
                 data.slotType = QuickSlotType.Empty;
 
             if (data.pageId < 0 || data.pageId >= QUICKSLOT_PAGE_NUM || data.slotId < 0 || data.slotId >= QUICKSLOT_MAXSLOT) {
@@ -40,8 +39,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
             // If it is, send the new slot row and column to prevent crashes.
             // TODO: Implement logic to handle pinned quickslot items.
 
-            switch (data.slotType)
-            {
+            switch (data.slotType) {
                 case QuickSlotType.Empty:
                     session.character.quickslot.remove({
                         pageId: data.pageId,
@@ -95,6 +93,6 @@ export default async function (session: Session<SendersType>, msg: Message) {
         }
     }
 
-    if(subTypeMap[subType] in subTypeHandler)
+    if (subTypeMap[subType] in subTypeHandler)
         subTypeHandler[subTypeMap[subType]]();
 }

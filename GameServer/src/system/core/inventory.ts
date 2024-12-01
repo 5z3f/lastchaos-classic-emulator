@@ -1,13 +1,10 @@
-import util from '../../util';
-import app from '../../app';
+import { ItemMessageType, ItemWearingPosition } from '../../api/item';
 import BaseItem from '../../baseobject/item';
+import database from '../../database';
+import { CharacterEvents } from '../../gameobject';
 import Character from '../../gameobject/character';
 import { FailMessageType } from '../../senders/fail';
 import { SystemMessageType } from '../../senders/sys';
-import database from '../../database';
-import { ItemMessageType, ItemWearingPosition } from '../../api/item';
-import log from '@local/shared/logger';
-import { CharacterEvents } from '../../gameobject';
 
 const MAX_TABS = 3;
 const MAX_COLUMNS = 20;
@@ -21,7 +18,7 @@ const OVERLOAD_THRESHOLD = 1.5;
 export enum InventoryTabType {
     Normal,
     Quest,
-    Event
+    Event,
 }
 
 type InventoryItemOptions = {
@@ -48,7 +45,7 @@ export class InventoryItem {
     options: number[];
 
     // can be undefined at the beginning
-    position: {tab: InventoryTabType, col: number, row: number};
+    position: { tab: InventoryTabType, col: number, row: number };
 
     constructor({ itemUid, baseItem, stack, plus, wearingPosition, flag, durability, options, stackUids }: InventoryItemOptions) {
         this.itemUid = itemUid;
@@ -85,18 +82,18 @@ export class Inventory {
 
     constructor(owner: Character) {
         this.owner = owner;
-        this.rows = Array.from({length: MAX_TABS}, () => 
-            Array.from({length: MAX_COLUMNS}, () => 
-                Array.from({length: MAX_ROWS}, () => new InventoryRow())
+        this.rows = Array.from({ length: MAX_TABS }, () =>
+            Array.from({ length: MAX_COLUMNS }, () =>
+                Array.from({ length: MAX_ROWS }, () => new InventoryRow())
             )
         );
-        
+
         this.maxWeight = MAX_WEIGHT;
     }
 
     get weight() {
         let weight = 0;
-    
+
         for (let tab of this.rows) {
             for (let column of tab) {
                 for (let row of column) {
@@ -105,21 +102,21 @@ export class Inventory {
                 }
             }
         }
-    
+
         return weight;
     }
-    
+
     find(tabType: InventoryTabType, opts: (item: InventoryItem) => boolean) {
         for (let col = 0; col < MAX_COLUMNS; col++) {
             for (let row = 0; row < MAX_ROWS; row++) {
-                let item = this.rows[tabType][col][row].item;
+                const item = this.rows[tabType][col][row].item;
                 if (item && opts(item)) {
                     item.position = {
                         tab: tabType,
                         col: col,
                         row: row
                     };
-                    
+
                     return item;
                 }
             }
@@ -127,23 +124,23 @@ export class Inventory {
     }
 
     filter(tabType: InventoryTabType, opts: (item: InventoryItem) => boolean) {
-        let results = [];
-    
+        const results = [];
+
         for (let col = 0; col < MAX_COLUMNS; col++) {
             for (let row = 0; row < MAX_ROWS; row++) {
-                let item = this.rows[tabType][col][row].item;
+                const item = this.rows[tabType][col][row].item;
                 if (item && opts(item)) {
                     item.position = {
                         tab: tabType,
                         col: col,
                         row: row
                     };
-                    
+
                     results.push(item);
                 }
             }
         }
-    
+
         return results;
     }
 
@@ -156,13 +153,13 @@ export class Inventory {
             return false;
         }
 
-        let itemWeight = inventoryItem.getWeight();
+        const itemWeight = inventoryItem.getWeight();
 
         if (this.isOverloaded(itemWeight)) {
             this.owner.session.send.sys(SystemMessageType.OverloadedWarning);
         }
 
-        if(this.isOverloadedBeyondLimit(itemWeight)) {
+        if (this.isOverloadedBeyondLimit(itemWeight)) {
             this.owner.session.send.sys(SystemMessageType.Overloaded);
             // TODO: apply speed penalty here (?)
         }
@@ -185,13 +182,13 @@ export class Inventory {
 
         // emit add event
         this.owner.emit(CharacterEvents.InventoryAdd, inventoryItem);
-        
+
         // send item to client
         this.owner.session.send.item({
             subType: ItemMessageType.Add,
             itemUid: inventoryItem.itemUid,
             itemId: inventoryItem.baseItem.id,
-            wearingPosition: (inventoryItem.wearingPosition == -1) ? 255 : inventoryItem.wearingPosition,
+            wearingPosition: (inventoryItem.wearingPosition === -1) ? 255 : inventoryItem.wearingPosition,
             plus: inventoryItem.plus,
             flag: inventoryItem.flag,
             durability: inventoryItem.durability,
@@ -207,9 +204,9 @@ export class Inventory {
         return true;
     }
 
-    async swap(tabType: InventoryTabType, src: {uid: number, col: number, row: number}, dst: {uid: number, col: number, row: number}) {
-        let srcItem = this.rows[tabType][src.col][src.row].item;
-        let dstItem = this.rows[tabType][dst.col][dst.row].item;
+    async swap(tabType: InventoryTabType, src: { uid: number, col: number, row: number }, dst: { uid: number, col: number, row: number }) {
+        const srcItem = this.rows[tabType][src.col][src.row].item;
+        const dstItem = this.rows[tabType][dst.col][dst.row].item;
 
         if (!srcItem) {
             // TODO: malformed packet, better log it in the future
@@ -226,7 +223,7 @@ export class Inventory {
             return false;
         }
 
-        let success = await database.inventory.move(srcItem.itemUid, [tabType, dst.col, dst.row].join(','));
+        const success = await database.inventory.move(srcItem.itemUid, [tabType, dst.col, dst.row].join(','));
 
         if (!success) {
             this.owner.session.send.fail(FailMessageType.DatabaseFailure);
@@ -241,7 +238,7 @@ export class Inventory {
                 row: src.row
             };
 
-            let success = await database.inventory.move(dstItem.itemUid, [tabType, src.col, src.row].join(','));
+            const success = await database.inventory.move(dstItem.itemUid, [tabType, src.col, src.row].join(','));
 
             if (!success) {
                 this.owner.session.send.fail(FailMessageType.DatabaseFailure);
@@ -249,7 +246,7 @@ export class Inventory {
                 return false;
             }
         }
-        
+
         this.rows[tabType][src.col][src.row].item = dstItem;
 
         srcItem.position = {
@@ -284,19 +281,21 @@ export class Inventory {
         return true;
     }
 
-    remove(tabType: InventoryTabType, position: {col: number, row: number}) {
-        this.rows[tabType][position.col][position.row].item = undefined;
+    remove(tabType: InventoryTabType, position: { col: number, row: number }) {
+        const rowItem = this.rows[tabType][position.col][position.row];
+        rowItem.item = undefined;
     }
 
-    async equip(position: {tab: InventoryTabType, col: number, row: number}, wearingPosition: ItemWearingPosition) {
-        let reqItem = this.rows[position.tab][position.col][position.row].item;
+    async equip(position: { tab: InventoryTabType, col: number, row: number }, wearingPosition: ItemWearingPosition) {
+        const rowItem = this.rows[position.tab][position.col][position.row];
+        const reqItem = rowItem.item;
 
-        if(!reqItem) {
+        if (!reqItem) {
             // TODO: log error 
             return false;
         }
 
-        let success = await database.inventory.equip(reqItem.itemUid, this.owner.id, wearingPosition);
+        const success = await database.inventory.equip(reqItem.itemUid, this.owner.id, wearingPosition);
 
         if (!success) {
             this.owner.session.send.fail(FailMessageType.DatabaseFailure);
@@ -310,29 +309,30 @@ export class Inventory {
     }
 
     async unequip(wearingPosition: ItemWearingPosition) {
-        if(wearingPosition == ItemWearingPosition.None)
+        if (wearingPosition === ItemWearingPosition.None)
             return false;
 
-        let reqItem = this.find(InventoryTabType.Normal, (item) => item.wearingPosition == wearingPosition);
+        const reqItem = this.find(InventoryTabType.Normal, (item) => item.wearingPosition == wearingPosition);
 
-        if(!reqItem) {
+        if (!reqItem) {
             // TODO: log error 
             return false;
         }
 
-        let success = await database.inventory.unequip(reqItem.itemUid, this.owner.id);
+        const success = await database.inventory.unequip(reqItem.itemUid, this.owner.id);
 
         if (!success) {
             this.owner.session.send.fail(FailMessageType.DatabaseFailure);
             return false;
         }
 
-        this.rows[reqItem.position.tab][reqItem.position.col][reqItem.position.row].item.wearingPosition = -1;
+        const rowItem = this.rows[reqItem.position.tab][reqItem.position.col][reqItem.position.row];
+        rowItem.item.wearingPosition = -1;
 
 
         this.owner.emit(CharacterEvents.InventoryUnequip, reqItem);
-        
-        return reqItem;        
+
+        return reqItem;
     }
 
     addToPosition(inventoryItem: InventoryItem, tabType: InventoryTabType, col: number, row: number) {
@@ -341,12 +341,14 @@ export class Inventory {
             return false;
         }
 
-        this.rows[tabType][col][row].item = inventoryItem;
+        const rowItem = this.rows[tabType][col][row];
+        rowItem.item = inventoryItem;
         return true;
     }
 
     isEmptyAt(tabType: InventoryTabType, col: number, row: number) {
-        return !this.rows[tabType][col][row].item;
+        const rowItem = this.rows[tabType][col][row];
+        return !rowItem.item;
     }
 
     isOverloaded(itemWeight: number): boolean {
@@ -356,19 +358,20 @@ export class Inventory {
     isOverloadedBeyondLimit(itemWeight: number): boolean {
         return this.weight + itemWeight > this.maxWeight * OVERLOAD_THRESHOLD;
     }
-    
+
     findSpace(tabType: InventoryTabType) {
         for (let col = 0; col < MAX_COLUMNS; col++) {
             for (let row = 0; row < MAX_ROWS; row++) {
-                if (!this.rows[tabType][col][row].item) {
-                    if (!this.rows[tabType][col][row].item) {
+                const rowItem = this.rows[tabType][col][row];
+                if (!rowItem.item) {
+                    if (!rowItem.item) {
                         return {
                             tab: tabType,
                             col: col,
                             row: row
                         };
                     }
-                }   
+                }
             }
         }
     }

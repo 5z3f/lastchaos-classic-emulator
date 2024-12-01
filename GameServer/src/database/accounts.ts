@@ -1,5 +1,5 @@
-import bcrypt from 'bcrypt';
 import log from '@local/shared/logger';
+import bcrypt from 'bcrypt';
 import app from '../app';
 
 type DBAccount = {
@@ -17,12 +17,16 @@ type DBCharacter = {
     hairId: number;
 };
 
-class accounts {
+export default class Accounts {
     static async getByCredentials(username: string, password: string) {
         try {
             const [dbAccount]: DBAccount[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
 
-            if (!(await bcrypt.compare(password, dbAccount.hash)))
+            if (!dbAccount)
+                return false;
+
+            const isValid = await bcrypt.compare(password, dbAccount.hash);
+            if (!isValid)
                 return false;
 
             return dbAccount;
@@ -44,5 +48,3 @@ class accounts {
         }
     }
 }
-
-export default accounts;

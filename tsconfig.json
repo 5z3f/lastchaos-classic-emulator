@@ -5,6 +5,7 @@
 		"allowJs": true,
 		"checkJs": true,
 		//"strict": true,
+		//"noUncheckedIndexedAccess": true,
 		//"declaration": true,
 		//"declarationDir": "types",
 		//"emitDeclarationOnly": true,

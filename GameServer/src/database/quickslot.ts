@@ -1,8 +1,8 @@
-import app from "../app";
 import log from "@local/shared/logger";
+import app from "../app";
 import { QUICKSLOT_MAXSLOT } from "../system/core/quickslot";
 
-export default class quickslot {
+export default class Quickslot {
     static async get(characterId: number) {
         try {
             const result = await app.dbc.query("SELECT * FROM quickslot WHERE id = ?", [
@@ -11,13 +11,13 @@ export default class quickslot {
 
             return result;
         }
-        catch(error) {
+        catch (error) {
             log.error(error);
             return null;
         }
     }
 
-    static async update(characterId: number, pageId: number, slotData) {
+    static async update(characterId: number, pageId: number, slotData: any[]) {
         try {
             const slots = Array.from({ length: QUICKSLOT_MAXSLOT }, (_, i) => `slot${i + 1} = ?`).join(', ');
             const slotDataString = slotData.map(s => s.join(','));
@@ -30,13 +30,13 @@ export default class quickslot {
 
             return result;
         }
-        catch(error) {
+        catch (error) {
             log.error(error);
             return null;
         }
     }
 
-    static async createPage(characterId: number, pageId: number, slotData) {
+    static async createPage(characterId: number, pageId: number, slotData: any[]) {
         try {
             const QUICKSLOT_MAXSLOT = 10;
             const placeholders = Array.from({ length: QUICKSLOT_MAXSLOT }, () => '?').join(', ');
@@ -51,7 +51,7 @@ export default class quickslot {
 
             return result;
         }
-        catch(error) {
+        catch (error) {
             log.error(error);
             return null;
         }

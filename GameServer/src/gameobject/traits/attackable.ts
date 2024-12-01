@@ -1,9 +1,9 @@
 import log from "@local/shared/logger";
-import Monster from "../monster";
 import Character from "../character";
+import Monster from "../monster";
 import NPC from "../npc";
 
-class Attackable {
+export default class Attackable {
     owner;
 
     constructor(owner: Character | Monster | NPC) {
@@ -11,7 +11,7 @@ class Attackable {
     }
 
     damage(attacker: Character) {
-        let owner = this.owner;
+        const owner = this.owner;
         owner.statistics.health -= attacker.statistics.attack.getTotalValue();
         attacker.statistics.health -= owner.statistics.attack.getTotalValue();
 
@@ -61,6 +61,3 @@ class Attackable {
         }
     }
 }
-
-
-export default Attackable;

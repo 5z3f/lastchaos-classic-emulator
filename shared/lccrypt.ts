@@ -1,5 +1,5 @@
 
-class lccrypt {
+export default class lccrypt {
     /* key rotation is currently not supported */
     static KEY = 1852535664;
 
@@ -214,5 +214,3 @@ class lccrypt {
         return Buffer.from(pTmpBuf.buffer);
     }
 }
-
-export default lccrypt;

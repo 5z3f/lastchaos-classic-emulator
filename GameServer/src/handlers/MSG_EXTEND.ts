@@ -1,15 +1,13 @@
-import log from '@local/shared/logger';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
-import { Statistic } from '../types';
-import { SendersType } from '../senders';
 import game from '../game';
-import Character from '../gameobject/character';
 import { GameObjectType } from '../gameobject';
+import Character from '../gameobject/character';
+import { SendersType } from '../senders';
 
 export enum ExtendMessageType {
     //String = 27,              // TODO: perform tests on it
-    Messenger = 28
+    Messenger = 28,
 }
 
 export enum ExtendMessengerType {
@@ -31,13 +29,13 @@ export enum ExtendMessengerType {
 }
 
 export default function (session: Session<SendersType>, msg: Message) {
-    let subType = msg.read('i32>') as ExtendMessageType;
+    const subType = msg.read('i32>') as ExtendMessageType;
 
     switch (subType) {
         case ExtendMessageType.Messenger:
-            var thirdType = msg.read('u8');
+            const thirdType = msg.read('u8');
 
-            switch(thirdType) {
+            switch (thirdType) {
                 case ExtendMessengerType.GroupAdd:
                     const groupName = msg.read('stringnt');
                     console.log(groupName)
@@ -49,7 +47,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                         text: msg.read('stringnt')
                     }
 
-                    if(data.senderUid !== session.character.uid) {
+                    if (data.senderUid !== session.character.uid) {
                         // TODO: malformed packet, log it
                         return;
                     }
@@ -77,7 +75,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                         });
                     }
                     else {
-                        const receiverCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.id == data.receiverId);
+                        const receiverCharacter: Character = game.world.find(GameObjectType.Character, (ch: Character) => ch.id === data.receiverId);
 
                         receiverCharacter.session.send.extend({
                             subType: ExtendMessageType.Messenger,
@@ -91,7 +89,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                     }
                     break;
             }
-            
+
             break;
     }
 }

@@ -1,5 +1,5 @@
-import fs from 'fs';
 import chalk from 'chalk';
+import fs from 'fs';
 
 function writeToLogFile(message: string) {
     const now = new Date();

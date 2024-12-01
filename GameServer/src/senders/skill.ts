@@ -1,24 +1,23 @@
 import Message from '@local/shared/message';
-import _messages from './_messages.json';
-import { SendersType } from '.';
 import Session from '@local/shared/session';
+import { SendersType } from '.';
+import _messages from './_messages.json';
 
 export default function (session: Session<SendersType>) {
-    return (subType, data) =>
-    {
-        let msg = new Message({ type: _messages.MSG_SKILL, subType: subType });
+    return (subType, data) => {
+        const msg = new Message({ type: _messages.MSG_SKILL, subType: subType });
 
         const MSG_SKILL_LIST = 0;
         const MSG_SKILL_READY = 2;
         const MSG_SKILL_FIRE = 3;
         const MSG_SKILL_CANCEL = 4;
 
-        if(subType === MSG_SKILL_LIST) {
+        if (subType === MSG_SKILL_LIST) {
             msg.write('u8', 1); // test 1 skill
             msg.write('i32>', data.skillId); // triple bash
             msg.write('u8', 5); // level 5
         }
-        else if(subType === MSG_SKILL_READY) {      // triple bash
+        else if (subType === MSG_SKILL_READY) {      // triple bash
             msg.write('u8', data.objType);          // 0x0
             msg.write('i32>', data.objUid);        // 0x0, 0x0, 0x0, 0x8
             msg.write('i32>', data.skillId);        // 0x0, 0x0, 0x0, 0xe6,
@@ -26,7 +25,7 @@ export default function (session: Session<SendersType>) {
             msg.write('i32>', data.targetUid);      // 0x0, 0x0, 0x6, 0x9b
             msg.write('i32>', 0); // skill speed    // 0x0, 0x0, 0x0, 0x0
         }
-        else if(subType === MSG_SKILL_FIRE) {                   // triple bash
+        else if (subType === MSG_SKILL_FIRE) {                   // triple bash
             msg.write('u8', data.objType);                      // 0x0
             msg.write('i32>', data.objUid);                     // 0x0, 0x0, 0x0, 0x8
             msg.write('i32>', data.skillId);                    // 0x0, 0x0, 0x0, 0xe6,
@@ -36,7 +35,7 @@ export default function (session: Session<SendersType>) {
             //
             msg.write('u8', data.targets.length);               // 0x0
 
-            for(let i = 0; i < data.targets.length; i++) {
+            for (let i = 0; i < data.targets.length; i++) {
                 msg.write('u8', data.targets[i].targetObjType); // -
                 msg.write('i32>', data.targets[i].targetUid);   // -
             }
@@ -44,7 +43,7 @@ export default function (session: Session<SendersType>) {
             msg.write('i32>', data.skillspeed);                           // 0x0, 0x0, 0x0, 0x0 (m_skillSpeed)
             msg.write('u8', data.ubMove);                                 // 0x0 (cMoveChar)
 
-            let isselftmp = data.x === 0 && data.y === 0;
+            const isselftmp = data.x === 0 && data.y === 0;
 
             msg.write('f<', isselftmp ? 0.0 : session.character.position.x);    // 0xe6, 0x1, 0x90, 0x44
             msg.write('f<', isselftmp ? 0.0 : session.character.position.y);    // 0xe1, 0x9e, 0x3e, 0x44
@@ -54,7 +53,7 @@ export default function (session: Session<SendersType>) {
 
             console.log('sent skill fire', data, msg.toString());
         }
-        else if(subType === MSG_SKILL_CANCEL) {
+        else if (subType === MSG_SKILL_CANCEL) {
             msg.write('u8', session.character.objType);
             msg.write('i32>', session.character.uid);
         }
