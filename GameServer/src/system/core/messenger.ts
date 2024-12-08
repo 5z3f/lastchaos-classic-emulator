@@ -62,11 +62,11 @@ class Friend {
 
         for (let result of results) {
             const messengerMsg = new MessengerMessage(
-                result.senderId,
-                result.receiverId,
+                result.sender,
+                result.receiver,
                 result.text,
-                result.sent,
-                result.date
+                !!result.sent,
+                result.createdAt
             );
 
             this.history.push(messengerMsg);
@@ -145,6 +145,8 @@ export default class Messenger {
 
     public async addFriend(characterId: number) {
         const dbFriendCharacter = await database.characters.getById(characterId);
+        if (!dbFriendCharacter)
+            return;
 
         const friend = new Friend(this.owner, characterId, dbFriendCharacter.nickname, dbFriendCharacter.class);
         await friend.loadHistory();

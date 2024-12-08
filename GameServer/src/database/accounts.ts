@@ -1,28 +1,16 @@
 import log from '@local/shared/logger';
 import bcrypt from 'bcrypt';
 import app from '../app';
-
-type DBAccount = {
-    id: number;
-    username: string;
-    hash: string;
-};
-
-type DBCharacter = {
-    id: number;
-    accountId: number;
-    nickname: string;
-    classId: number;
-    faceId: number;
-    hairId: number;
-};
+import type { TableAccounts, TableCharacters } from './types';
 
 export default class Accounts {
     static async getByCredentials(username: string, password: string) {
         try {
-            const [dbAccount]: DBAccount[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
+            const [dbAccount]: TableAccounts[] = await app.dbc.query("SELECT * FROM accounts WHERE username = ?", [username]);
 
             if (!dbAccount)
+                return false;
+            if (!dbAccount.hash)
                 return false;
 
             const isValid = await bcrypt.compare(password, dbAccount.hash);
@@ -39,7 +27,7 @@ export default class Accounts {
 
     static async getCharacters(accountId: number) {
         try {
-            const dbCharacters: DBCharacter[] = await app.dbc.query("SELECT * FROM characters WHERE accountId = ?", [accountId]);
+            const dbCharacters: TableCharacters[] = await app.dbc.query("SELECT * FROM characters WHERE accountId = ?", [accountId]);
             return dbCharacters;
         }
         catch (error) {

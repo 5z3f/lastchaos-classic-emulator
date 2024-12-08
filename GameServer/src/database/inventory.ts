@@ -1,4 +1,5 @@
 import log from "@local/shared/logger";
+import type { UpsertResult } from "mariadb";
 import { ItemPlaceType, ItemWearingPosition } from "../api/item";
 import app from "../app";
 
@@ -18,7 +19,7 @@ export default class Inventory {
             WHERE id = ? OR parentId = ?`;
 
         try {
-            const result = await app.dbc.query(newInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(newInventoryItemQuery, [
                 accountId,
                 charId,
                 ItemPlaceType.Inventory,
@@ -42,7 +43,7 @@ export default class Inventory {
             WHERE id = ? OR parentId = ?`;
 
         try {
-            const result = await app.dbc.query(moveInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(moveInventoryItemQuery, [
                 position,
                 itemUid,
                 itemUid
@@ -63,7 +64,7 @@ export default class Inventory {
             WHERE charId = ? AND id = ?`;
 
         try {
-            const result = await app.dbc.query(equipInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(equipInventoryItemQuery, [
                 wearingPosition,
                 charId,
                 itemUid
@@ -84,7 +85,7 @@ export default class Inventory {
             WHERE charId = ? AND id = ?`;
 
         try {
-            const result = await app.dbc.query(equipInventoryItemQuery, [
+            const result: UpsertResult = await app.dbc.query(equipInventoryItemQuery, [
                 charId,
                 itemUid
             ]);

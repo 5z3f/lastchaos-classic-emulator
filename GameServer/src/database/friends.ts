@@ -1,4 +1,5 @@
 import log from "@local/shared/logger";
+import type { UpsertResult } from "mariadb";
 import app from "../app";
 
 export default class Friends {
@@ -32,7 +33,7 @@ export default class Friends {
             VALUES (?, ?)`;
 
         try {
-            const result = await app.dbc.execute(query, [
+            const result: UpsertResult = await app.dbc.execute(query, [
                 characterId,
                 friendId
             ]);

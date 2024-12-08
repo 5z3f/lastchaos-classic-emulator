@@ -35,7 +35,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             if (data.faceId >= MAX_FACESTYLES || data.hairId >= MAX_HAIRSTYLES || data.jobId >= MAX_CLASSES)
                 return;
 
-            const [exists] = await database.characters.exists(data.nickname);
+            const [exists] = (await database.characters.exists(data.nickname))!;
 
             if (exists) {
                 session.send.fail(FailMessageType.NicknameAlreadyTaken);
@@ -116,7 +116,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                     level: dbCharacter.level,
                     experience: dbCharacter.experience,
                     maxExperience: 100,                                     // FIXME: probably will be removed later (?)
-                    skillpoint: dbCharacter.skillpoint
+                    skillpoint: dbCharacter.skillpoints,
                 },
                 //@ts-ignore
                 statistics: {

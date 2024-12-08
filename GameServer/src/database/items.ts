@@ -1,4 +1,5 @@
 import log from '@local/shared/logger';
+import type { UpsertResult } from 'mariadb';
 import app from "../app";
 
 type item = {
@@ -26,7 +27,7 @@ export default class Items {
             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
 
         try {
-            const result = await app.dbc.execute(newItemQuery, [
+            const result: UpsertResult = await app.dbc.execute(newItemQuery, [
                 item.itemId,
                 item.accountId,
                 item.charId,
@@ -68,7 +69,7 @@ export default class Items {
         try {
             // TODO: probably will cause problem with max allowed packet
             const query = `INSERT INTO items (itemId, accountId, charId, place, position, plus, seals, parentId) VALUES ${queryValues.join(',')}`;
-            const result = await app.dbc.query(query);
+            const result: UpsertResult = await app.dbc.query(query);
             return result.insertId;
         }
         catch (error) {

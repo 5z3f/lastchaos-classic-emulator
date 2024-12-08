@@ -80,10 +80,10 @@ export default async function (session: Session<SendersType>, msg: Message) {
 
     // setup and send inventory to client
     {
-        const dbInventoryItems = await database.characters.getInventoryItems(character.id)
+        const dbInventoryItems = await database.characters.getInventoryItems(character.id);
         const inventoryStacks: any[][] = [];
 
-        for (const dbInventoryItem of dbInventoryItems) {
+        for (const dbInventoryItem of dbInventoryItems!) {
             if (dbInventoryItem.parentId !== null) {
                 if (!inventoryStacks[dbInventoryItem.parentId])
                     inventoryStacks[dbInventoryItem.parentId] = [];
@@ -161,16 +161,16 @@ export default async function (session: Session<SendersType>, msg: Message) {
         });
     }
 
-    // load quickslot from database
+    // load quickslot from databasez
     {
         const dbQuickslotPages = await database.quickslot.get(character.id);
 
-        if (!dbQuickslotPages.length) {
+        if (!dbQuickslotPages!.length) {
             for (let i = 0; i < QUICKSLOT_PAGE_NUM; i++)
                 await database.quickslot.createPage(character.id, i, character.quickslot.quickSlots[i])
         }
 
-        for (const dbQuickslotPage of dbQuickslotPages) {
+        for (const dbQuickslotPage of dbQuickslotPages!) {
             for (let i = 1; i <= QUICKSLOT_MAXSLOT; i++) {
                 const key = `slot${i}`;
                 const [slotTypeId, value1, value2] = dbQuickslotPage[key].split(',');

@@ -1,5 +1,6 @@
 import log from "@local/shared/logger";
 import app from "../app";
+import type { TableChatlog } from "./types";
 
 export default class Chatlog {
     public static async get(chatType: number, senderId: number, receiverId: number | null = null, limit: number = 50) {
@@ -10,7 +11,7 @@ export default class Chatlog {
             LIMIT ?`;
 
         try {
-            const result = await app.dbc.execute(query, [
+            const result: TableChatlog[] = await app.dbc.execute(query, [
                 chatType,
                 senderId,
                 receiverId,
