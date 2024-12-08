@@ -1,7 +1,10 @@
 import Message from '@local/shared/message';
+import type Session from '@local/shared/session';
+import type { SendersType } from '.';
 
-export default function (session) {
-    return (byteString, packType) => {
+
+export default function (session: Session<SendersType>) {
+    return (byteString: string, packType: number) => {
         if (byteString.includes('0x'))
             byteString = byteString.replace(/0x/g, '').split(', ').map((strByte) => (strByte.length === 1) ? `0${strByte}` : strByte).join('');
 

@@ -5,6 +5,7 @@ import _messages from './_messages.json';
 
 import { SendersType } from '.';
 import { GameObjectType } from '../gameobject';
+import type Character from '../gameobject/character';
 import { ExtendMessageType, ExtendMessengerType } from '../handlers/MSG_EXTEND';
 
 type ExtendMessageGroupListData = {
@@ -78,7 +79,7 @@ export default function (session: Session<SendersType>) {
                         msg.write('stringnt', data.senderNickname);
                         break;
                     case ExtendMessengerType.OneVsOne:
-                        const senderChar = game.world.find(GameObjectType.Character, (c) => c.uid === data.senderUid);
+                        const senderChar = game.world.find(GameObjectType.Character, (c: Character) => c.uid === data.senderUid);
 
                         msg.write('i32>', data.senderUid);
                         msg.write('stringnt', data.senderNickname || senderChar.nickname);

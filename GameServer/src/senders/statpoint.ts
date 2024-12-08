@@ -3,8 +3,17 @@ import Session from '@local/shared/session';
 import { SendersType } from '.';
 import _messages from './_messages.json';
 
+export type StatpointMessage = {
+    points?: number;
+    //} | {
+    type?: number;
+    value?: number;
+    remainingPoints?: number;
+    //} | {
+};
+
 export default function (session: Session<SendersType>) {
-    return (subType, data) => {
+    return (subType: number, data: StatpointMessage) => {
         const msg = new Message({ type: _messages.MSG_STATPOINT, subType: subType });
 
         const subTypeMap = {
@@ -25,8 +34,9 @@ export default function (session: Session<SendersType>) {
             MSG_STATPOINT_ERROR: () => { },
         };
 
-        if (subTypeMap[subType] in subTypeHandler)
-            subTypeHandler[subTypeMap[subType]]();
+        const subType1 = subTypeMap[subType as keyof typeof subTypeMap];
+        if (subType1 in subTypeHandler)
+            subTypeHandler[subType1 as keyof typeof subTypeHandler]();
 
 
         session.write(msg.build());

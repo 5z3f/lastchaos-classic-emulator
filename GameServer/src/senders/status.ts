@@ -3,12 +3,51 @@ import App from '../app';
 import Message from '@local/shared/message';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
+import type { Statistic } from '../types';
 import _messages from './_messages.json';
 
 const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
 
+export type StatusMessage = {
+    level: number;
+    experience: number;
+    maxExperience: number;
+    health: number;
+    maxHealth: Statistic;
+    mana: number;
+    maxMana: Statistic;
+    strength: Statistic;
+    dexterity: Statistic;
+    intelligence: Statistic;
+    condition: Statistic;
+    strengthAdded: number;
+    dexterityAdded: number;
+    intelligenceAdded: number;
+    conditionAdded: number;
+    attack: Statistic;
+    magicAttack: Statistic;
+    defense: Statistic;
+    magicResist: Statistic;
+    skillpoint: number;
+    weight: number;
+    maxWeight: number;
+    walkSpeed: Statistic;
+    runSpeed: Statistic;
+    attackSpeed: Statistic;
+    magicSpeed?: Statistic;
+    pkName: number;
+    pkPenalty: number;
+    pkCount: number;
+    reputation: number;
+    attackRange: Statistic;
+    meracJoinFlag: number;
+    dratanJoinFlag?: number;
+    skillSpeed?: Statistic;
+    mapAttr: number;
+}
+
 export default function (session: Session<SendersType>) {
-    return (data) => {
+    return (data: StatusMessage) => {
         const msg = new Message({ type: _messages.MSG_STATUS });
 
         msg.write('i32>', data.level);                                                              // Level
@@ -93,7 +132,7 @@ export default function (session: Session<SendersType>) {
         if (clientHigherThan1107)
             msg.write('u8', data.attackSpeed.getBaseValue());                                       // Base Attack Speed
 
-        msg.write('u8', data.magicSpeed.getTotalValue());                                           // Magic Speed (?)
+        msg.write('u8', data.magicSpeed?.getTotalValue());                                           // Magic Speed (?)
 
         msg.write('u8', data.pkName);                                                               // PK Name
         msg.write('i32>', data.pkPenalty);                                                          // PK Penalty
@@ -106,7 +145,7 @@ export default function (session: Session<SendersType>) {
         if (clientHigherThan1107)
             msg.write('u8', data.dratanJoinFlag);                                                   // GetJoinFlag(ZONE_DRATAN)
 
-        msg.write('i32>', data.skillSpeed.getTotalValue());                                         // Skill Speed
+        msg.write('i32>', data.skillSpeed?.getTotalValue());                                         // Skill Speed
         msg.write('u8', data.mapAttr);                                                              // GetMapAttr()
 
         // FIXME: to check

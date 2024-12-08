@@ -97,6 +97,7 @@ export default async function (session: Session<SendersType>, msg: Message) {
         }
     }
 
-    if (subTypeMap[subType] in subTypeHandler)
-        subTypeHandler[subTypeMap[subType]]();
+    const subType1 = subTypeMap[subType as keyof typeof subTypeMap];
+    if (subType1 in subTypeHandler)
+        subTypeHandler[subType1 as keyof typeof subTypeHandler]();
 }

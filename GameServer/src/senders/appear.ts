@@ -1,5 +1,8 @@
 import Message from '@local/shared/message';
+import type Session from '@local/shared/session';
+import type { SendersType } from '.';
 import { PacketObjectType } from '../gameobject';
+import type { PositionProps } from '../types/position';
 import _messages from './_messages.json';
 
 function buildAppearMessageCharacter(msg: Message) {
@@ -59,13 +62,7 @@ interface NPCData {
     firstAppearance: boolean;
     uid: number;
     id: number;
-    position: {
-        x: number;
-        y: number;
-        z: number;
-        r: number;
-        layer: number;
-    };
+    position: PositionProps;
     health: number;
     maxHealth: number;
 }
@@ -90,7 +87,7 @@ function buildAppearMessageNPC(msg: Message, data: NPCData) {
 // TODO: finish type for CharacterData
 type AppearMessageData = NPCData /*| CharacterData*/;
 
-export default function (session) {
+export default function (session: Session<SendersType>) {
     return (data: AppearMessageData) => {
         const msg = new Message({ type: _messages.MSG_APPEAR });
 

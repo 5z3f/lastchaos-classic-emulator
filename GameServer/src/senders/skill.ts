@@ -3,8 +3,24 @@ import Session from '@local/shared/session';
 import { SendersType } from '.';
 import _messages from './_messages.json';
 
+export type SkillMessage = {
+    objType?: number;
+    objUid?: number;
+    skillId?: number;
+    targetObjType?: number;
+    targetUid?: number;
+    targets?: {
+        targetObjType: number;
+        targetUid: number;
+    }[];
+    skillspeed?: number;
+    ubMove?: number;
+    x?: number;
+    y?: number;
+};
+
 export default function (session: Session<SendersType>) {
-    return (subType, data) => {
+    return (subType: number, data: SkillMessage) => {
         const msg = new Message({ type: _messages.MSG_SKILL, subType: subType });
 
         const MSG_SKILL_LIST = 0;
@@ -34,12 +50,14 @@ export default function (session: Session<SendersType>) {
             msg.write('u8', data.targetObjType);                // 0x1
             msg.write('i32>', data.targetUid);                  // 0x0, 0x0, 0x6, 0x9b
 
+            const targets = data.targets!;
             //
-            msg.write('u8', data.targets.length);               // 0x0
+            msg.write('u8', targets.length);               // 0x0
 
-            for (let i = 0; i < data.targets.length; i++) {
-                msg.write('u8', data.targets[i].targetObjType); // -
-                msg.write('i32>', data.targets[i].targetUid);   // -
+            for (let i = 0; i < targets.length; i++) {
+                const target = targets[i]!;
+                msg.write('u8', target.targetObjType); // -
+                msg.write('i32>', target.targetUid);   // -
             }
 
             msg.write('i32>', data.skillspeed);                           // 0x0, 0x0, 0x0, 0x0 (m_skillSpeed)

@@ -2,6 +2,7 @@ import Message from '@local/shared/message';
 import Session from '@local/shared/session';
 import { SendersType } from '.';
 import { ItemMessageType } from '../api/item';
+import type { PositionProps } from '../types/position';
 import _messages from './_messages.json';
 
 type TakeMessageData = {
@@ -112,13 +113,7 @@ type DropMessageData = {
     itemUid: number;
     itemId: number;
     stack: number;
-    position: {
-        x: number;
-        y: number;
-        z: number;
-        r: number;
-        layer: number;
-    };
+    position: PositionProps;
     objType: number;
     objUid: number;
     alive: number;

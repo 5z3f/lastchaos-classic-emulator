@@ -31,7 +31,7 @@ type InventoryItemOptions = {
     flag?: number,
     durability?: number,
     options?: number[]
-}
+};
 
 export class InventoryItem {
     itemUid: number;
@@ -109,7 +109,7 @@ export class Inventory {
     find(tabType: InventoryTabType, opts: (item: InventoryItem) => boolean) {
         for (let col = 0; col < MAX_COLUMNS; col++) {
             for (let row = 0; row < MAX_ROWS; row++) {
-                const item = this.rows[tabType][col][row].item;
+                const item = this.rows[tabType]![col]![row]!.item;
                 if (item && opts(item)) {
                     item.position = {
                         tab: tabType,
@@ -128,7 +128,7 @@ export class Inventory {
 
         for (let col = 0; col < MAX_COLUMNS; col++) {
             for (let row = 0; row < MAX_ROWS; row++) {
-                const item = this.rows[tabType][col][row].item;
+                const item = this.rows[tabType]![col]![row]!.item;
                 if (item && opts(item)) {
                     item.position = {
                         tab: tabType,
@@ -166,7 +166,7 @@ export class Inventory {
 
         const success = await database.inventory.add(
             inventoryItem.itemUid,
-            this.owner.session.accountId,
+            this.owner.session.accountId!,
             this.owner.id,
             [space.tab, space.col, space.row].join(',')
         );
@@ -178,7 +178,7 @@ export class Inventory {
 
         // add the item to the found space
         inventoryItem.position = space;
-        this.rows[space.tab][space.col][space.row].item = inventoryItem;
+        this.rows[space.tab]![space.col]![space.row]!.item = inventoryItem;
 
         // emit add event
         this.owner.emit(CharacterEvents.InventoryAdd, inventoryItem);
@@ -205,8 +205,8 @@ export class Inventory {
     }
 
     async swap(tabType: InventoryTabType, src: { uid: number, col: number, row: number }, dst: { uid: number, col: number, row: number }) {
-        const srcItem = this.rows[tabType][src.col][src.row].item;
-        const dstItem = this.rows[tabType][dst.col][dst.row].item;
+        const srcItem = this.rows[tabType]![src.col]?.[src.row]?.item;
+        const dstItem = this.rows[tabType]![dst.col]?.[dst.row]?.item;
 
         if (!srcItem) {
             // TODO: malformed packet, better log it in the future
@@ -247,7 +247,7 @@ export class Inventory {
             }
         }
 
-        this.rows[tabType][src.col][src.row].item = dstItem;
+        this.rows[tabType]![src.col]![src.row]!.item = dstItem;
 
         srcItem.position = {
             tab: tabType,
@@ -255,7 +255,8 @@ export class Inventory {
             row: dst.row
         };
 
-        this.rows[tabType][dst.col][dst.row].item = srcItem;
+        // TODO: check dest position
+        this.rows[tabType]![dst.col]![dst.row]!.item = srcItem;
 
         // emit swap event
         this.owner.emit(CharacterEvents.InventorySwap, tabType, src, dst);
@@ -282,13 +283,13 @@ export class Inventory {
     }
 
     remove(tabType: InventoryTabType, position: { col: number, row: number }) {
-        const rowItem = this.rows[tabType][position.col][position.row];
-        rowItem.item = undefined;
+        if (this.rows[tabType]![position.col]?.[position.row])
+            this.rows[tabType]![position.col]![position.row]! = new InventoryRow();
     }
 
     async equip(position: { tab: InventoryTabType, col: number, row: number }, wearingPosition: ItemWearingPosition) {
-        const rowItem = this.rows[position.tab][position.col][position.row];
-        const reqItem = rowItem.item;
+        const rowItem = this.rows[position.tab]?.[position.col]?.[position.row];
+        const reqItem = rowItem?.item;
 
         if (!reqItem) {
             // TODO: log error 
@@ -326,8 +327,8 @@ export class Inventory {
             return false;
         }
 
-        const rowItem = this.rows[reqItem.position.tab][reqItem.position.col][reqItem.position.row];
-        rowItem.item.wearingPosition = -1;
+        const rowItem = this.rows[reqItem.position!.tab]![reqItem.position!.col]![reqItem.position!.row]!;
+        rowItem.item!.wearingPosition = -1;
 
 
         this.owner.emit(CharacterEvents.InventoryUnequip, reqItem);
@@ -341,14 +342,14 @@ export class Inventory {
             return false;
         }
 
-        const rowItem = this.rows[tabType][col][row];
+        const rowItem = this.rows[tabType]![col]![row]!;
         rowItem.item = inventoryItem;
         return true;
     }
 
     isEmptyAt(tabType: InventoryTabType, col: number, row: number) {
-        const rowItem = this.rows[tabType][col][row];
-        return !rowItem.item;
+        const rowItem = this.rows[tabType]?.[col]?.[row];
+        return !rowItem?.item;
     }
 
     isOverloaded(itemWeight: number): boolean {
@@ -362,7 +363,7 @@ export class Inventory {
     findSpace(tabType: InventoryTabType) {
         for (let col = 0; col < MAX_COLUMNS; col++) {
             for (let row = 0; row < MAX_ROWS; row++) {
-                const rowItem = this.rows[tabType][col][row];
+                const rowItem = this.rows[tabType]![col]![row]!;
                 if (!rowItem.item) {
                     return {
                         tab: tabType,

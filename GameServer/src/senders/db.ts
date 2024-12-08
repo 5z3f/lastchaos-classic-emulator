@@ -41,7 +41,7 @@ interface DBMessageData {
     wearingItems?: WearingItem[];
 }
 
-function buildCharacterExistMessage(msg, dbCharacter: DBCharacter, wearingItems: WearingItem[]) {
+function buildCharacterExistMessage(msg: Message, dbCharacter: DBCharacter, wearingItems: WearingItem[]) {
     msg.write('i32>', dbCharacter.id);              // Character ID (UID)
     msg.write('stringnt', dbCharacter.nickname);    // Nickname
     msg.write('u8', dbCharacter.class);             // Class
@@ -73,7 +73,19 @@ export default function (session: Session<SendersType>) {
 
         switch (subType) {
             case DBMessageType.CharacterExist:
-                buildCharacterExistMessage(msg, dbCharacter, wearingItems);
+                {
+                    if (!dbCharacter) {
+                        log.error('dbCharacter is not defined');
+                        return;
+                    }
+
+                    if (!wearingItems) {
+                        log.error('wearingItems is not defined');
+                        return;
+                    }
+
+                    buildCharacterExistMessage(msg, dbCharacter, wearingItems);
+                }
                 break;
             case DBMessageType.CharacterExistEnd:
             case DBMessageType.OK:

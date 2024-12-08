@@ -1,4 +1,5 @@
 import log from "@local/shared/logger";
+import type { MessageDamageType } from "../../senders/damage";
 import Character from "../character";
 import Monster from "../monster";
 import NPC from "../npc";
@@ -21,7 +22,7 @@ export default class Attackable {
         attacker.session.send.damage({
             attackerObjType: 0,
             attackerIndex: attacker.uid,
-            damageType: 3,
+            damageType: 3 as MessageDamageType, // ?
             skillId: -1,
             targetObjType: 1,
             targetIndex: owner.uid,

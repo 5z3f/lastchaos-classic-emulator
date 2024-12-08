@@ -39,8 +39,8 @@ export default class Quickslot {
             if (triggeredSlotDst) {
                 const [pageId, slotId] = triggeredSlotDst;
                 this.add({
-                    pageId: pageId,
-                    slotId: slotId,
+                    pageId: pageId!,
+                    slotId: slotId!,
                     slotType: (src.uid === -1) ? QuickSlotType.Empty : QuickSlotType.Item,
                     value1: (src.uid === -1) ? -1 : dst.col,
                     value2: (src.uid === -1) ? -1 : dst.row
@@ -50,8 +50,8 @@ export default class Quickslot {
             if (triggeredSlotSrc) {
                 const [pageId, slotId] = triggeredSlotSrc;
                 this.add({
-                    pageId: pageId,
-                    slotId: slotId,
+                    pageId: pageId!,
+                    slotId: slotId!,
                     slotType: (dst.uid === -1) ? QuickSlotType.Empty : QuickSlotType.Item,
                     value1: (dst.uid === -1) ? -1 : src.col,
                     value2: (dst.uid === -1) ? -1 : src.row
@@ -66,9 +66,9 @@ export default class Quickslot {
 
     find(slotType: QuickSlotType, value1: number, value2: number) {
         for (let pageId = 0; pageId < this.quickSlots.length; pageId++) {
-            const quickSlotPage = this.quickSlots[pageId];
+            const quickSlotPage = this.quickSlots[pageId]!;
             for (let slotId = 0; slotId < quickSlotPage.length; slotId++) {
-                const [slotTypeId, v1, v2] = quickSlotPage[slotId];
+                const [slotTypeId, v1, v2] = quickSlotPage[slotId]!;
 
                 if (slotTypeId == slotType && v1 === value1 && v2 === value2)
                     return [pageId, slotId];
@@ -78,15 +78,25 @@ export default class Quickslot {
 
     update(pageId: number, slotId: number, slotType: QuickSlotType, value1: number, value2: number) {
         const quickSlotPage = this.quickSlots[pageId];
+        if (!quickSlotPage) {
+            console.log('inventory update !quickSlotPage', pageId);
+            return;
+        }
+
         quickSlotPage[slotId] = [slotType, value1, value2];
     }
 
-    async add({ pageId, slotId, slotType, value1, value2 = -1, updateDb = true, sendPacket = true }) {
+    async add({ pageId, slotId, slotType, value1, value2 = -1, updateDb = true, sendPacket = true }: { pageId: number, slotId: number, slotType: QuickSlotType, value1: number, value2?: number, updateDb?: boolean, sendPacket?: boolean }) {
         this.update(pageId, slotId, slotType, value1, value2);
 
         if (updateDb) {
             // TODO: update single row
             const quickSlotPage = this.quickSlots[pageId];
+            if (!quickSlotPage) {
+                console.log('inventory add !quickSlotPage', pageId);
+                return;
+            }
+
             await database.quickslot.update(this.owner.id, pageId, quickSlotPage);
         }
 
@@ -98,8 +108,13 @@ export default class Quickslot {
         }
     }
 
-    async remove({ pageId, slotId }) {
+    async remove({ pageId, slotId }: { pageId: number, slotId: number }) {
         const quickSlotPage = this.quickSlots[pageId];
+        if (!quickSlotPage) {
+            console.log('inventory remove !quickSlotPage', pageId);
+            return;
+        }
+
         quickSlotPage[slotId] = this.emptyQuickslotItem;
 
         // TODO: update single row
@@ -112,11 +127,21 @@ export default class Quickslot {
         this.owner.session.send.quickslot
     }
 
-    async swap({ pageId, slotIdFrom, slotIdTo }) {
+    async swap({ pageId, slotIdFrom, slotIdTo }: { pageId: number, slotIdFrom: number, slotIdTo: number }) {
         const quickSlotPage = this.quickSlots[pageId];
-        const from = quickSlotPage[slotIdFrom];
+        if (!quickSlotPage) {
+            console.log('inventory swap !quickSlotPage', pageId);
+            return;
+        }
 
-        quickSlotPage[slotIdFrom] = quickSlotPage[slotIdTo];
+        const from = quickSlotPage[slotIdFrom];
+        if (!from) {
+            console.log('inventory swap !from', slotIdFrom);
+            return;
+        }
+
+        // ?
+        quickSlotPage[slotIdFrom] = quickSlotPage[slotIdTo]!;
         quickSlotPage[slotIdTo] = from;
 
         // TODO: update single row

@@ -38,6 +38,7 @@ export enum ChatColors {
 }
 
 export enum Color {
+    None = 0,
     IndianRed = 0xCD5C5CFF,
     Maroon = 0x800000FF,
     Olive = 0x808000FF,
@@ -146,18 +147,22 @@ export default class Chat {
 
             return;
         }
-        else {
-            const characters: Character[] = game.world.filter(GameObjectType.Character, (ch: Character) => chatTypeConditions[chatType](senderCharacter, ch));
 
-            for (let ch of characters) {
-                ch.session.send.chat({
-                    subType: chatType,
-                    senderId,
-                    senderName,
-                    receiverName: ch.nickname,
-                    text,
-                });
-            }
+        // TODO: this should not be here?
+        if (typeof senderCharacter === 'string')
+            return;
+
+        const chatTypeConditionsByType = chatTypeConditions[chatType as keyof typeof chatTypeConditions];
+        const characters = game.world.filter(GameObjectType.Character, (ch: Character) => chatTypeConditionsByType(senderCharacter, ch)) as Character[];
+
+        for (let ch of characters) {
+            ch.session.send.chat({
+                subType: chatType,
+                senderId,
+                senderName,
+                receiverName: ch.nickname,
+                text,
+            });
         }
     }
 

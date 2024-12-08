@@ -145,7 +145,7 @@ export default function (session: Session<SendersType>, msg: Message) {
                         itemUid: -1
                     },
                     dst: {
-                        position: result.position,
+                        position: result.position!,
                         itemUid: result.itemUid
                     }
                 });
@@ -191,7 +191,7 @@ export default function (session: Session<SendersType>, msg: Message) {
             }
 
             // wear requested item
-            const resp = await character.inventory.equip(reqItem.position, msgdata.wearingPosition);
+            const resp = await character.inventory.equip(reqItem.position!, msgdata.wearingPosition);
 
             if (!resp) {
                 // TODO: send error message to the client

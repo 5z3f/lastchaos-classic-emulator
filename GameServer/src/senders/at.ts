@@ -1,12 +1,27 @@
 import App from '../app';
 
 import Message from '@local/shared/message';
+import type Session from '@local/shared/session';
+import type { SendersType } from '.';
+import type { PositionProps } from '../types/position';
 import _messages from './_messages.json';
 
 const clientHigherThan1107 = App.config.gameserver.clientVersion > 1107;
 
-export default function (session) {
-    return ({ uid, name, classType, jobType, hairType, faceType, zoneId, areaId, position }) => {
+export type AtMessage = {
+    uid: number,
+    name: string,
+    classType: number,
+    jobType: number,
+    hairType: number,
+    faceType: number,
+    zoneId: number,
+    areaId: number,
+    position: PositionProps,
+};
+
+export default function (session: Session<SendersType>) {
+    return ({ uid, name, classType, jobType, hairType, faceType, zoneId, areaId, position }: AtMessage) => {
         const msg = new Message({ type: _messages.MSG_AT });
 
         msg.write('i32>', uid);                        // Unique ID

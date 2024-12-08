@@ -1,5 +1,7 @@
 import log from '@local/shared/logger';
 import Message from '@local/shared/message';
+import type Session from '@local/shared/session';
+import type { SendersType } from '.';
 import _messages from './_messages.json';
 
 export enum AssistMessageType {
@@ -17,7 +19,7 @@ interface AssistData {
     remainTime?: number;
 }
 
-export default function (session) {
+export default function (session: Session<SendersType>) {
     return (subType: AssistMessageType, data: AssistData) => {
         const msg = new Message({ type: _messages.MSG_ASSIST, subType });
 

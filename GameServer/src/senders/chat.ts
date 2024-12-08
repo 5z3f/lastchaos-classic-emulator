@@ -32,13 +32,13 @@ export default function (session: Session<SendersType>) {
         if (data.subType === ChatType.System) {
             // type: MSG_EVENT, subType: MSG_EVENT_WHITEDAY_2007
             const msg = new Message({ type: 43, subType: 45 });
-            buildSystemMessage(msg, data.color, data.text);
+            buildSystemMessage(msg, data.color || Color.None, data.text);
             session.write(msg.build());
             return;
         }
 
         const msg = new Message({ type: _messages.MSG_CHAT, subType: data.subType });
-        buildMessage(msg, data.senderId, data.senderName, data.receiverName || '', data.text);
+        buildMessage(msg, data.senderId || 0, data.senderName || '', data.receiverName || '', data.text);
         session.write(msg.build());
     }
 }

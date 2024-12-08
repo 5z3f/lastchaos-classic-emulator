@@ -104,7 +104,7 @@ export default class NPC extends GameObject<GameObjectType.NPC> {
                 objType: this.objType,
                 uid: this.uid,
                 moveType: 1, // TODO
-                speed: this.statistics.runSpeed,
+                speed: this.statistics.runSpeed.getTotalValue(),
                 position: this.position,
                 attribute: 0, // TODO
             })

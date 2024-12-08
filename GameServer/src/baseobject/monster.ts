@@ -1,3 +1,4 @@
+import type { PositionProps } from '../types/position';
 import BaseObject from './index';
 
 type statistics = {
@@ -19,13 +20,7 @@ type statistics = {
 
 type Spawn = {
     zoneId: number,
-    position: {
-        x: number,
-        y: number,
-        z: number,
-        r: number,
-        layer: number,
-    },
+    position: PositionProps,
     respawnTime: number,
 };
 

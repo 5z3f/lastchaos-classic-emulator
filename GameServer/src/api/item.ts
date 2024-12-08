@@ -109,10 +109,11 @@ export default class ItemApi {
         }
 
         const ownerPositionString = owner.position.clone().toArray().slice(0, 2).join(',');
+        const accountId = owner.session.accountId!;
 
         const itemUid = await database.items.insert({
             itemId: contentItem.id,
-            accountId: owner.session.accountId,
+            accountId,
             charId: owner.id,
             place: ItemPlaceType.Inventory,
             position: ownerPositionString,
@@ -129,7 +130,7 @@ export default class ItemApi {
             const success = database.items.insertStack({
                 parentId: itemUid,
                 itemId: contentItem.id,
-                accountId: owner.session.accountId,
+                accountId,
                 charId: owner.id,
                 place: 0,
                 position: ownerPositionString,

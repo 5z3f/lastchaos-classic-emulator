@@ -86,6 +86,7 @@ export class Buff extends EventEmitter<BuffEvents> {
             baseItem,
             undefined,
             buffScript.duration,
+            // @ts-ignore TODO: fix type
             buffScript,
         );
     }
@@ -94,7 +95,7 @@ export class Buff extends EventEmitter<BuffEvents> {
         if (this.script) {
             if (this.originType === BuffOrigin.Item) {
                 const baseItem = this.originRef as BaseItem;
-                const spellLevel = baseItem.values[1];
+                const spellLevel = baseItem.values[1]!;
 
                 // run custom logic from script
                 this.modifiedStatistics = this.script.apply(this.owner, spellLevel, this);
@@ -126,9 +127,9 @@ export class Buff extends EventEmitter<BuffEvents> {
                 objType: this.owner.objType,
                 objIndex: this.owner.uid,
                 itemIndex: baseItem.id,
-                skillIndex: baseItem.values[0],
+                skillIndex: baseItem.values[0]!,
                 skillLevel: baseItem.values[1],
-                remainTime: (this.duration + 1) * LCTIME_MULTIPLIER,
+                remainTime: ((this.duration || 0) + 1) * LCTIME_MULTIPLIER,
             });
 
             this.owner.session.send.effect({
@@ -151,7 +152,7 @@ export class Buff extends EventEmitter<BuffEvents> {
 
         if (this.originType === BuffOrigin.Item) {
             const baseItem = this.originRef as BaseItem;
-            const spellIndex = baseItem.values[0];
+            const spellIndex = baseItem.values[0]!;
 
             // search for buff script with given index
             const buffScript = getBuffScript(spellIndex);

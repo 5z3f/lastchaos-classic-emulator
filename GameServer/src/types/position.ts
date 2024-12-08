@@ -1,5 +1,13 @@
 import { Vector2 } from 'three';
 
+export type PositionProps = {
+    x: number,
+    y: number,
+    z: number,
+    r: number,
+    layer: number,
+};
+
 type PositionOptions = {
     x: number,
     y: number,

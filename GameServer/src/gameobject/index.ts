@@ -116,9 +116,9 @@ export default class GameObject<T extends GameObjectType> extends EventEmitter<E
         attackSpeed: Statistic,
     };
 
-    type: T;
+    type!: T;
     respawnCount: number = 0;
-    objType: PacketObjectType;
+    objType!: PacketObjectType;
 
     // we need to store all timeouts/intervals to clear them when object is disposed
     timeoutIds: NodeJS.Timeout[];

@@ -131,7 +131,7 @@ const commands = {
             }
 
             const contentType = contentTypeMap[arg0];
-            if (!contentType) {
+            if (contentType === undefined) {
                 api.chat.system(character, 'Please provide a valid content type', Color.IndianRed);
                 return;
             }
